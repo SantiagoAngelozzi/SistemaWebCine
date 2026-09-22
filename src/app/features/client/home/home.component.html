@@ -1,0 +1,51 @@
+<div class="home-page">
+  <section class="hero">
+    <h1>¡Bienvenido al Cine!</h1>
+    <p>Elegí tu próxima función, sacá tus entradas y no te pierdas nada.</p>
+    <div class="hero-actions">
+      <a routerLink="/cartelera" class="btn-primary">Ver cartelera completa</a>
+      <a routerLink="/proximamente" class="btn-secondary">Próximos estrenos</a>
+    </div>
+  </section>
+
+  <section class="destacadas">
+    <h2>🔥 Las más elegidas</h2>
+
+    @if (errorMessage()) {
+      <p class="error">⚠️ {{ errorMessage() }}</p>
+    }
+
+    @if (cargando()) {
+      <p class="hint">Cargando…</p>
+    } @else if (!destacadas().length) {
+      <div class="empty-state">
+        <p>Todavía no hay películas cargadas. ¡Volvé pronto!</p>
+      </div>
+    } @else {
+      <div class="grid">
+        @for (pelicula of destacadas(); track pelicula.id) {
+          <a class="pelicula-card" [routerLink]="['/pelicula', pelicula.id]">
+            <div class="poster" [class.sin-imagen]="!pelicula.imagen_url">
+              @if (pelicula.imagen_url) {
+                <img [src]="pelicula.imagen_url" [alt]="pelicula.nombre" />
+              } @else {
+                <span>🎬</span>
+              }
+              <span class="badge">{{ pelicula.clasificacion }}</span>
+            </div>
+            <div class="info">
+              <h3>{{ pelicula.nombre }}</h3>
+              <p class="meta">{{ pelicula.duracion_minutos }} min · {{ pelicula.idioma }}</p>
+              <div class="tags">
+                @for (formato of pelicula.formatos; track formato) {
+                  <span class="tag">{{ formato }}</span>
+                }
+              </div>
+              <p class="precio">${{ pelicula.precio_normal }}</p>
+            </div>
+          </a>
+        }
+      </div>
+    }
+  </section>
+</div>
