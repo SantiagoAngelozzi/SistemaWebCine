@@ -3,7 +3,7 @@
     <p class="hint">Cargando…</p>
   } @else if (errorMessage() || !pelicula()) {
     <div class="empty-state">
-      <p>⚠️ {{ errorMessage() ?? 'Película no encontrada.' }}</p>
+      <p>{{ errorMessage() ?? 'Película no encontrada.' }}</p>
     </div>
   } @else {
     <div class="ficha">
@@ -31,7 +31,7 @@
 
         @if (pelicula()!.clasificacion !== 'ATP') {
           <p class="aviso-edad">
-            🔞 Película {{ pelicula()!.clasificacion }} — la entrada debe ir acompañada de un
+            Película {{ pelicula()!.clasificacion }} — la entrada debe ir acompañada de un
             adulto según corresponda.
           </p>
         }

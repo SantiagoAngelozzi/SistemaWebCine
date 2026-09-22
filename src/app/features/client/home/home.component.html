@@ -9,10 +9,10 @@
   </section>
 
   <section class="destacadas">
-    <h2>🔥 Las más elegidas</h2>
+    <h2>Las más elegidas</h2>
 
     @if (errorMessage()) {
-      <p class="error">⚠️ {{ errorMessage() }}</p>
+      <p class="error">{{ errorMessage() }}</p>
     }
 
     @if (cargando()) {

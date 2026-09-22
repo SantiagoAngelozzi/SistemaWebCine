@@ -33,7 +33,7 @@
           <input id="pass" type="password" formControlName="password" placeholder="••••••••" />
         </div>
         @if (errorMessage()) {
-          <p class="error">⚠️ {{ errorMessage() }}</p>
+          <p class="error">{{ errorMessage() }}</p>
         }
         <button type="submit" class="btn-primary" [disabled]="loading()">
           {{ loading() ? 'ENTRANDO…' : '¡ENTRAR YA!' }}
@@ -84,7 +84,7 @@
           <input id="pass2" type="password" formControlName="password" placeholder="••••••••" />
         </div>
         @if (errorMessage()) {
-          <p class="error">⚠️ {{ errorMessage() }}</p>
+          <p class="error">{{ errorMessage() }}</p>
         }
         <button type="submit" class="btn-primary" [disabled]="loading()">
         {{ loading() ? 'CREANDO…' : '¡CREAR MI CUENTA!' }}
