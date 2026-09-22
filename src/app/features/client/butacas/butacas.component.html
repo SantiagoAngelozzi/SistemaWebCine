@@ -1,0 +1,112 @@
+<div class="butacas-page">
+  @if (cargando()) {
+    <p class="hint">Cargando mapa de butacas…</p>
+  } @else if (codigoCompraExitosa()) {
+    <div class="exito">
+      <h2>¡Compra confirmada!</h2>
+      <p>Código de tu entrada:</p>
+      <p class="codigo">{{ codigoCompraExitosa() }}</p>
+      <p class="hint">
+        (La emisión del PDF con el QR para presentar en sala es el siguiente paso del proyecto.)
+      </p>
+      <button type="button" class="btn-primary" (click)="volverAInicio()">Volver al inicio</button>
+    </div>
+  } @else if (errorMessage() && !funcion()) {
+    <div class="empty-state"><p> {{ errorMessage() }}</p></div>
+  } @else if (funcion()) {
+    <header class="header-funcion">
+      <h1>{{ funcion()!.peliculaNombre }}</h1>
+      <p class="meta">
+        {{ funcion()!.salaNombre }} · {{ funcion()!.fecha }} {{ funcion()!.hora_inicio }} ·
+        {{ funcion()!.formato }} · {{ funcion()!.idioma }}
+      </p>
+      @if (funcion()!.peliculaClasificacion !== 'ATP') {
+        <p class="aviso-edad">
+          {{ funcion()!.peliculaClasificacion }} — la entrada debe ir acompañada de un adulto.
+        </p>
+      }
+    </header>
+
+    @if (errorMessage()) {
+      <p class="error"> {{ errorMessage() }}</p>
+    }
+
+    <div class="leyenda">
+      <span class="item"><span class="swatch libre"></span> Libre</span>
+      <span class="item"><span class="swatch accesible"></span> Accesible</span>
+      <span class="item"><span class="swatch vip"></span> VIP (+{{ recargoVipTexto }})</span>
+      <span class="item"><span class="swatch seleccionada"></span> Tu selección</span>
+      <span class="item"><span class="swatch reservada"></span> Eligiendo otra persona</span>
+      <span class="item"><span class="swatch ocupada"></span> Ocupada</span>
+    </div>
+
+    <div class="pantalla">PANTALLA</div>
+
+    <div class="mapa">
+      @for (fila of filas(); track fila.fila) {
+        <div class="fila">
+          <span class="label">{{ fila.fila }}</span>
+          <div class="bloque">
+            @for (b of fila.izquierda; track b.id) {
+              <button
+                type="button"
+                class="butaca"
+                [ngClass]="[b.tipo, b.estado]"
+                [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
+                (click)="toggleButaca(b)"
+              >
+                {{ b.columna }}
+              </button>
+            }
+          </div>
+          <div class="bloque">
+            @for (b of fila.centro; track b.id) {
+              <button
+                type="button"
+                class="butaca"
+                [ngClass]="[b.tipo, b.estado]"
+                [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
+                (click)="toggleButaca(b)"
+              >
+                {{ b.columna }}
+              </button>
+            }
+          </div>
+          <div class="bloque">
+            @for (b of fila.derecha; track b.id) {
+              <button
+                type="button"
+                class="butaca"
+                [ngClass]="[b.tipo, b.estado]"
+                [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
+                (click)="toggleButaca(b)"
+              >
+                {{ b.columna }}
+              </button>
+            }
+          </div>
+          <span class="label">{{ fila.fila }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="resumen">
+      @if (hayVipSeleccionada()) {
+        <p class="aviso-vip">
+          Elegiste al menos una butaca VIP: tiene un recargo del {{ recargoVipTexto }} sobre el
+          precio base.
+        </p>
+      }
+      <p class="seleccion-texto">Butacas seleccionadas: {{ seleccionadasTexto() }}</p>
+      <p class="total">Total: ${{ total() }}</p>
+      <button
+        type="button"
+        class="btn-primary"
+        [disabled]="!seleccionadas().size || comprando()"
+        (click)="confirmarCompra()"
+      >
+        {{ comprando() ? 'Confirmando…' : 'CONFIRMAR COMPRA' }}
+      </button>
+    </div>
+  }
+</div>

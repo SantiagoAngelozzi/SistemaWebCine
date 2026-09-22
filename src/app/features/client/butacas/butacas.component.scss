@@ -1,0 +1,253 @@
+:host {
+  display: block;
+  padding: 24px 32px 60px;
+}
+
+.hint {
+  opacity: 0.7;
+}
+
+.header-funcion {
+  margin-bottom: 8px;
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    margin: 0 0 6px;
+  }
+
+  .meta {
+    margin: 0;
+    opacity: 0.75;
+    font-size: 13px;
+  }
+}
+
+.aviso-edad {
+  margin: 8px 0 0;
+  display: inline-block;
+  padding: 6px 12px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 8px;
+  background: #ffe3ea;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.error {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 10px;
+  background: #ffe3ea;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 16px 0;
+  font-size: 12px;
+  font-weight: 700;
+
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 2px solid var(--color-tinta);
+  display: inline-block;
+
+  &.libre {
+    background: var(--color-papel-2);
+  }
+  &.accesible {
+    background: var(--color-turquesa);
+  }
+  &.vip {
+    background: var(--color-naranja);
+  }
+  &.seleccionada {
+    background: var(--color-lima);
+  }
+  &.reservada {
+    background: var(--color-coral);
+  }
+  &.ocupada {
+    background: var(--color-tinta);
+  }
+}
+
+.pantalla {
+  text-align: center;
+  padding: 8px;
+  margin-bottom: 20px;
+  border-radius: 999px;
+  background: var(--color-tinta);
+  color: var(--color-papel-2);
+  font-family: var(--font-display);
+  letter-spacing: 4px;
+  font-size: 12px;
+}
+
+.mapa {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+}
+
+.label {
+  width: 16px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.bloque {
+  display: flex;
+  gap: 4px;
+}
+
+.butaca {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  border: 2px solid var(--color-tinta);
+  background: var(--color-papel-2);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
+  padding: 0;
+
+  &.accesible {
+    background: var(--color-turquesa);
+  }
+  &.vip {
+    background: var(--color-naranja);
+  }
+
+  &.seleccionada {
+    background: var(--color-lima) !important;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px var(--color-tinta);
+  }
+
+  &.reservada_otro {
+    background: var(--color-coral) !important;
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  &.ocupada {
+    background: var(--color-tinta) !important;
+    color: var(--color-papel-2);
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.resumen {
+  margin-top: 24px;
+  padding: 20px;
+  border: var(--border-comic-lg);
+  border-radius: 16px;
+  background: var(--color-papel-2);
+  box-shadow: var(--shadow-comic-md);
+  max-width: 480px;
+}
+
+.aviso-vip {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 8px;
+  background: var(--color-naranja);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.seleccion-texto {
+  margin: 0 0 8px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.total {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
+.btn-primary {
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  padding: 12px;
+  border: var(--border-comic);
+  border-radius: 12px;
+  background: var(--color-coral);
+  color: var(--color-tinta);
+  cursor: pointer;
+  box-shadow: var(--shadow-comic-sm);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  &:hover:not(:disabled) {
+    background: var(--color-magenta);
+    color: var(--color-papel-2);
+  }
+}
+
+.exito {
+  text-align: center;
+  padding: 60px 24px;
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 30px;
+  }
+
+  .codigo {
+    font-family: monospace;
+    font-size: 14px;
+    background: var(--color-papel);
+    border: var(--border-comic);
+    border-radius: 8px;
+    padding: 10px;
+    display: inline-block;
+    margin: 10px 0;
+    word-break: break-all;
+  }
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  opacity: 0.7;
+}

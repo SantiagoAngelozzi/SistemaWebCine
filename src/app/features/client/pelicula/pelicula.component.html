@@ -1,0 +1,66 @@
+<div class="pelicula-page">
+  @if (cargando()) {
+    <p class="hint">Cargando…</p>
+  } @else if (errorMessage() || !pelicula()) {
+    <div class="empty-state">
+      <p>⚠️ {{ errorMessage() ?? 'Película no encontrada.' }}</p>
+    </div>
+  } @else {
+    <div class="ficha">
+      <div class="poster" [class.sin-imagen]="!pelicula()!.imagen_url">
+        @if (pelicula()!.imagen_url) {
+          <img [src]="pelicula()!.imagen_url" [alt]="pelicula()!.nombre" />
+        } @else {
+          <span>🎬</span>
+        }
+      </div>
+
+      <div class="info">
+        <h1>{{ pelicula()!.nombre }}</h1>
+        <div class="tags">
+          <span class="badge">{{ pelicula()!.clasificacion }}</span>
+          <span class="tag">{{ pelicula()!.duracion_minutos }} min</span>
+          <span class="tag">{{ pelicula()!.idioma }}</span>
+          @for (formato of pelicula()!.formatos; track formato) {
+            <span class="tag">{{ formato }}</span>
+          }
+          @for (genero of pelicula()!.generoNombres; track genero) {
+            <span class="tag tag-genero">{{ genero }}</span>
+          }
+        </div>
+
+        @if (pelicula()!.clasificacion !== 'ATP') {
+          <p class="aviso-edad">
+            🔞 Película {{ pelicula()!.clasificacion }} — la entrada debe ir acompañada de un
+            adulto según corresponda.
+          </p>
+        }
+
+        <p class="sinopsis">{{ pelicula()!.sinopsis || 'Sin sinopsis cargada.' }}</p>
+      </div>
+    </div>
+
+    <section class="funciones">
+      <h2>Funciones disponibles</h2>
+
+      @if (!funciones().length) {
+        <div class="empty-state">
+          <p>Todavía no hay funciones programadas para esta película.</p>
+        </div>
+      } @else {
+        <div class="grid-funciones">
+          @for (funcion of funciones(); track funcion.id) {
+            <button type="button" class="funcion-card" (click)="irAButacas(funcion.id)">
+              <span class="fecha">{{ funcion.fecha }}</span>
+              <span class="hora">{{ funcion.hora_inicio }}</span>
+              <span class="detalle">
+                {{ funcion.salaNombre }} · {{ funcion.formato }} · {{ funcion.idioma }}
+              </span>
+              <span class="precio">${{ funcion.precio }}</span>
+            </button>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>
