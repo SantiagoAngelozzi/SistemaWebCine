@@ -1,0 +1,45 @@
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px;
+}
+
+.placeholder-card {
+  max-width: 480px;
+  text-align: center;
+  background: var(--color-papel-2);
+  border: var(--border-comic-lg);
+  border-radius: 20px;
+  box-shadow: var(--shadow-comic-lg);
+  padding: 40px 32px;
+}
+
+.emoji {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  letter-spacing: 1px;
+  margin: 0 0 12px;
+}
+
+p {
+  margin: 0 0 20px;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border: 2px dashed var(--color-tinta);
+  border-radius: 999px;
+  background: var(--color-papel);
+}

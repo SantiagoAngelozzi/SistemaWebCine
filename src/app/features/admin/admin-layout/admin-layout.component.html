@@ -1,0 +1,37 @@
+<div class="admin-shell">
+  <aside class="sidebar">
+    <div class="brand-mini">
+      <span>CINE</span>
+      <small>Admin</small>
+    </div>
+
+    <nav>
+      @for (item of navItems; track item.path) {
+        <a
+          class="nav-item"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+        >
+          <span class="nav-emoji"></span>
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <div class="main">
+        <header class="topbar">
+      <div class="topbar-row">
+        <h1>Panel de Administración</h1>
+        <button type="button" class="logout-btn" (click)="cerrarSesion()">
+          Cerrar sesión
+        </button>
+      </div>
+      <div class="topbar-strip"></div>
+    </header>
+
+    <section class="content">
+      <router-outlet />
+    </section>
+  </div>
+</div>
