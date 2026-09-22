@@ -1,0 +1,150 @@
+<div class="page">
+  <div class="tabs">
+    <div class="tab" [class.active]="tabActiva() === 'salas'" (click)="cambiarTab('salas')">
+       SALAS
+    </div>
+    <div class="tab" [class.active]="tabActiva() === 'funciones'" (click)="cambiarTab('funciones')">
+       FUNCIONES
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="error">⚠️ {{ errorMessage() }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="hint">Cargando…</p>
+  } @else {
+    @if (tabActiva() === 'salas') {
+      <section class="panel">
+        <div class="crear-sala">
+          <input #nombreSalaInput type="text" placeholder="Nombre de la sala (ej: Sala 1)" />
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="guardandoSala()"
+            (click)="crearSala(nombreSalaInput.value); nombreSalaInput.value = ''"
+          >
+            {{ guardandoSala() ? 'Creando…' : '+ Crear sala' }}
+          </button>
+        </div>
+        <p class="hint">
+          Al crear una sala se generan automáticamente sus butacas: filas A-I y L-Q estándar
+          (28/fila), J-K accesibles (14/fila) y R-S-T VIP (28/fila) — tal como pide el PDF.
+        </p>
+
+        @if (!salas().length) {
+          <div class="empty-state"><p>Todavía no hay salas creadas.</p></div>
+        } @else {
+          <div class="grid-salas">
+            @for (sala of salas(); track sala.id) {
+              <div class="sala-card">
+                <h3>{{ sala.nombre }}</h3>
+                <p class="meta">{{ sala.cantidadButacas }} butacas</p>
+                <button type="button" class="danger" (click)="eliminarSala(sala)">🗑️ Eliminar</button>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    } @else {
+      <section class="panel">
+        <form [formGroup]="formFuncion" (ngSubmit)="crearFuncion()" class="form-card">
+          <h3>Programar función</h3>
+
+          <div class="field">
+            <label>Película</label>
+            <select formControlName="peliculaId">
+              <option value="" disabled>Elegí una película</option>
+              @for (pelicula of peliculas(); track pelicula.id) {
+                <option [value]="pelicula.id">
+                  {{ pelicula.nombre }} ({{ pelicula.duracion_minutos }} min)
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label>Fecha</label>
+              <input type="date" formControlName="fecha" />
+            </div>
+            <div class="field">
+              <label>Hora de inicio</label>
+              <input type="time" formControlName="horaInicio" />
+            </div>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label>Formato</label>
+              <select formControlName="formato">
+                @for (formato of formatosDisponibles; track formato) {
+                  <option [value]="formato">{{ formato }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>Idioma</label>
+              <select formControlName="idioma">
+                <option value="castellano">Castellano</option>
+                <option value="subtitulada">Subtitulada</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Precio</label>
+            <input type="number" formControlName="precio" min="0" step="0.01" />
+          </div>
+
+          <p class="hint">
+            La sala se asigna sola: el sistema busca una sala sin funciones superpuestas
+            (respetando 30 min de limpieza antes y después) y programa ahí.
+          </p>
+
+          <div class="actions">
+            <button type="submit" class="btn-primary" [disabled]="guardandoFuncion()">
+              {{ guardandoFuncion() ? 'Programando…' : 'Programar función' }}
+            </button>
+          </div>
+        </form>
+
+        @if (!funciones().length) {
+          <div class="empty-state"><p>Todavía no hay funciones programadas.</p></div>
+        } @else {
+          <table class="tabla-funciones">
+            <thead>
+              <tr>
+                <th>Película</th>
+                <th>Sala</th>
+                <th>Fecha</th>
+                <th>Horario</th>
+                <th>Formato</th>
+                <th>Idioma</th>
+                <th>Precio</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (funcion of funciones(); track funcion.id) {
+                <tr>
+                  <td>{{ funcion.peliculaNombre }}</td>
+                  <td>{{ funcion.salaNombre }}</td>
+                  <td>{{ funcion.fecha }}</td>
+                  <td>{{ funcion.hora_inicio }} - {{ funcion.hora_fin }}</td>
+                  <td>{{ funcion.formato }}</td>
+                  <td>{{ funcion.idioma }}</td>
+                  <td>${{ funcion.precio }}</td>
+                  <td>
+                    <button type="button" class="danger" (click)="eliminarFuncion(funcion)">🗑️</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+    }
+  }
+</div>
