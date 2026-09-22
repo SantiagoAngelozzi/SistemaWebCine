@@ -1,0 +1,25 @@
+<div class="client-shell">
+  <div class="top-strip"></div>
+
+  <header class="navbar">
+    <a class="logo" routerLink="inicio">CINE</a>
+
+    <nav>
+      @for (item of navItems; track item.path) {
+        <a
+          class="nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <a class="login-link" routerLink="/auth/login">Ingresar</a>
+  </header>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>
