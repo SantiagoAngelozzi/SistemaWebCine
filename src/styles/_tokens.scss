@@ -1,0 +1,29 @@
+// Design tokens - identidad visual "comic pop" del cine.
+// Unica fuente de verdad para colores y tipografia de toda la app.
+
+:root {
+  // Paleta (inspirada en el degrade de referencia: turquesa -> lima -> naranja -> coral -> magenta)
+  --color-turquesa: #2EC4B6;
+  --color-lima: #F4D03F;
+  --color-naranja: #FF9F1C;
+  --color-coral: #FF6F91;
+  --color-magenta: #A6339B;
+
+  // Neutros
+  --color-tinta: #1B1A2E;   // texto y contornos tipo comic
+  --color-papel: #FFF8ED;   // fondo general
+  --color-papel-2: #FFFFFF; // superficies de tarjetas/inputs
+
+  // Tipografia
+  --font-display: 'Bangers', cursive;
+  --font-body: 'Baloo 2', sans-serif;
+
+  // Bordes y sombras "comic" (contorno grueso + sombra dura sin blur)
+  --border-comic: 3px solid var(--color-tinta);
+  --border-comic-lg: 5px solid var(--color-tinta);
+  --shadow-comic-sm: 3px 3px 0 var(--color-tinta);
+  --shadow-comic-md: 5px 5px 0 var(--color-tinta);
+  --shadow-comic-lg: 10px 10px 0 var(--color-tinta);
+
+  --radius-comic: 12px;
+}
