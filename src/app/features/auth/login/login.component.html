@@ -1,0 +1,96 @@
+<div class="stage">
+  <div class="brand">
+    <h1>CINE</h1>
+    <p>¡La función está por empezar!</p>
+  </div>
+
+  <div class="panel">
+    <div class="tabs">
+      <div
+        class="tab"
+        [class.active]="activeTab() === 'login'"
+        (click)="switchTab('login')"
+      >
+        INGRESAR
+      </div>
+      <div
+        class="tab"
+        [class.active]="activeTab() === 'registro'"
+        (click)="switchTab('registro')"
+      >
+        REGISTRARME
+      </div>
+    </div>
+
+    @if (activeTab() === 'login') {
+      <form [formGroup]="loginForm" (ngSubmit)="submitLogin()">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" formControlName="email" placeholder="vos@mail.com" />
+        </div>
+        <div class="field">
+          <label for="pass">Contraseña</label>
+          <input id="pass" type="password" formControlName="password" placeholder="••••••••" />
+        </div>
+        @if (errorMessage()) {
+          <p class="error">⚠️ {{ errorMessage() }}</p>
+        }
+        <button type="submit" class="btn-primary" [disabled]="loading()">
+          {{ loading() ? 'ENTRANDO…' : '¡ENTRAR YA!' }}
+        </button>
+        <div class="anon" (click)="continuarComoInvitado()">
+          O seguí como invitado, sin registrarte 🎬
+        </div>
+        <p class="fine"><a href="javascript:void(0)">¿Olvidaste tu contraseña?</a></p>
+      </form>
+    } @else {
+      <form [formGroup]="registroForm" (ngSubmit)="submitRegistro()">
+        <div class="row2">
+          <div class="field">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" formControlName="nombre" placeholder="Ej: Lucía" />
+          </div>
+          <div class="field">
+            <label for="apellido">Apellido</label>
+            <input id="apellido" type="text" formControlName="apellido" placeholder="Ej: Gómez" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="email2">Email</label>
+          <input id="email2" type="email" formControlName="email" placeholder="vos@mail.com" />
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="nac">Fecha de nacimiento</label>
+            <input id="nac" type="date" formControlName="fechaNacimiento" />
+          </div>
+          <div class="field">
+            <label for="sangre">Tipo de sangre</label>
+            <input id="sangre" type="text" formControlName="tipoSangre" placeholder="Ej: O+" />
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="ojos">Color de ojos</label>
+            <input id="ojos" type="text" formControlName="colorOjos" placeholder="Ej: Marrones" />
+          </div>
+          <div class="field">
+            <label for="vacas">Días de vacaciones/año</label>
+            <input id="vacas" type="number" formControlName="diasVacaciones" placeholder="Ej: 14" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="pass2">Contraseña</label>
+          <input id="pass2" type="password" formControlName="password" placeholder="••••••••" />
+        </div>
+        @if (errorMessage()) {
+          <p class="error">⚠️ {{ errorMessage() }}</p>
+        }
+        <button type="submit" class="btn-primary" [disabled]="loading()">
+        {{ loading() ? 'CREANDO…' : '¡CREAR MI CUENTA!' }}
+        </button>
+        <p class="fine">20% OFF en tu primera compra por registrarte 🍿</p>
+      </form>
+    }
+  </div>
+</div>
