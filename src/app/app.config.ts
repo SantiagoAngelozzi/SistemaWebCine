@@ -1,7 +1,8 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideServiceWorker } from '@angular/service-worker';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -10,6 +11,9 @@ export const appConfig: ApplicationConfig = {
     // title, description) llegue directo como @Input() al componente,
     // asi las 7 secciones del admin reutilizan AdminPlaceholderComponent
     // sin duplicar codigo.
-    provideRouter(routes, withComponentInputBinding())
+    provideRouter(routes, withComponentInputBinding()), provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+          })
   ]
 };
