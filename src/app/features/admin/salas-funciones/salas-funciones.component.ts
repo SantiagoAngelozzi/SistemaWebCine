@@ -5,10 +5,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FuncionConDetalle } from '../../../core/models/funcion.model';
 import { FormatoProyeccion, IdiomaPelicula, PeliculaConRelaciones } from '../../../core/models/pelicula.model';
 import { SalaConCantidadButacas } from '../../../core/models/sala.model';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { FuncionesService } from '../../../core/services/funciones.service';
 import { PeliculasService } from '../../../core/services/peliculas.service';
 import { SalasService } from '../../../core/services/salas.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 type Tab = 'salas' | 'funciones';
 
@@ -25,6 +27,8 @@ export class SalasFuncionesComponent implements OnInit {
   private funcionesService = inject(FuncionesService);
   private peliculasService = inject(PeliculasService);
   private supabase = inject(SupabaseService);
+  private confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
 
   tabActiva = signal<Tab>('salas');
 
@@ -82,30 +86,32 @@ export class SalasFuncionesComponent implements OnInit {
     if (!nombreLimpio) return;
 
     this.guardandoSala.set(true);
-    this.errorMessage.set(null);
     try {
       await this.salasService.crear(nombreLimpio);
+      this.toastService.exito(`Sala "${nombreLimpio}" creada con sus butacas 🎭`);
       await this.cargarTodo();
     } catch (err) {
       console.error(err);
-      this.errorMessage.set('No se pudo crear la sala.');
+      this.toastService.error('No se pudo crear la sala.');
     } finally {
       this.guardandoSala.set(false);
     }
   }
 
   async eliminarSala(sala: SalaConCantidadButacas): Promise<void> {
-    const confirmado = confirm(
-      `¿Eliminar la sala "${sala.nombre}" y sus ${sala.cantidadButacas} butacas? Esta acción no se puede deshacer.`
+    const confirmado = await this.confirmService.preguntar(
+      `¿Eliminar la sala "${sala.nombre}" y sus ${sala.cantidadButacas} butacas? Esta acción no se puede deshacer.`,
+      { titulo: 'Eliminar sala', textoConfirmar: 'Eliminar' }
     );
     if (!confirmado) return;
 
     try {
       await this.salasService.eliminar(sala.id);
+      this.toastService.exito('Sala eliminada');
       await this.cargarTodo();
     } catch (err) {
       console.error(err);
-      this.errorMessage.set(
+      this.toastService.error(
         'No se pudo eliminar la sala (probablemente tenga funciones programadas todavía).'
       );
     }
@@ -117,7 +123,6 @@ export class SalasFuncionesComponent implements OnInit {
       return;
     }
     this.guardandoFuncion.set(true);
-    this.errorMessage.set(null);
 
     try {
       const {
@@ -125,6 +130,7 @@ export class SalasFuncionesComponent implements OnInit {
       } = await this.supabase.client.auth.getSession();
 
       await this.funcionesService.crear(this.formFuncion.getRawValue(), session?.user.id);
+      this.toastService.exito('Función programada 🗓️');
       this.formFuncion.reset({
         peliculaId: '',
         fecha: '',
@@ -136,22 +142,26 @@ export class SalasFuncionesComponent implements OnInit {
       await this.cargarTodo();
     } catch (err: any) {
       console.error(err);
-      this.errorMessage.set(err?.message ?? 'No se pudo crear la función.');
+      this.toastService.error(err?.message ?? 'No se pudo crear la función.');
     } finally {
       this.guardandoFuncion.set(false);
     }
   }
 
   async eliminarFuncion(funcion: FuncionConDetalle): Promise<void> {
-    const confirmado = confirm(`¿Eliminar la función de "${funcion.peliculaNombre}"?`);
+    const confirmado = await this.confirmService.preguntar(
+      `¿Eliminar la función de "${funcion.peliculaNombre}"?`,
+      { titulo: 'Eliminar función', textoConfirmar: 'Eliminar' }
+    );
     if (!confirmado) return;
 
     try {
       await this.funcionesService.eliminar(funcion.id);
+      this.toastService.exito('Función eliminada');
       await this.cargarTodo();
     } catch (err) {
       console.error(err);
-      this.errorMessage.set('No se pudo eliminar la función.');
+      this.toastService.error('No se pudo eliminar la función.');
     }
   }
 }

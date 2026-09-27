@@ -1,0 +1,16 @@
+@if (confirmService.request(); as pedido) {
+  <div class="overlay" (click)="confirmService.responder(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>{{ pedido.titulo }}</h3>
+      <p>{{ pedido.mensaje }}</p>
+      <div class="acciones">
+        <button type="button" class="btn-secundario" (click)="confirmService.responder(false)">
+          {{ pedido.textoCancelar }}
+        </button>
+        <button type="button" class="btn-peligro" (click)="confirmService.responder(true)">
+          {{ pedido.textoConfirmar }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

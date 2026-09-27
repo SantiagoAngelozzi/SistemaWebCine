@@ -9,7 +9,9 @@ import {
   IdiomaPelicula,
   PeliculaConRelaciones
 } from '../../../core/models/pelicula.model';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { PeliculasService } from '../../../core/services/peliculas.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 const FORMATOS_DISPONIBLES: FormatoProyeccion[] = ['2D', '3D', '4D', '5D'];
 
@@ -23,6 +25,8 @@ const FORMATOS_DISPONIBLES: FormatoProyeccion[] = ['2D', '3D', '4D', '5D'];
 export class PeliculasComponent implements OnInit {
   private fb = inject(FormBuilder);
   private peliculasService = inject(PeliculasService);
+  private confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
 
   formatosDisponibles = FORMATOS_DISPONIBLES;
 
@@ -147,30 +151,36 @@ export class PeliculasComponent implements OnInit {
 
       if (id) {
         await this.peliculasService.actualizar(id, valores, generoIds, formatos);
+        this.toastService.exito('Película actualizada 🎬');
       } else {
         await this.peliculasService.crear(valores, generoIds, formatos);
+        this.toastService.exito('Película creada 🎬');
       }
 
       this.mostrandoForm.set(false);
       await this.cargarDatos();
     } catch (err) {
       console.error(err);
-      this.errorMessage.set('No se pudo guardar la película. Revisá los datos e intentá de nuevo.');
+      this.toastService.error('No se pudo guardar la película. Revisá los datos e intentá de nuevo.');
     } finally {
       this.guardando.set(false);
     }
   }
 
   async eliminar(pelicula: PeliculaConRelaciones): Promise<void> {
-    const confirmado = confirm(`¿Eliminar "${pelicula.nombre}"? Esta acción no se puede deshacer.`);
+    const confirmado = await this.confirmService.preguntar(
+      `¿Eliminar "${pelicula.nombre}"? Esta acción no se puede deshacer.`,
+      { titulo: 'Eliminar película', textoConfirmar: 'Eliminar' }
+    );
     if (!confirmado) return;
 
     try {
       await this.peliculasService.eliminar(pelicula.id);
+      this.toastService.exito('Película eliminada');
       await this.cargarDatos();
     } catch (err) {
       console.error(err);
-      this.errorMessage.set('No se pudo eliminar la película.');
+      this.toastService.error('No se pudo eliminar la película.');
     }
   }
 }

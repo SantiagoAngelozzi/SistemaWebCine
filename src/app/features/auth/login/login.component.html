@@ -26,14 +26,28 @@
       <form [formGroup]="loginForm" (ngSubmit)="submitLogin()">
         <div class="field">
           <label for="email">Email</label>
-          <input id="email" type="email" formControlName="email" placeholder="vos@mail.com" />
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="vos@mail.com"
+            [class.input-invalido]="loginForm.controls.email.invalid && loginForm.controls.email.touched"
+          />
+          <app-form-error [control]="loginForm.controls.email" />
         </div>
         <div class="field">
           <label for="pass">Contraseña</label>
-          <input id="pass" type="password" formControlName="password" placeholder="••••••••" />
+          <input
+            id="pass"
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+            [class.input-invalido]="loginForm.controls.password.invalid && loginForm.controls.password.touched"
+          />
+          <app-form-error [control]="loginForm.controls.password" />
         </div>
         @if (errorMessage()) {
-          <p class="error">{{ errorMessage() }}</p>
+          <p class="error"> {{ errorMessage() }}</p>
         }
         <button type="submit" class="btn-primary" [disabled]="loading()">
           {{ loading() ? 'ENTRANDO…' : '¡ENTRAR YA!' }}
@@ -48,21 +62,48 @@
         <div class="row2">
           <div class="field">
             <label for="nombre">Nombre</label>
-            <input id="nombre" type="text" formControlName="nombre" placeholder="Ej: Lucía" />
+            <input
+              id="nombre"
+              type="text"
+              formControlName="nombre"
+              placeholder="Ej: Lucía"
+              [class.input-invalido]="registroForm.controls.nombre.invalid && registroForm.controls.nombre.touched"
+            />
+            <app-form-error [control]="registroForm.controls.nombre" />
           </div>
           <div class="field">
             <label for="apellido">Apellido</label>
-            <input id="apellido" type="text" formControlName="apellido" placeholder="Ej: Gómez" />
+            <input
+              id="apellido"
+              type="text"
+              formControlName="apellido"
+              placeholder="Ej: Gómez"
+              [class.input-invalido]="registroForm.controls.apellido.invalid && registroForm.controls.apellido.touched"
+            />
+            <app-form-error [control]="registroForm.controls.apellido" />
           </div>
         </div>
         <div class="field">
           <label for="email2">Email</label>
-          <input id="email2" type="email" formControlName="email" placeholder="vos@mail.com" />
+          <input
+            id="email2"
+            type="email"
+            formControlName="email"
+            placeholder="vos@mail.com"
+            [class.input-invalido]="registroForm.controls.email.invalid && registroForm.controls.email.touched"
+          />
+          <app-form-error [control]="registroForm.controls.email" />
         </div>
         <div class="row2">
           <div class="field">
             <label for="nac">Fecha de nacimiento</label>
-            <input id="nac" type="date" formControlName="fechaNacimiento" />
+            <input
+              id="nac"
+              type="date"
+              formControlName="fechaNacimiento"
+              [class.input-invalido]="registroForm.controls.fechaNacimiento.invalid && registroForm.controls.fechaNacimiento.touched"
+            />
+            <app-form-error [control]="registroForm.controls.fechaNacimiento" />
           </div>
           <div class="field">
             <label for="sangre">Tipo de sangre</label>
@@ -81,13 +122,20 @@
         </div>
         <div class="field">
           <label for="pass2">Contraseña</label>
-          <input id="pass2" type="password" formControlName="password" placeholder="••••••••" />
+          <input
+            id="pass2"
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+            [class.input-invalido]="registroForm.controls.password.invalid && registroForm.controls.password.touched"
+          />
+          <app-form-error [control]="registroForm.controls.password" />
         </div>
         @if (errorMessage()) {
-          <p class="error">{{ errorMessage() }}</p>
+          <p class="error"> {{ errorMessage() }}</p>
         }
         <button type="submit" class="btn-primary" [disabled]="loading()">
-        {{ loading() ? 'CREANDO…' : '¡CREAR MI CUENTA!' }}
+          {{ loading() ? 'CREANDO…' : '¡CREAR MI CUENTA!' }}
         </button>
         <p class="fine">20% OFF en tu primera compra por registrarte 🍿</p>
       </form>

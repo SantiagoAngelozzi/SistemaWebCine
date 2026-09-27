@@ -2,16 +2,19 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { AuthService } from './core/services/auth.service';
+import { ConfirmModalComponent } from './shared/confirm-modal/confirm-modal.component';
+import { ToastContainerComponent } from './shared/toast/toast-container.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
-  template: `<router-outlet />`
+  imports: [RouterOutlet, ConfirmModalComponent, ToastContainerComponent],
+  template: `
+    <router-outlet />
+    <app-confirm-modal />
+    <app-toast-container />
+  `
 })
 export class AppComponent {
-  // Se inyecta aca (aunque no se use directamente en el template) para que
-  // el constructor de AuthService corra apenas arranca la app y la sesion
-  // este disponible en toda la app desde el primer render.
   private auth = inject(AuthService);
 }

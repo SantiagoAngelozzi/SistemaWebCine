@@ -1,0 +1,8 @@
+<div class="toast-stack">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="toast" [ngClass]="toast.tipo">
+      <span>{{ toast.mensaje }}</span>
+      <button type="button" (click)="toastService.cerrar(toast.id)">✕</button>
+    </div>
+  }
+</div>

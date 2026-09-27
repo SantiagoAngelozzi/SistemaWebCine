@@ -5,13 +5,15 @@ import { Router } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { FormErrorComponent } from '../../../shared/form-error/form-error.component';
 
 type AuthTab = 'login' | 'registro';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormErrorComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
@@ -19,6 +21,7 @@ export class LoginComponent {
   private fb = new FormBuilder();
   private auth = inject(AuthService);
   private supabase = inject(SupabaseService);
+  private toastService = inject(ToastService);
   private router = inject(Router);
 
   activeTab = signal<AuthTab>('login');
@@ -49,12 +52,13 @@ export class LoginComponent {
   async submitLogin(): Promise<void> {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
+      this.toastService.error('Completá email y contraseña.');
       return;
     }
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    try {
+    try { 
       const { email, password } = this.loginForm.getRawValue();
       const { data, error } = await this.auth.signIn(email, password);
 
@@ -74,6 +78,7 @@ export class LoginComponent {
   async submitRegistro(): Promise<void> {
     if (this.registroForm.invalid) {
       this.registroForm.markAllAsTouched();
+      this.toastService.error('Revisá los campos marcados en rojo.');
       return;
     }
     this.loading.set(true);

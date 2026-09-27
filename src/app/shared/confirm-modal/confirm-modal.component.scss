@@ -1,0 +1,64 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 26, 46, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--color-papel-2);
+  border: var(--border-comic-lg);
+  border-radius: 18px;
+  box-shadow: var(--shadow-comic-lg);
+  padding: 28px;
+  max-width: 380px;
+  width: 100%;
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin: 0 0 10px;
+  }
+
+  p {
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-secundario,
+.btn-peligro {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  padding: 10px 18px;
+  border: var(--border-comic);
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: var(--shadow-comic-sm);
+  transition: transform 0.12s ease;
+
+  &:hover {
+    transform: translate(-2px, -2px);
+  }
+}
+
+.btn-secundario {
+  background: var(--color-papel);
+  color: var(--color-tinta);
+}
+
+.btn-peligro {
+  background: var(--color-coral);
+  color: var(--color-tinta);
+}
