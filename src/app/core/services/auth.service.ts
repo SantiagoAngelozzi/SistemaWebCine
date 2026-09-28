@@ -33,12 +33,28 @@ export class AuthService {
   }
 
   signUp(email: string, password: string, datos: RegistroData) {
-
     return this.supabase.client.auth.signUp({
       email,
       password,
       options: { data: { ...datos } }
     });
+  }
+
+  esMayorDeEdad(fechaNacimiento: string | null | undefined): boolean {
+    if (!fechaNacimiento) return false;
+
+    const nacimiento = new Date(fechaNacimiento);
+    if (Number.isNaN(nacimiento.getTime())) return false;
+
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+      edad--;
+    }
+
+    return edad >= 18;
   }
 
   signOut() {

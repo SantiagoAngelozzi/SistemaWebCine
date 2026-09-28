@@ -5,6 +5,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 
 import { FuncionParaCompra } from '../../../core/models/compra.model';
 import { Butaca, TipoButaca } from '../../../core/models/sala.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { ComprasService } from '../../../core/services/compras.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 
@@ -33,6 +34,7 @@ const CLIENTE_ID = crypto.randomUUID();
 export class ButacasComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private authService = inject(AuthService);
   private comprasService = inject(ComprasService);
   private supabase = inject(SupabaseService);
 
@@ -207,6 +209,27 @@ export class ButacasComponent implements OnInit, OnDestroy {
         data: { session }
       } = await this.supabase.client.auth.getSession();
 
+      if (!session?.user?.id) {
+        this.errorMessage.set('Debés iniciar sesión para comprar entradas.');
+        return;
+      }
+
+      const { data: perfil, error: perfilError } = await this.supabase.client
+        .from('usuarios')
+        .select('fecha_nacimiento')
+        .eq('id', session.user.id)
+        .single();
+
+      if (perfilError || !perfil) {
+        this.errorMessage.set('No se pudo verificar tu perfil para comprar entradas.');
+        return;
+      }
+
+      if (funcion.peliculaClasificacion === '+18' && !this.authService.esMayorDeEdad(perfil.fecha_nacimiento)) {
+        this.errorMessage.set('No podés comprar entradas para una película +18 si sos menor de 18 años.');
+        return;
+      }
+
       const butacas: { id: string; tipo: TipoButaca }[] = Array.from(this.seleccionadas()).map((id) => {
         const b = this.butacasPorId.get(id)!;
         return { id: b.id, tipo: b.tipo };
@@ -216,7 +239,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
         funcion.id,
         butacas,
         funcion.precio,
-        session?.user.id ?? null
+        session.user.id
       );
 
       this.codigoCompraExitosa.set(codigo);
