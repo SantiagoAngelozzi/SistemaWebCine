@@ -3,13 +3,6 @@ import { Injectable, inject } from '@angular/core';
 import { SalaConCantidadButacas, TipoButaca } from '../models/sala.model';
 import { SupabaseService } from './supabase.service';
 
-// Geometria fija de las salas, tal como la definio la catedra:
-// - Filas estandar (A-I, L-Q): 3 columnas de 4, 20 y 4 = 28 butacas/fila.
-// - Filas accesibles (J, K): se recorta cada bloque a 2, 10 y 2 = 14/fila.
-// - Filas VIP (R, S, T): mismo ancho que las estandar (28/fila).
-// La numeracion de columna deja los pasillos en las posiciones 5 y 26
-// (por eso los arrays saltean esos numeros), para que coincida con como
-// se ve/numera una sala de cine real.
 const FILAS_ESTANDAR = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'M', 'N', 'O', 'P', 'Q'];
 const FILAS_ACCESIBLES = ['J', 'K'];
 const FILAS_VIP = ['R', 'S', 'T'];

@@ -1,8 +1,5 @@
 import { AbstractControl } from '@angular/forms';
 
-// Traduce el primer error activo de un control a un mensaje legible.
-// Para sumar una validacion nueva (ej. un Validators custom), solo hay
-// que agregar una entrada aca — no hace falta tocar cada template.
 const MENSAJES: Record<string, (control: AbstractControl) => string> = {
   required: () => 'Este campo es obligatorio.',
   email: () => 'Ingresá un email válido.',

@@ -27,9 +27,6 @@ export class HomeComponent implements OnInit {
     this.cargando.set(true);
     this.errorMessage.set(null);
     try {
-      // TODO: una vez que exista el modulo de ventas (compras/entradas),
-      // reemplazar este orden por "las 3 mas vendidas" real (PDF, seccion
-      // 2). Por ahora se muestran las 3 activas mas recientes.
       const peliculas = await this.peliculasService.listarActivas(3);
       this.destacadas.set(peliculas);
     } catch (err) {

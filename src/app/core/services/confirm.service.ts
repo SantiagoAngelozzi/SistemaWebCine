@@ -15,9 +15,6 @@ export interface ConfirmOpciones {
 
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {
-  // La request actual (o null si no hay ningun modal abierto). El
-  // ConfirmModalComponent, montado una sola vez en AppComponent, escucha
-  // este signal y se muestra solo cuando hay algo que preguntar.
   request = signal<ConfirmRequest | null>(null);
 
   private resolver: ((valor: boolean) => void) | null = null;

@@ -23,8 +23,6 @@ export class PeliculasService {
   }
 
   async listar(): Promise<PeliculaConRelaciones[]> {
-    // Select anidado: Supabase resuelve el join usando las FK ya definidas
-    // en el schema (pelicula_generos -> generos, pelicula_formatos).
     const { data, error } = await this.supabase.client
       .from('peliculas')
       .select('*, pelicula_generos(genero_id, generos(id, nombre)), pelicula_formatos(formato)')
@@ -34,8 +32,6 @@ export class PeliculasService {
     return (data ?? []).map((fila) => this.mapearFila(fila));
   }
 
-  // Usado por las vistas publicas (Home, Cartelera): solo peliculas
-  // activas, con limite opcional.
   async listarActivas(limite?: number): Promise<PeliculaConRelaciones[]> {
     let query = this.supabase.client
       .from('peliculas')
@@ -52,7 +48,6 @@ export class PeliculasService {
     return (data ?? []).map((fila) => this.mapearFila(fila));
   }
 
-    // Usado por la ficha de pelicula (ruta /pelicula/:id).
   async obtenerActivaPorId(id: string): Promise<PeliculaConRelaciones | null> {
     const { data, error } = await this.supabase.client
       .from('peliculas')
@@ -95,9 +90,6 @@ export class PeliculasService {
 
     if (error) throw error;
 
-    // Sincronizar relaciones: se borran y se vuelven a insertar. Es mas
-    // simple que calcular un diff, y el volumen por pelicula es chico
-    // (unos pocos generos/formatos como mucho).
     await this.supabase.client.from('pelicula_generos').delete().eq('pelicula_id', id);
     await this.supabase.client.from('pelicula_formatos').delete().eq('pelicula_id', id);
     await this.guardarRelaciones(id, generoIds, formatos);

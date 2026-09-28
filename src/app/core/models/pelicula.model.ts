@@ -23,8 +23,6 @@ export interface Pelicula {
   created_at: string;
 }
 
-// Pelicula "aplanada" con sus relaciones ya resueltas, lista para mostrar
-// en el listado sin tener que andar navegando las tablas intermedias.
 export interface PeliculaConRelaciones extends Pelicula {
   generoIds: string[];
   generoNombres: string[];

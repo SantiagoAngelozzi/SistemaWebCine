@@ -5,9 +5,6 @@ import { FuncionParaCompra } from '../models/compra.model';
 import { Butaca, TipoButaca } from '../models/sala.model';
 import { SupabaseService } from './supabase.service';
 
-// Las butacas VIP salen un 50% mas caras que el precio base de la funcion.
-// El PDF pide que sean "mas caras" sin dar un numero exacto; queda aca
-// centralizado para ajustarlo facil si hace falta.
 const RECARGO_VIP = 1.5;
 
 @Injectable({ providedIn: 'root' })
@@ -53,9 +50,6 @@ export class ComprasService {
   }
 
   async listarButacasOcupadas(funcionId: string): Promise<Set<string>> {
-    // Nota: no filtramos por estado de la compra porque todavia no existe
-    // el flujo de cancelacion (toda compra queda "confirmada" por ahora).
-    // Cuando se implemente cancelacion, ajustar esta consulta.
     const { data, error } = await this.supabase.client
       .from('compra_entradas')
       .select('butaca_id')
@@ -101,9 +95,6 @@ export class ComprasService {
     const { error: errorEntradas } = await this.supabase.client.from('compra_entradas').insert(filas);
 
     if (errorEntradas) {
-      // Si fallo (ej: alguien compro la misma butaca un instante antes,
-      // rompe el unique(funcion_id, butaca_id)), deshacemos la compra para
-      // no dejar un registro huerfano sin entradas asociadas.
       await this.supabase.client.from('compras').delete().eq('id', compra.id);
       throw new Error(
         'Una o más butacas ya fueron vendidas justo ahora por otra persona. Elegí otras y volvé a intentar.'

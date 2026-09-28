@@ -16,7 +16,6 @@ import { obtenerMensajeError } from '../../core/utils/form-errors';
   styleUrl: './form-error.component.scss'
 })
 export class FormErrorComponent {
-  // Uso: <app-form-error [control]="form.controls.email" />
   @Input({ required: true }) control: AbstractControl | null = null;
 
   mensaje(): string | null {

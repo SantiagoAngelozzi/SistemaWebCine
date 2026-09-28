@@ -21,8 +21,6 @@ interface FilaUI {
   derecha: ButacaUI[];
 }
 
-// Identificador propio de esta pestaña/sesion, para distinguir "mis"
-// selecciones transmitidas por broadcast de las de otros usuarios.
 const CLIENTE_ID = crypto.randomUUID();
 
 @Component({
@@ -144,9 +142,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
   }
 
   private suscribirseRealtime(): void {
-    // Capa 1: ocupacion real. Cuando alguien confirma una compra (en
-    // cualquier pestaña/dispositivo), la butaca se traba para todos los
-    // que esten mirando esta funcion en ese momento.
+ 
     this.canalOcupacion = this.comprasService.suscribirseAOcupacion(this.funcionId, (butacaId) => {
       this.marcarEstado(butacaId, 'ocupada');
       this.seleccionadas.update((set) => {
@@ -157,9 +153,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
       });
     });
 
-    // Capa 2: selecciones en curso de otros usuarios (broadcast efimero,
-    // no persiste en la base). Asi dos personas ven en vivo que la otra
-    // esta por elegir una butaca, antes de que confirme nada.
     this.canalSeleccion = this.comprasService.crearCanalSeleccion(this.funcionId);
     this.canalSeleccion
       .on('broadcast', { event: 'seleccion' }, ({ payload }) => {
@@ -175,8 +168,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     const butaca = this.butacasPorId.get(butacaId);
     if (!butaca || butaca.estado === 'ocupada') return;
     butaca.estado = estado;
-    // Los objetos butaca estan mutados in-place dentro del Map; disparamos
-    // el signal con una copia superficial para que Angular vuelva a pintar.
     this.filas.update((filas) => filas.map((f) => ({ ...f })));
   }
 
@@ -232,7 +223,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
     } catch (err: any) {
       console.error(err);
       this.errorMessage.set(err?.message ?? 'No se pudo confirmar la compra.');
-      await this.cargar(); // refrescar por si alguna butaca se vendio mientras tanto
+      await this.cargar(); 
     } finally {
       this.comprando.set(false);
     }

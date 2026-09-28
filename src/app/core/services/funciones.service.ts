@@ -26,7 +26,6 @@ export class FuncionesService {
   }
 
   async crear(valores: FuncionFormValue, usuarioId: string | undefined): Promise<void> {
-    // 1) Traer la duracion real de la pelicula para calcular hora_fin.
     const { data: pelicula, error: errorPelicula } = await this.supabase.client
       .from('peliculas')
       .select('duracion_minutos')
@@ -39,8 +38,6 @@ export class FuncionesService {
 
     const horaFin = this.sumarMinutos(valores.horaInicio, pelicula.duracion_minutos);
 
-    // 2) Traer todas las salas y las funciones ya programadas ESE DIA, para
-    // poder chequear solapamientos + el margen de 30 minutos.
     const [{ data: salas, error: errorSalas }, { data: funcionesDelDia, error: errorFunciones }] =
       await Promise.all([
         this.supabase.client.from('salas').select('id, nombre').order('nombre'),
@@ -54,8 +51,6 @@ export class FuncionesService {
     if (errorFunciones) throw errorFunciones;
     if (!salas?.length) throw new Error('Todavía no hay salas creadas.');
 
-    // 3) Elegir la primera sala sin conflicto (respetando el margen de 30
-    // min antes y despues, tal como pide el PDF).
     const salaLibre = salas.find((sala) => {
       const ocupaciones = (funcionesDelDia ?? []).filter((f) => f.sala_id === sala.id);
       return !ocupaciones.some((f) =>

@@ -7,10 +7,6 @@ import { provideServiceWorker } from '@angular/service-worker';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    // withComponentInputBinding: permite que `data` de cada ruta (emoji,
-    // title, description) llegue directo como @Input() al componente,
-    // asi las 7 secciones del admin reutilizan AdminPlaceholderComponent
-    // sin duplicar codigo.
     provideRouter(routes, withComponentInputBinding()), provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),
             registrationStrategy: 'registerWhenStable:30000'
