@@ -1,0 +1,150 @@
+:host {
+  display: block;
+}
+
+.card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-papel-2);
+  border: var(--border-comic);
+  border-radius: 14px;
+  box-shadow: var(--shadow-comic-sm);
+  overflow: hidden;
+  transition: transform 0.12s ease;
+
+  &:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: var(--shadow-comic-md);
+  }
+}
+
+.enlace {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+}
+
+.poster {
+  position: relative;
+  height: 170px;
+  background: var(--color-lima);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &.sin-imagen {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--color-lima),
+      var(--color-lima) 10px,
+      var(--color-naranja) 10px,
+      var(--color-naranja) 20px
+    );
+  }
+}
+
+.badge {
+  position: absolute;
+  top: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 2px solid var(--color-tinta);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--color-papel-2);
+
+  &.clasificacion {
+    left: 8px;
+  }
+
+  &.preventa {
+    right: 8px;
+    background: var(--color-coral);
+  }
+}
+
+.info {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .meta {
+    margin: 0;
+    font-size: 12px;
+    opacity: 0.75;
+  }
+
+  .fecha {
+    margin: 4px 0 0;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .precio {
+    margin: 4px 0 0;
+    font-weight: 700;
+
+    .normal {
+      font-weight: 400;
+      font-size: 12px;
+      opacity: 0.6;
+      text-decoration: line-through;
+    }
+  }
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 2px solid var(--color-tinta);
+  background: var(--color-turquesa);
+}
+
+.tag-genero {
+  background: var(--color-papel);
+}
+
+.btn-alerta {
+  border: none;
+  border-top: 2px solid var(--color-tinta);
+  background: var(--color-papel);
+  padding: 12px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-lima);
+  }
+
+  &.activa {
+    background: var(--color-lima);
+  }
+}

@@ -100,19 +100,17 @@ export const routes: Routes = [
       },
       {
         path: 'cartelera',
-        component: AdminPlaceholderComponent,
-        data: {
-          title: 'Cartelera',
-          description: 'Listado completo de películas con buscador y filtro dinámico por género (multi-género por película).'
-        }
+        loadComponent: () =>
+          import('./features/client/cartelera/cartelera.component').then(
+            (m) => m.CarteleraComponent
+          )
       },
       {
         path: 'proximamente',
-        component: AdminPlaceholderComponent,
-        data: {
-          title: 'Próximamente',
-          description: 'Estrenos de las próximas semanas, con opción de activar alerta para cuando abra la venta.'
-        }
+        loadComponent: () =>
+          import('./features/client/proximamente/proximamente.component').then(
+            (m) => m.ProximamenteComponent
+          )
       },
       {
         path: 'mis-peliculas',

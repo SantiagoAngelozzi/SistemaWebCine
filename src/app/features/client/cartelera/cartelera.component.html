@@ -1,0 +1,68 @@
+<div class="cartelera-page">
+  <h1>Cartelera</h1>
+
+  @if (avisos().length) {
+    <div class="aviso-venta">
+      <p>¡Ya abrió la venta de películas que estabas esperando!</p>
+      <div class="aviso-links">
+        @for (pelicula of avisos(); track pelicula.id) {
+          <a [routerLink]="['/pelicula', pelicula.id]">{{ pelicula.nombre }}</a>
+        }
+      </div>
+      <button type="button" (click)="descartarAvisos()">Entendido</button>
+    </div>
+  }
+
+  <div class="filtros">
+    <input
+      type="search"
+      class="buscador"
+      placeholder="Buscar película por nombre…"
+      [value]="busqueda()"
+      (input)="onBusqueda($any($event.target).value)"
+    />
+
+    @if (generos().length) {
+      <div class="chips">
+        @for (genero of generos(); track genero.id) {
+          <button
+            type="button"
+            class="chip"
+            [class.activo]="generosSeleccionados().includes(genero.id)"
+            [attr.aria-pressed]="generosSeleccionados().includes(genero.id)"
+            (click)="toggleGenero(genero.id)"
+          >
+            {{ genero.nombre }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (hayFiltros()) {
+      <button type="button" class="limpiar" (click)="limpiarFiltros()">✕ Limpiar filtros</button>
+    }
+  </div>
+
+  @if (cargando()) {
+    <p class="hint">Cargando cartelera…</p>
+  } @else if (errorMessage()) {
+    <div class="empty-state"><p> {{ errorMessage() }}</p></div>
+  } @else if (!enCartelera().length) {
+    <div class="empty-state">
+      <p>Todavía no hay películas en cartelera. ¡Volvé pronto!</p>
+    </div>
+  } @else if (!filtradas().length) {
+    <div class="empty-state">
+      <p>Ninguna película coincide con tu búsqueda.</p>
+    </div>
+  } @else {
+    <p class="contador">
+      {{ filtradas().length }} {{ filtradas().length === 1 ? 'película' : 'películas' }}
+    </p>
+    <div class="grid">
+      @for (pelicula of filtradas(); track pelicula.id) {
+        <app-pelicula-card [pelicula]="pelicula" modo="cartelera" />
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,138 @@
+:host {
+  display: block;
+}
+
+.cartelera-page {
+  padding: 32px;
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    letter-spacing: 1px;
+    margin: 0 0 20px;
+  }
+}
+
+.hint {
+  opacity: 0.7;
+}
+
+.aviso-venta {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: var(--border-comic);
+  border-radius: 12px;
+  background: var(--color-lima);
+  box-shadow: var(--shadow-comic-sm);
+
+  p {
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+
+  .aviso-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+
+    a {
+      color: var(--color-tinta);
+      font-weight: 700;
+      font-size: 13px;
+    }
+  }
+
+  button {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 12px;
+    border: 2px solid var(--color-tinta);
+    border-radius: 8px;
+    background: var(--color-papel-2);
+    cursor: pointer;
+  }
+}
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.buscador {
+  width: 100%;
+  max-width: 420px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 14px;
+  border: var(--border-comic);
+  border-radius: 10px;
+  background: var(--color-papel-2);
+
+  &:focus {
+    outline: none;
+    box-shadow: 4px 4px 0 var(--color-coral);
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 6px 14px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 999px;
+  background: var(--color-papel);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+  }
+
+  &.activo {
+    background: var(--color-lima);
+    box-shadow: var(--shadow-comic-sm);
+  }
+}
+
+.limpiar {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.contador {
+  margin: 0 0 12px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  opacity: 0.7;
+  border: 2px dashed var(--color-tinta);
+  border-radius: 14px;
+}

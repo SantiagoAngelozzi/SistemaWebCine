@@ -1,0 +1,35 @@
+<div class="proximamente-page">
+  <h1> Próximamente</h1>
+  <p class="intro">
+    Estrenos de las próximas semanas. La venta abre unos días antes del estreno, con precio de
+    preventa.
+  </p>
+
+  @if (!cargando() && !logueado()) {
+    <div class="aviso-login">
+       Para activar alertas de estreno necesitás
+      <a routerLink="/auth/login">ingresar o registrarte</a>.
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="hint">Cargando próximos estrenos…</p>
+  } @else if (errorMessage()) {
+    <div class="empty-state"><p> {{ errorMessage() }}</p></div>
+  } @else if (!proximas().length) {
+    <div class="empty-state">
+      <p>No hay estrenos anunciados por el momento. ¡Volvé pronto!</p>
+    </div>
+  } @else {
+    <div class="grid">
+      @for (pelicula of proximas(); track pelicula.id) {
+        <app-pelicula-card
+          [pelicula]="pelicula"
+          modo="proximamente"
+          [alertaActiva]="tieneAlerta(pelicula.id)"
+          (alertaCambiada)="toggleAlerta($event)"
+        />
+      }
+    </div>
+  }
+</div>
