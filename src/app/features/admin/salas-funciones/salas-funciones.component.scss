@@ -170,6 +170,12 @@ button.danger {
     border: var(--border-comic);
     border-radius: 10px;
     background: var(--color-papel);
+
+    &.input-invalido {
+      border-color: #b3123f;
+      background: #fff5f8;
+      box-shadow: 0 0 0 2px rgba(179, 18, 63, 0.12);
+    }
   }
 }
 

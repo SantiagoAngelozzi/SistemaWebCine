@@ -54,7 +54,10 @@
 
           <div class="field">
             <label>Película</label>
-            <select formControlName="peliculaId">
+            <select
+              formControlName="peliculaId"
+              [class.input-invalido]="formFuncion.controls.peliculaId.invalid && formFuncion.controls.peliculaId.touched"
+            >
               <option value="" disabled>Elegí una película</option>
               @for (pelicula of peliculas(); track pelicula.id) {
                 <option [value]="pelicula.id">
@@ -62,40 +65,66 @@
                 </option>
               }
             </select>
+            <app-form-error [control]="formFuncion.controls.peliculaId" />
           </div>
 
           <div class="row2">
             <div class="field">
               <label>Fecha</label>
-              <input type="date" formControlName="fecha" />
+              <input
+                type="date"
+                formControlName="fecha"
+                [class.input-invalido]="formFuncion.controls.fecha.invalid && formFuncion.controls.fecha.touched"
+              />
+              <app-form-error [control]="formFuncion.controls.fecha" />
             </div>
             <div class="field">
               <label>Hora de inicio</label>
-              <input type="time" formControlName="horaInicio" />
+              <input
+                type="time"
+                formControlName="horaInicio"
+                [class.input-invalido]="formFuncion.controls.horaInicio.invalid && formFuncion.controls.horaInicio.touched"
+              />
+              <app-form-error [control]="formFuncion.controls.horaInicio" />
             </div>
           </div>
 
           <div class="row2">
             <div class="field">
               <label>Formato</label>
-              <select formControlName="formato">
+              <select
+                formControlName="formato"
+                [class.input-invalido]="formFuncion.controls.formato.invalid && formFuncion.controls.formato.touched"
+              >
                 @for (formato of formatosDisponibles; track formato) {
                   <option [value]="formato">{{ formato }}</option>
                 }
               </select>
+              <app-form-error [control]="formFuncion.controls.formato" />
             </div>
             <div class="field">
               <label>Idioma</label>
-              <select formControlName="idioma">
+              <select
+                formControlName="idioma"
+                [class.input-invalido]="formFuncion.controls.idioma.invalid && formFuncion.controls.idioma.touched"
+              >
                 <option value="castellano">Castellano</option>
                 <option value="subtitulada">Subtitulada</option>
               </select>
+              <app-form-error [control]="formFuncion.controls.idioma" />
             </div>
           </div>
 
           <div class="field">
             <label>Precio</label>
-            <input type="number" formControlName="precio" min="0" step="0.01" />
+            <input
+              type="number"
+              formControlName="precio"
+              min="0"
+              step="0.01"
+              [class.input-invalido]="formFuncion.controls.precio.invalid && formFuncion.controls.precio.touched"
+            />
+            <app-form-error [control]="formFuncion.controls.precio" />
           </div>
 
           <p class="hint">

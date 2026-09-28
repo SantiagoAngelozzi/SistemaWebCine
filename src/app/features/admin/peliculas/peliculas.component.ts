@@ -12,13 +12,14 @@ import {
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { PeliculasService } from '../../../core/services/peliculas.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { FormErrorComponent } from '../../../shared/form-error/form-error.component';
 
 const FORMATOS_DISPONIBLES: FormatoProyeccion[] = ['2D', '3D', '4D', '5D'];
 
 @Component({
   selector: 'app-admin-peliculas',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormErrorComponent],
   templateUrl: './peliculas.component.html',
   styleUrl: './peliculas.component.scss'
 })
@@ -138,6 +139,7 @@ export class PeliculasComponent implements OnInit {
   async guardar(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.toastService.error('Revisá los campos marcados en rojo.');
       return;
     }
     this.guardando.set(true);

@@ -11,13 +11,14 @@ import { PeliculasService } from '../../../core/services/peliculas.service';
 import { SalasService } from '../../../core/services/salas.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { FormErrorComponent } from '../../../shared/form-error/form-error.component';
 
 type Tab = 'salas' | 'funciones';
 
 @Component({
   selector: 'app-admin-salas-funciones',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormErrorComponent],
   templateUrl: './salas-funciones.component.html',
   styleUrl: './salas-funciones.component.scss'
 })
@@ -83,7 +84,10 @@ export class SalasFuncionesComponent implements OnInit {
 
   async crearSala(nombre: string): Promise<void> {
     const nombreLimpio = nombre.trim();
-    if (!nombreLimpio) return;
+    if (!nombreLimpio) {
+      this.toastService.error('Ingresá un nombre para la sala.');
+      return;
+    }
 
     this.guardandoSala.set(true);
     try {
@@ -120,6 +124,7 @@ export class SalasFuncionesComponent implements OnInit {
   async crearFuncion(): Promise<void> {
     if (this.formFuncion.invalid) {
       this.formFuncion.markAllAsTouched();
+      this.toastService.error('Revisá los campos marcados en rojo.');
       return;
     }
     this.guardandoFuncion.set(true);
