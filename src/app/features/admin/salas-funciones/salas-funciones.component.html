@@ -115,18 +115,6 @@
             </div>
           </div>
 
-          <div class="field">
-            <label>Precio</label>
-            <input
-              type="number"
-              formControlName="precio"
-              min="0"
-              step="0.01"
-              [class.input-invalido]="formFuncion.controls.precio.invalid && formFuncion.controls.precio.touched"
-            />
-            <app-form-error [control]="formFuncion.controls.precio" />
-          </div>
-
           <p class="hint">
             La sala se asigna sola: el sistema busca una sala sin funciones superpuestas
             (respetando 30 min de limpieza antes y después) y programa ahí.
@@ -151,7 +139,7 @@
                 <th>Horario</th>
                 <th>Formato</th>
                 <th>Idioma</th>
-                <th>Precio</th>
+                <th>Precio vigente</th>
                 <th></th>
               </tr>
             </thead>
@@ -164,7 +152,7 @@
                   <td>{{ funcion.hora_inicio }} - {{ funcion.hora_fin }}</td>
                   <td>{{ funcion.formato }}</td>
                   <td>{{ funcion.idioma }}</td>
-                  <td>${{ funcion.precio }}</td>
+                  <td>${{ funcion.precioVigente }}</td>
                   <td>
                     <button type="button" class="danger" (click)="eliminarFuncion(funcion)">🗑️</button>
                   </td>

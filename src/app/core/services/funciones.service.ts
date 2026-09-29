@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 
 import { FuncionConDetalle, FuncionFormValue } from '../models/funcion.model';
+import { precioVigente } from '../utils/pelicula-fechas';
 import { SupabaseService } from './supabase.service';
 
 const MARGEN_MINUTOS = 30;
@@ -12,7 +13,9 @@ export class FuncionesService {
   async listar(): Promise<FuncionConDetalle[]> {
     const { data, error } = await this.supabase.client
       .from('funciones')
-      .select('*, peliculas(nombre), salas(nombre)')
+      .select(
+        '*, peliculas(nombre, precio_normal, precio_preventa, dias_preventa, fecha_estreno), salas(nombre)'
+      )
       .order('fecha', { ascending: true })
       .order('hora_inicio', { ascending: true });
 
@@ -21,11 +24,13 @@ export class FuncionesService {
     return (data ?? []).map((fila: any) => ({
       ...fila,
       peliculaNombre: fila.peliculas?.nombre ?? '(película eliminada)',
-      salaNombre: fila.salas?.nombre ?? '(sala eliminada)'
+      salaNombre: fila.salas?.nombre ?? '(sala eliminada)',
+      precioVigente: fila.peliculas ? precioVigente(fila.peliculas) : 0
     }));
   }
 
   async crear(valores: FuncionFormValue, usuarioId: string | undefined): Promise<void> {
+    // 1) Traer la duracion real de la pelicula para calcular hora_fin.
     const { data: pelicula, error: errorPelicula } = await this.supabase.client
       .from('peliculas')
       .select('duracion_minutos')
@@ -38,6 +43,8 @@ export class FuncionesService {
 
     const horaFin = this.sumarMinutos(valores.horaInicio, pelicula.duracion_minutos);
 
+    // 2) Traer todas las salas y las funciones ya programadas ESE DIA, para
+    // poder chequear solapamientos + el margen de 30 minutos.
     const [{ data: salas, error: errorSalas }, { data: funcionesDelDia, error: errorFunciones }] =
       await Promise.all([
         this.supabase.client.from('salas').select('id, nombre').order('nombre'),
@@ -51,6 +58,8 @@ export class FuncionesService {
     if (errorFunciones) throw errorFunciones;
     if (!salas?.length) throw new Error('Todavía no hay salas creadas.');
 
+    // 3) Elegir la primera sala sin conflicto (respetando el margen de 30
+    // min antes y despues, tal como pide el PDF).
     const salaLibre = salas.find((sala) => {
       const ocupaciones = (funcionesDelDia ?? []).filter((f) => f.sala_id === sala.id);
       return !ocupaciones.some((f) =>
@@ -72,7 +81,6 @@ export class FuncionesService {
       hora_fin: horaFin,
       formato: valores.formato,
       idioma: valores.idioma,
-      precio: valores.precio,
       created_by: usuarioId ?? null
     });
 

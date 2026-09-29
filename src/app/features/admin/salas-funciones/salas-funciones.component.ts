@@ -50,7 +50,6 @@ export class SalasFuncionesComponent implements OnInit {
     horaInicio: ['', Validators.required],
     formato: ['2D' as FormatoProyeccion, Validators.required],
     idioma: ['castellano' as IdiomaPelicula, Validators.required],
-    precio: [0, [Validators.required, Validators.min(0)]]
   });
 
   async ngOnInit(): Promise<void> {
@@ -92,7 +91,7 @@ export class SalasFuncionesComponent implements OnInit {
     this.guardandoSala.set(true);
     try {
       await this.salasService.crear(nombreLimpio);
-      this.toastService.exito(`Sala "${nombreLimpio}" creada con sus butacas 🎭`);
+      this.toastService.exito(`Sala "${nombreLimpio}" creada con sus butacas`);
       await this.cargarTodo();
     } catch (err) {
       console.error(err);
@@ -135,14 +134,13 @@ export class SalasFuncionesComponent implements OnInit {
       } = await this.supabase.client.auth.getSession();
 
       await this.funcionesService.crear(this.formFuncion.getRawValue(), session?.user.id);
-      this.toastService.exito('Función programada 🗓️');
+      this.toastService.exito('Función programada');
       this.formFuncion.reset({
         peliculaId: '',
         fecha: '',
         horaInicio: '',
         formato: '2D',
         idioma: 'castellano',
-        precio: 0
       });
       await this.cargarTodo();
     } catch (err: any) {

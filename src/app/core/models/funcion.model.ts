@@ -9,7 +9,6 @@ export interface Funcion {
   hora_fin: string;
   formato: FormatoProyeccion;
   idioma: IdiomaPelicula;
-  precio: number;
   created_by: string | null;
   created_at: string;
 }
@@ -17,6 +16,7 @@ export interface Funcion {
 export interface FuncionConDetalle extends Funcion {
   peliculaNombre: string;
   salaNombre: string;
+  precioVigente: number;
 }
 
 export interface FuncionFormValue {
@@ -25,5 +25,4 @@ export interface FuncionFormValue {
   horaInicio: string;
   formato: FormatoProyeccion;
   idioma: IdiomaPelicula;
-  precio: number;
 }

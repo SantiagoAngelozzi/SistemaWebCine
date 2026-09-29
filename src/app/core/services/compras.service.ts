@@ -4,6 +4,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { FuncionParaCompra } from '../models/compra.model';
 import { Butaca, TipoButaca } from '../models/sala.model';
 import { SupabaseService } from './supabase.service';
+import { precioVigente } from '../utils/pelicula-fechas';
 
 const RECARGO_VIP = 1.5;
 
@@ -11,10 +12,12 @@ const RECARGO_VIP = 1.5;
 export class ComprasService {
   private supabase = inject(SupabaseService);
 
-  async obtenerFuncion(id: string): Promise<FuncionParaCompra> {
+    async obtenerFuncion(id: string): Promise<FuncionParaCompra> {
     const { data, error } = await this.supabase.client
       .from('funciones')
-      .select('*, peliculas(nombre, clasificacion, duracion_minutos), salas(nombre)')
+      .select(
+        '*, peliculas(nombre, clasificacion, duracion_minutos, precio_normal, precio_preventa, dias_preventa, fecha_estreno), salas(nombre)'
+      )
       .eq('id', id)
       .single();
 
@@ -27,7 +30,7 @@ export class ComprasService {
       hora_fin: data.hora_fin,
       formato: data.formato,
       idioma: data.idioma,
-      precio: data.precio,
+      precio: precioVigente(data.peliculas),
       sala_id: data.sala_id,
       salaNombre: data.salas?.nombre ?? '',
       peliculaId: data.pelicula_id,

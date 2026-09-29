@@ -209,25 +209,22 @@ export class ButacasComponent implements OnInit, OnDestroy {
         data: { session }
       } = await this.supabase.client.auth.getSession();
 
-      if (!session?.user?.id) {
-        this.errorMessage.set('Debés iniciar sesión para comprar entradas.');
-        return;
-      }
+      if (session?.user?.id) {
+        const { data: perfil, error: perfilError } = await this.supabase.client
+          .from('usuarios')
+          .select('fecha_nacimiento')
+          .eq('id', session.user.id)
+          .single();
 
-      const { data: perfil, error: perfilError } = await this.supabase.client
-        .from('usuarios')
-        .select('fecha_nacimiento')
-        .eq('id', session.user.id)
-        .single();
+        if (perfilError || !perfil) {
+          this.errorMessage.set('No se pudo verificar tu perfil para comprar entradas.');
+          return;
+        }
 
-      if (perfilError || !perfil) {
-        this.errorMessage.set('No se pudo verificar tu perfil para comprar entradas.');
-        return;
-      }
-
-      if (funcion.peliculaClasificacion === '+18' && !this.authService.esMayorDeEdad(perfil.fecha_nacimiento)) {
-        this.errorMessage.set('No podés comprar entradas para una película +18 si sos menor de 18 años.');
-        return;
+        if (funcion.peliculaClasificacion === '+18' && !this.authService.esMayorDeEdad(perfil.fecha_nacimiento)) {
+          this.errorMessage.set('No podés comprar entradas para una película +18 si sos menor de 18 años.');
+          return;
+        }
       }
 
       const butacas: { id: string; tipo: TipoButaca }[] = Array.from(this.seleccionadas()).map((id) => {
@@ -239,7 +236,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
         funcion.id,
         butacas,
         funcion.precio,
-        session.user.id
+        session?.user.id ?? null
       );
 
       this.codigoCompraExitosa.set(codigo);
