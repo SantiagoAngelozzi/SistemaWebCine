@@ -3,11 +3,14 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { ActivatedRoute, Router } from '@angular/router';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
-import { FuncionParaCompra } from '../../../core/models/compra.model';
+import { CompraConfirmada, FuncionParaCompra } from '../../../core/models/compra.model';
 import { Butaca, TipoButaca } from '../../../core/models/sala.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ComprasService } from '../../../core/services/compras.service';
+import { ComprobantePdfService } from '../../../core/services/comprobante-pdf.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { estadoVenta } from '../../../core/utils/pelicula-fechas';
 
 type EstadoButaca = 'libre' | 'ocupada' | 'seleccionada' | 'reservada_otro';
 
@@ -36,14 +39,17 @@ export class ButacasComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService);
   private comprasService = inject(ComprasService);
+  private comprobantePdf = inject(ComprobantePdfService);
   private supabase = inject(SupabaseService);
+  private toastService = inject(ToastService);
 
   recargoVipTexto = '50%';
 
   cargando = signal(true);
   errorMessage = signal<string | null>(null);
   comprando = signal(false);
-  codigoCompraExitosa = signal<string | null>(null);
+  compraExitosa = signal<CompraConfirmada | null>(null);
+  generandoPdf = signal(false);
 
   funcion = signal<FuncionParaCompra | null>(null);
   filas = signal<FilaUI[]>([]);
@@ -97,6 +103,15 @@ export class ButacasComponent implements OnInit, OnDestroy {
     this.errorMessage.set(null);
     try {
       const funcion = await this.comprasService.obtenerFuncion(this.funcionId);
+      if (
+        estadoVenta({
+          fecha_estreno: funcion.peliculaFechaEstreno,
+          dias_preventa: funcion.peliculaDiasPreventa
+        }) === 'proximamente'
+      ) {
+        this.errorMessage.set('La venta de esta película todavía no está habilitada.');
+        return;
+      }
       this.funcion.set(funcion);
 
       const [butacas, ocupadas] = await Promise.all([
@@ -221,8 +236,9 @@ export class ButacasComponent implements OnInit, OnDestroy {
           return;
         }
 
-        if (funcion.peliculaClasificacion === '+18' && !this.authService.esMayorDeEdad(perfil.fecha_nacimiento)) {
-          this.errorMessage.set('No podés comprar entradas para una película +18 si sos menor de 18 años.');
+        const edadMinima = funcion.peliculaClasificacion === '+18' ? 18 : funcion.peliculaClasificacion === '+13' ? 13 : 0;
+        if (edadMinima && !this.authService.tieneEdadMinima(perfil.fecha_nacimiento, edadMinima)) {
+          this.errorMessage.set(`No podés comprar entradas para una película ${funcion.peliculaClasificacion} si no cumplís la edad mínima.`);
           return;
         }
       }
@@ -232,14 +248,9 @@ export class ButacasComponent implements OnInit, OnDestroy {
         return { id: b.id, tipo: b.tipo };
       });
 
-      const codigo = await this.comprasService.confirmarCompra(
-        funcion.id,
-        butacas,
-        funcion.precio,
-        session?.user.id ?? null
-      );
-
-      this.codigoCompraExitosa.set(codigo);
+      const compra = await this.comprasService.confirmarCompra(funcion.id, butacas);
+      this.compraExitosa.set(compra);
+      await this.descargarComprobante();
     } catch (err: any) {
       console.error(err);
       this.errorMessage.set(err?.message ?? 'No se pudo confirmar la compra.');
@@ -251,5 +262,45 @@ export class ButacasComponent implements OnInit, OnDestroy {
 
   volverAInicio(): void {
     this.router.navigateByUrl('/inicio');
+  }
+
+  async descargarComprobante(): Promise<void> {
+    const funcion = this.funcion();
+    const compra = this.compraExitosa();
+    if (!funcion || !compra) return;
+
+    const entradas = Array.from(this.seleccionadas())
+      .map((id) => this.butacasPorId.get(id))
+      .filter((butaca): butaca is ButacaUI => !!butaca)
+      .map((butaca) => ({
+        ubicacion: `${butaca.fila}-${butaca.columna}`,
+        tipo: butaca.tipo,
+        precio: this.comprasService.calcularPrecioButaca(funcion.precio, butaca.tipo)
+      }));
+
+    this.generandoPdf.set(true);
+    try {
+      await this.comprobantePdf.descargar({
+        codigoQr: compra.codigo_qr,
+        pelicula: funcion.peliculaNombre,
+        sala: funcion.salaNombre,
+        fecha: funcion.fecha,
+        hora: funcion.hora_inicio,
+        formato: funcion.formato,
+        idioma: funcion.idioma,
+        entradas,
+        total: compra.total,
+        advertenciaEdad:
+          funcion.peliculaClasificacion === 'ATP'
+            ? undefined
+            : `Película ${funcion.peliculaClasificacion}: concurrencia obligatoria con un adulto responsable.`
+      });
+      this.toastService.exito('Comprobante PDF descargado.');
+    } catch (err) {
+      console.error(err);
+      this.toastService.error('No se pudo generar el comprobante PDF.');
+    } finally {
+      this.generandoPdf.set(false);
+    }
   }
 }

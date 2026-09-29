@@ -1,0 +1,19 @@
+{
+  "name": "Cine - Gestión y Entradas",
+  "short_name": "Cine",
+  "description": "Compra de entradas y gestión integral de cine.",
+  "lang": "es-AR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#1976d2",
+  "background_color": "#10131b",
+  "icons": [
+    {
+      "src": "/icons/cine-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

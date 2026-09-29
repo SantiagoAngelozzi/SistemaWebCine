@@ -43,7 +43,11 @@
     <section class="funciones">
       <h2>Funciones disponibles</h2>
 
-      @if (!funciones().length) {
+      @if (!ventaHabilitada()) {
+        <div class="empty-state">
+          <p>La venta se habilita cuando comience la preventa.</p>
+        </div>
+      } @else if (!funciones().length) {
         <div class="empty-state">
           <p>Todavía no hay funciones programadas para esta película.</p>
         </div>

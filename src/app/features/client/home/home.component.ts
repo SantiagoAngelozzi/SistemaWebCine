@@ -27,7 +27,7 @@ export class HomeComponent implements OnInit {
     this.cargando.set(true);
     this.errorMessage.set(null);
     try {
-      const peliculas = await this.peliculasService.listarActivas(3);
+      const peliculas = await this.peliculasService.listarMasVendidas(3);
       this.destacadas.set(peliculas);
     } catch (err) {
       console.error(err);

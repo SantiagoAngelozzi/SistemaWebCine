@@ -9,7 +9,6 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 import { FuncionesService } from '../../../core/services/funciones.service';
 import { PeliculasService } from '../../../core/services/peliculas.service';
 import { SalasService } from '../../../core/services/salas.service';
-import { SupabaseService } from '../../../core/services/supabase.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { FormErrorComponent } from '../../../shared/form-error/form-error.component';
 
@@ -27,7 +26,6 @@ export class SalasFuncionesComponent implements OnInit {
   private salasService = inject(SalasService);
   private funcionesService = inject(FuncionesService);
   private peliculasService = inject(PeliculasService);
-  private supabase = inject(SupabaseService);
   private confirmService = inject(ConfirmService);
   private toastService = inject(ToastService);
 
@@ -129,11 +127,7 @@ export class SalasFuncionesComponent implements OnInit {
     this.guardandoFuncion.set(true);
 
     try {
-      const {
-        data: { session }
-      } = await this.supabase.client.auth.getSession();
-
-      await this.funcionesService.crear(this.formFuncion.getRawValue(), session?.user.id);
+      await this.funcionesService.crear(this.formFuncion.getRawValue());
       this.toastService.exito('Función programada');
       this.formFuncion.reset({
         peliculaId: '',

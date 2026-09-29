@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { FuncionConDetalle } from '../../../core/models/funcion.model';
 import { PeliculaConRelaciones } from '../../../core/models/pelicula.model';
 import { PeliculasService } from '../../../core/services/peliculas.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { estadoVenta } from '../../../core/utils/pelicula-fechas';
 
 @Component({
   selector: 'app-pelicula-detalle',
@@ -25,6 +26,10 @@ export class PeliculaComponent implements OnInit {
   errorMessage = signal<string | null>(null);
   pelicula = signal<PeliculaConRelaciones | null>(null);
   funciones = signal<FuncionConDetalle[]>([]);
+  ventaHabilitada = computed(() => {
+    const pelicula = this.pelicula();
+    return !!pelicula && estadoVenta(pelicula) !== 'proximamente';
+  });
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');

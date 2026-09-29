@@ -38,9 +38,9 @@ export class LoginComponent {
     apellido: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     fechaNacimiento: ['', Validators.required],
-    tipoSangre: [''],
-    colorOjos: [''],
-    diasVacaciones: [null as number | null],
+    tipoSangre: ['', Validators.required],
+    colorOjos: ['', Validators.required],
+    diasVacaciones: [null as number | null, [Validators.required, Validators.min(0)]],
     password: ['', [Validators.required, Validators.minLength(6)]]
   });
 

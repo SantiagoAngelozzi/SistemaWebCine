@@ -48,6 +48,33 @@ export class PeliculasService {
     return (data ?? []).map((fila) => this.mapearFila(fila));
   }
 
+  async listarMasVendidas(limite = 3): Promise<PeliculaConRelaciones[]> {
+    const { data: ranking, error: errorRanking } = await this.supabase.client.rpc(
+      'obtener_peliculas_mas_vendidas',
+      { p_limite: limite }
+    );
+    if (errorRanking) throw new Error(errorRanking.message);
+
+    const ids = (ranking ?? []).map((fila: { pelicula_id: string }) => fila.pelicula_id);
+    if (!ids.length) return [];
+
+    const { data, error } = await this.supabase.client
+      .from('peliculas')
+      .select('*, pelicula_generos(genero_id, generos(id, nombre)), pelicula_formatos(formato)')
+      .in('id', ids);
+    if (error) throw error;
+
+    const porId = new Map<string, PeliculaConRelaciones>(
+      (data ?? []).map((fila: any) => [fila.id as string, this.mapearFila(fila)] as const)
+    );
+    return ids
+      .map((id: string) => porId.get(id))
+      .filter(
+        (pelicula: PeliculaConRelaciones | undefined): pelicula is PeliculaConRelaciones =>
+          pelicula !== undefined
+      );
+  }
+
   async obtenerActivaPorId(id: string): Promise<PeliculaConRelaciones | null> {
     const { data, error } = await this.supabase.client
       .from('peliculas')

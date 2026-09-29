@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
-import { FuncionParaCompra } from '../models/compra.model';
+import { CompraConfirmada, FuncionParaCompra } from '../models/compra.model';
 import { Butaca, TipoButaca } from '../models/sala.model';
 import { SupabaseService } from './supabase.service';
 import { precioVigente } from '../utils/pelicula-fechas';
@@ -36,7 +36,9 @@ export class ComprasService {
       peliculaId: data.pelicula_id,
       peliculaNombre: data.peliculas?.nombre ?? '',
       peliculaClasificacion: data.peliculas?.clasificacion ?? 'ATP',
-      peliculaDuracion: data.peliculas?.duracion_minutos ?? 0
+      peliculaDuracion: data.peliculas?.duracion_minutos ?? 0,
+      peliculaFechaEstreno: data.peliculas?.fecha_estreno ?? '',
+      peliculaDiasPreventa: data.peliculas?.dias_preventa ?? 0
     };
   }
 
@@ -68,43 +70,17 @@ export class ComprasService {
 
   async confirmarCompra(
     funcionId: string,
-    butacas: { id: string; tipo: TipoButaca }[],
-    precioBase: number,
-    usuarioId: string | null
-  ): Promise<string> {
-    const codigoQr = crypto.randomUUID();
-    const total = butacas.reduce((acc, b) => acc + this.calcularPrecioButaca(precioBase, b.tipo), 0);
+    butacas: { id: string; tipo: TipoButaca }[]
+  ): Promise<CompraConfirmada> {
+    // Precio, disponibilidad, edad y total se validan en la base. No se
+    // aceptan montos ni usuario desde el navegador.
+    const { data, error } = await this.supabase.client.rpc('crear_compra_entradas', {
+      p_funcion_id: funcionId,
+      p_butaca_ids: butacas.map((butaca) => butaca.id)
+    });
 
-    const { data: compra, error: errorCompra } = await this.supabase.client
-      .from('compras')
-      .insert({
-        usuario_id: usuarioId,
-        total,
-        estado: 'confirmada',
-        codigo_qr: codigoQr
-      })
-      .select('id')
-      .single();
-
-    if (errorCompra || !compra) throw errorCompra ?? new Error('No se pudo crear la compra.');
-
-    const filas = butacas.map((b) => ({
-      compra_id: compra.id,
-      funcion_id: funcionId,
-      butaca_id: b.id,
-      precio: this.calcularPrecioButaca(precioBase, b.tipo)
-    }));
-
-    const { error: errorEntradas } = await this.supabase.client.from('compra_entradas').insert(filas);
-
-    if (errorEntradas) {
-      await this.supabase.client.from('compras').delete().eq('id', compra.id);
-      throw new Error(
-        'Una o más butacas ya fueron vendidas justo ahora por otra persona. Elegí otras y volvé a intentar.'
-      );
-    }
-
-    return codigoQr;
+    if (error || !data) throw new Error(error?.message ?? 'No se pudo crear la compra.');
+    return data as CompraConfirmada;
   }
 
   suscribirseAOcupacion(funcionId: string, onNuevaOcupacion: (butacaId: string) => void): RealtimeChannel {

@@ -1,14 +1,15 @@
 <div class="butacas-page">
   @if (cargando()) {
     <p class="hint">Cargando mapa de butacas…</p>
-  } @else if (codigoCompraExitosa()) {
+  } @else if (compraExitosa()) {
     <div class="exito">
       <h2>¡Compra confirmada!</h2>
-      <p>Código de tu entrada:</p>
-      <p class="codigo">{{ codigoCompraExitosa() }}</p>
-      <p class="hint">
-        (La emisión del PDF con el QR para presentar en sala es el siguiente paso del proyecto.)
-      </p>
+      <p>Tu comprobante incluye este código QR único:</p>
+      <p class="codigo">{{ compraExitosa()!.codigo_qr }}</p>
+      <p class="total">Total abonado: ${{ compraExitosa()!.total }}</p>
+      <button type="button" class="btn-secondary" [disabled]="generandoPdf()" (click)="descargarComprobante()">
+        {{ generandoPdf() ? 'GENERANDO PDF…' : 'VOLVER A DESCARGAR EL COMPROBANTE' }}
+      </button>
       <button type="button" class="btn-primary" (click)="volverAInicio()">Volver al inicio</button>
     </div>
   } @else if (errorMessage() && !funcion()) {

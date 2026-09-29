@@ -40,7 +40,7 @@ export class AuthService {
     });
   }
 
-  esMayorDeEdad(fechaNacimiento: string | null | undefined): boolean {
+  tieneEdadMinima(fechaNacimiento: string | null | undefined, edadMinima: number): boolean {
     if (!fechaNacimiento) return false;
 
     const nacimiento = new Date(fechaNacimiento);
@@ -54,7 +54,11 @@ export class AuthService {
       edad--;
     }
 
-    return edad >= 18;
+    return edad >= edadMinima;
+  }
+
+  esMayorDeEdad(fechaNacimiento: string | null | undefined): boolean {
+    return this.tieneEdadMinima(fechaNacimiento, 18);
   }
 
   signOut() {

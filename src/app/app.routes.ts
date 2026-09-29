@@ -18,21 +18,13 @@ export const routes: Routes = [
         (m) => m.AdminLayoutComponent
       ),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: '', pathMatch: 'full', redirectTo: 'peliculas' },
             {
         path: 'peliculas',
         loadComponent: () =>
           import('./features/admin/peliculas/peliculas.component').then(
             (m) => m.PeliculasComponent
           )
-      },
-      {
-        path: 'peliculas',
-        component: AdminPlaceholderComponent,
-        data: {
-          title: 'Películas',
-          description: 'Alta, edición y baja de películas: géneros, formatos, idioma y clasificación por edad.'
-        }
       },
             {
         path: 'salas-funciones',

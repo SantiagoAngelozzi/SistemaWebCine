@@ -107,17 +107,20 @@
           </div>
           <div class="field">
             <label for="sangre">Tipo de sangre</label>
-            <input id="sangre" type="text" formControlName="tipoSangre" placeholder="Ej: O+" />
+            <input id="sangre" type="text" formControlName="tipoSangre" placeholder="Ej: O+" [class.input-invalido]="registroForm.controls.tipoSangre.invalid && registroForm.controls.tipoSangre.touched" />
+            <app-form-error [control]="registroForm.controls.tipoSangre" />
           </div>
         </div>
         <div class="row2">
           <div class="field">
             <label for="ojos">Color de ojos</label>
-            <input id="ojos" type="text" formControlName="colorOjos" placeholder="Ej: Marrones" />
+            <input id="ojos" type="text" formControlName="colorOjos" placeholder="Ej: Marrones" [class.input-invalido]="registroForm.controls.colorOjos.invalid && registroForm.controls.colorOjos.touched" />
+            <app-form-error [control]="registroForm.controls.colorOjos" />
           </div>
           <div class="field">
             <label for="vacas">Días de vacaciones/año</label>
-            <input id="vacas" type="number" formControlName="diasVacaciones" placeholder="Ej: 14" />
+            <input id="vacas" type="number" formControlName="diasVacaciones" placeholder="Ej: 14" min="0" [class.input-invalido]="registroForm.controls.diasVacaciones.invalid && registroForm.controls.diasVacaciones.touched" />
+            <app-form-error [control]="registroForm.controls.diasVacaciones" />
           </div>
         </div>
         <div class="field">

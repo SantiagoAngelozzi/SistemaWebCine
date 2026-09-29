@@ -12,4 +12,12 @@ export interface FuncionParaCompra {
   peliculaNombre: string;
   peliculaClasificacion: string;
   peliculaDuracion: number;
+  peliculaFechaEstreno: string;
+  peliculaDiasPreventa: number;
+}
+
+export interface CompraConfirmada {
+  compra_id: string;
+  codigo_qr: string;
+  total: number;
 }
