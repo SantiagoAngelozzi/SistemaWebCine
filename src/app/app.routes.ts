@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 import { AdminPlaceholderComponent } from './shared/admin-placeholder/admin-placeholder.component';
 
 import { adminGuard } from './core/guards/admin.guard';
-import { empleadoGuard, sinEmpleadoGuard } from './core/guards/rol.guard';
+import { empleadoGuard, sesionGuard, sinEmpleadoGuard } from './core/guards/rol.guard';
 
 export const routes: Routes = [
   {
@@ -133,11 +133,9 @@ export const routes: Routes = [
       },
       {
         path: 'perfil',
-        component: AdminPlaceholderComponent,
-        data: {
-          title: 'Perfil',
-          description: 'Datos de la cuenta, cupones disponibles, puntos de fidelización y crédito por cancelaciones.'
-        }
+        canActivate: [sesionGuard],
+        loadComponent: () =>
+          import('./features/client/perfil/perfil.component').then((m) => m.PerfilComponent)
       }
     ]
   },

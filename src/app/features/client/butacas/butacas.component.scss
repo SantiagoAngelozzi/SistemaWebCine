@@ -398,3 +398,25 @@
   font-weight: 700;
   letter-spacing: 4px;
 }
+
+.usar-credito {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border: 2px dashed var(--color-tinta);
+  border-radius: 10px;
+  background: var(--color-papel);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.detalle.pago {
+  margin-top: -4px;
+}
+
+.exito .credito-usado {
+  font-weight: 700;
+}

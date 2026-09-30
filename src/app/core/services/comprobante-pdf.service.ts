@@ -29,6 +29,8 @@ export interface DatosComprobante {
   entradas: EntradaComprobante[];
   productos?: ProductoComprobante[];
   total: number;
+  /** Crédito en cuenta aplicado al pago (si hubo). */
+  creditoUsado?: number;
   advertenciaEdad?: string;
 }
 
@@ -121,6 +123,17 @@ export class ComprobantePdfService {
     pdf.setFontSize(14);
     pdf.text('TOTAL', margen, y);
     pdf.text(this.formatearImporte(datos.total), 192, y, { align: 'right' });
+
+    if (datos.creditoUsado && datos.creditoUsado > 0) {
+      y += 8;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text('Credito en cuenta aplicado', margen, y);
+      pdf.text(`-${this.formatearImporte(datos.creditoUsado)}`, 192, y, { align: 'right' });
+      y += 6;
+      pdf.text('Abonado con otros medios', margen, y);
+      pdf.text(this.formatearImporte(Math.max(0, datos.total - datos.creditoUsado)), 192, y, { align: 'right' });
+    }
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);

@@ -16,7 +16,14 @@
       }
     </nav>
 
-    <a class="login-link" routerLink="/auth/login">Ingresar</a>
+    @if (logueado()) {
+      <div class="sesion">
+        <a class="usuario" routerLink="perfil" title="Mi cuenta">👤 {{ nombreUsuario() }}</a>
+        <button type="button" class="logout-btn" (click)="cerrarSesion()">Salir</button>
+      </div>
+    } @else {
+      <a class="login-link" routerLink="/auth/login">Ingresar</a>
+    }
   </header>
 
   <main class="content">

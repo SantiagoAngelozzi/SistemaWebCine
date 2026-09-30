@@ -11,7 +11,13 @@
           🍿 Con este mismo QR retirás tus productos en el Candy Bar.
         </p>
       }
-      <p class="total">Total abonado: ${{ compraExitosa()!.total }}</p>
+      <p class="total">Total: ${{ compraExitosa()!.total }}</p>
+      @if (compraExitosa()!.credito_usado > 0) {
+        <p class="credito-usado">
+          Pagaste ${{ compraExitosa()!.credito_usado }} con tu crédito en cuenta y
+          ${{ compraExitosa()!.a_pagar }} con otro medio.
+        </p>
+      }
       <button type="button" class="btn-secondary" [disabled]="generandoPdf()" (click)="descargarComprobante()">
         {{ generandoPdf() ? 'GENERANDO PDF…' : 'VOLVER A DESCARGAR EL COMPROBANTE' }}
       </button>
@@ -175,6 +181,30 @@
           }
 
           <p class="total">Total: ${{ total() }}</p>
+
+          @if (creditoDisponible() > 0) {
+            <label class="usar-credito">
+              <input
+                type="checkbox"
+                [checked]="usarCredito()"
+                (change)="usarCredito.set($any($event.target).checked)"
+              />
+              Usar mi crédito en cuenta (${{ creditoDisponible() }} disponible)
+            </label>
+            @if (usarCredito()) {
+              <ul class="detalle pago">
+                <li class="descuento">
+                  <span>Crédito aplicado</span>
+                  <span>−${{ creditoAplicado() }}</span>
+                </li>
+                <li>
+                  <span><strong>A pagar con otro medio</strong></span>
+                  <span><strong>${{ aPagar() }}</strong></span>
+                </li>
+              </ul>
+            }
+          }
+
           <button
             type="button"
             class="btn-primary"

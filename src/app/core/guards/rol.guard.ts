@@ -28,3 +28,12 @@ export const sinEmpleadoGuard: CanActivateFn = async () => {
   const rol = await auth.obtenerRolActual();
   return rol === 'empleado' ? router.createUrlTree(['/empleado']) : true;
 };
+
+/** Pantallas de la cuenta (Perfil, Mis compras): requieren sesión iniciada. */
+export const sesionGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  const rol = await auth.obtenerRolActual();
+  return rol ? true : router.createUrlTree(['/auth/login']);
+};

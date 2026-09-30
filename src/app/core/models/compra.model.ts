@@ -52,6 +52,10 @@ export interface CompraConfirmada {
   /** Código de 8 caracteres para carga manual si falla el lector. */
   codigo_corto: string;
   total: number;
+  /** Parte del total pagada con crédito en cuenta. */
+  credito_usado: number;
+  /** Lo que se abona con otros medios: total - credito_usado. */
+  a_pagar: number;
   entradas: EntradaConfirmada[];
   candy: CandyConfirmado[];
 }

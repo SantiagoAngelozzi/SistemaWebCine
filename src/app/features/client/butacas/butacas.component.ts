@@ -13,6 +13,7 @@ import {
 import { Butaca, TipoButaca } from '../../../core/models/sala.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { CandyService } from '../../../core/services/candy.service';
+import { CuentaService } from '../../../core/services/cuenta.service';
 import { ComprasService } from '../../../core/services/compras.service';
 import { ComprobantePdfService } from '../../../core/services/comprobante-pdf.service';
 import { formatearCodigoCorto } from '../../../core/services/validacion.service';
@@ -70,6 +71,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private comprasService = inject(ComprasService);
   private candyService = inject(CandyService);
+  private cuentaService = inject(CuentaService);
   private comprobantePdf = inject(ComprobantePdfService);
   private supabase = inject(SupabaseService);
   private toastService = inject(ToastService);
@@ -186,6 +188,17 @@ export class ButacasComponent implements OnInit, OnDestroy {
     redondear(this.subtotalEntradas() - this.descuentoEntradasEnCombos() + this.subtotalCandy())
   );
 
+  /** Crédito en cuenta del usuario logueado (0 para anónimos). */
+  creditoDisponible = signal(0);
+  usarCredito = signal(false);
+
+  /** Vista previa: la base decide cuánto crédito se usa realmente. */
+  creditoAplicado = computed(() =>
+    this.usarCredito() ? redondear(Math.min(this.creditoDisponible(), this.total())) : 0
+  );
+
+  aPagar = computed(() => redondear(this.total() - this.creditoAplicado()));
+
   async ngOnInit(): Promise<void> {
     const funcionId = this.route.snapshot.paramMap.get('funcionId');
     if (!funcionId) {
@@ -221,7 +234,8 @@ export class ButacasComponent implements OnInit, OnDestroy {
       const [butacas, ocupadas] = await Promise.all([
         this.comprasService.listarButacasDeSala(funcion.sala_id),
         this.comprasService.listarButacasOcupadas(this.funcionId),
-        this.cargarCatalogoCandy()
+        this.cargarCatalogoCandy(),
+        this.cargarCredito()
       ]);
 
       this.armarFilas(butacas, ocupadas);
@@ -231,6 +245,16 @@ export class ButacasComponent implements OnInit, OnDestroy {
     } finally {
       this.cargando.set(false);
     }
+  }
+
+  private async cargarCredito(): Promise<void> {
+    try {
+      this.creditoDisponible.set(await this.cuentaService.obtenerCredito());
+    } catch (err) {
+      console.error(err);
+      this.creditoDisponible.set(0);
+    }
+    if (this.creditoDisponible() <= 0) this.usarCredito.set(false);
   }
 
   /** Si el Candy Bar falla se puede seguir comprando sólo entradas. */
@@ -300,8 +324,10 @@ export class ButacasComponent implements OnInit, OnDestroy {
 
   private suscribirseRealtime(): void {
  
-    this.canalOcupacion = this.comprasService.suscribirseAOcupacion(this.funcionId, (butacaId) =>
-      this.alOcuparseButaca(butacaId)
+    this.canalOcupacion = this.comprasService.suscribirseAOcupacion(
+      this.funcionId,
+      (butacaId) => this.alOcuparseButaca(butacaId),
+      (butacaId) => this.alLiberarseButaca(butacaId)
     );
 
     this.canalSeleccion = this.comprasService.crearCanalSeleccion(this.funcionId);
@@ -334,6 +360,14 @@ export class ButacasComponent implements OnInit, OnDestroy {
     );
     this.ajustarCombosAButacas();
     if (!this.seleccionadas().size) this.paso.set('butacas');
+  }
+
+  /** Alguien canceló su compra: la butaca vuelve a estar libre para todos. */
+  private alLiberarseButaca(butacaId: string): void {
+    const butaca = this.butacasPorId.get(butacaId);
+    if (!butaca || butaca.estado !== 'ocupada') return;
+    butaca.estado = 'libre';
+    this.filas.update((filas) => filas.map((f) => ({ ...f })));
   }
 
   private marcarEstado(butacaId: string, estado: EstadoButaca): void {
@@ -454,8 +488,15 @@ export class ButacasComponent implements OnInit, OnDestroy {
           return;
         }
 
+        // Sólo se bloquea si se conoce la fecha de nacimiento y no alcanza la
+        // edad mínima (misma regla que la base). Sin fecha, se vende con la
+        // advertencia impresa en el comprobante, igual que a un anónimo.
         const edadMinima = funcion.peliculaClasificacion === '+18' ? 18 : funcion.peliculaClasificacion === '+13' ? 13 : 0;
-        if (edadMinima && !this.authService.tieneEdadMinima(perfil.fecha_nacimiento, edadMinima)) {
+        if (
+          edadMinima &&
+          perfil.fecha_nacimiento &&
+          !this.authService.tieneEdadMinima(perfil.fecha_nacimiento, edadMinima)
+        ) {
           this.errorMessage.set(`No podés comprar entradas para una película ${funcion.peliculaClasificacion} si no cumplís la edad mínima.`);
           return;
         }
@@ -469,10 +510,15 @@ export class ButacasComponent implements OnInit, OnDestroy {
       const compra = await this.comprasService.confirmarCompra(
         funcion.id,
         butacas,
-        this.itemsCandyParaCompra()
+        this.itemsCandyParaCompra(),
+        this.usarCredito() && this.creditoDisponible() > 0
       );
       this.compraExitosa.set(compra);
       this.carrito.set(new Map());
+      if (compra.credito_usado > 0) {
+        this.creditoDisponible.update((c) => redondear(Math.max(0, c - compra.credito_usado)));
+        this.usarCredito.set(false);
+      }
       await this.descargarComprobante();
     } catch (err: any) {
       console.error(err);
@@ -532,6 +578,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
         entradas,
         productos,
         total: compra.total,
+        creditoUsado: compra.credito_usado,
         advertenciaEdad:
           funcion.peliculaClasificacion === 'ATP'
             ? undefined

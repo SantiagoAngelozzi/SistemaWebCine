@@ -58,7 +58,8 @@ export class ComprasService {
     const { data, error } = await this.supabase.client
       .from('compra_entradas')
       .select('butaca_id')
-      .eq('funcion_id', funcionId);
+      .eq('funcion_id', funcionId)
+      .eq('activa', true); // las entradas de compras canceladas liberan la butaca
 
     if (error) throw error;
     return new Set((data ?? []).map((fila: any) => fila.butaca_id));
@@ -71,7 +72,8 @@ export class ComprasService {
   async confirmarCompra(
     funcionId: string,
     butacas: { id: string; tipo: TipoButaca }[],
-    candy: ItemCandySeleccionado[] = []
+    candy: ItemCandySeleccionado[] = [],
+    usarCredito = false
   ): Promise<CompraConfirmada> {
     // Precio, disponibilidad, edad, Candy Bar y total se validan en la base.
     // No se aceptan montos ni usuario desde el navegador: del Candy Bar sólo
@@ -81,7 +83,9 @@ export class ComprasService {
       p_butaca_ids: butacas.map((butaca) => butaca.id),
       p_items: candy
         .filter((item) => item.cantidad > 0)
-        .map((item) => ({ tipo: item.tipo, id: item.id, cantidad: item.cantidad }))
+        .map((item) => ({ tipo: item.tipo, id: item.id, cantidad: item.cantidad })),
+      // Sólo se indica SI se quiere usar el crédito; cuánto se usa lo decide la base.
+      p_usar_credito: usarCredito
     });
 
     if (error || !data) throw new Error(error?.message ?? 'No se pudo crear la compra.');
@@ -90,24 +94,36 @@ export class ComprasService {
     return {
       ...compra,
       total: Number(compra.total),
+      credito_usado: Number(compra.credito_usado ?? 0),
+      a_pagar: Number(compra.a_pagar ?? compra.total),
       entradas: (compra.entradas ?? []).map((e) => ({ ...e, precio: Number(e.precio) })),
       candy: (compra.candy ?? []).map((c) => ({ ...c, precio_unitario: Number(c.precio_unitario) }))
     };
   }
 
-  suscribirseAOcupacion(funcionId: string, onNuevaOcupacion: (butacaId: string) => void): RealtimeChannel {
+  /**
+   * INSERT en compra_entradas = butaca vendida.
+   * UPDATE con activa = false = compra cancelada: la butaca vuelve a estar libre.
+   */
+  suscribirseAOcupacion(
+    funcionId: string,
+    onNuevaOcupacion: (butacaId: string) => void,
+    onLiberada: (butacaId: string) => void = () => {}
+  ): RealtimeChannel {
+    const filtro = {
+      schema: 'public',
+      table: 'compra_entradas',
+      filter: `funcion_id=eq.${funcionId}`
+    };
     return this.supabase.client
       .channel(`ocupacion-funcion-${funcionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'compra_entradas',
-          filter: `funcion_id=eq.${funcionId}`
-        },
-        (payload) => onNuevaOcupacion((payload.new as any).butaca_id)
+      .on('postgres_changes', { event: 'INSERT', ...filtro }, (payload) =>
+        onNuevaOcupacion((payload.new as any).butaca_id)
       )
+      .on('postgres_changes', { event: 'UPDATE', ...filtro }, (payload) => {
+        const fila = payload.new as any;
+        if (fila.activa === false) onLiberada(fila.butaca_id);
+      })
       .subscribe();
   }
 

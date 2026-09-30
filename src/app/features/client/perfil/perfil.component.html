@@ -1,0 +1,197 @@
+<div class="perfil-page">
+  @if (cargando()) {
+    <p class="hint">Cargando tu cuenta…</p>
+  } @else if (errorMessage()) {
+    <div class="empty-state"><p>{{ errorMessage() }}</p></div>
+  } @else {
+    <header class="cabecera">
+      <div>
+        <h1>{{ nombreCompleto() }}</h1>
+        <p class="meta">
+          {{ perfil()?.email }}
+          @if (perfil()?.fecha_nacimiento) {
+            · Nacimiento: {{ formatearFecha(perfil()!.fecha_nacimiento!) }}
+          }
+        </p>
+      </div>
+
+      <div class="tarjeta-credito">
+        <span class="etiqueta">Crédito en cuenta</span>
+        <span class="monto">${{ perfil()?.credito ?? 0 }}</span>
+        <span class="ayuda">Se genera al cancelar una compra y se usa en la próxima.</span>
+      </div>
+    </header>
+
+    <div class="tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        [class.active]="pestania() === 'compras'"
+        (click)="pestania.set('compras')"
+      >
+        MIS COMPRAS
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        [class.active]="pestania() === 'credito'"
+        (click)="pestania.set('credito')"
+      >
+        MOVIMIENTOS DE CRÉDITO
+      </button>
+    </div>
+
+    @if (pestania() === 'compras') {
+      @if (!compras().length) {
+        <div class="empty-state">
+          <p>Todavía no hiciste compras.</p>
+          <a class="btn-primary" routerLink="/cartelera">Ver cartelera</a>
+        </div>
+      } @else {
+        <section>
+          <h2>Próximas funciones</h2>
+          @if (!proximas().length) {
+            <p class="hint">No tenés funciones por delante.</p>
+          }
+          <div class="lista">
+            @for (compra of proximas(); track compra.id) {
+              <ng-container *ngTemplateOutlet="tarjetaCompra; context: { $implicit: compra }" />
+            }
+          </div>
+        </section>
+
+        @if (historial().length) {
+          <section>
+            <h2>Historial</h2>
+            <div class="lista">
+              @for (compra of historial(); track compra.id) {
+                <ng-container *ngTemplateOutlet="tarjetaCompra; context: { $implicit: compra }" />
+              }
+            </div>
+          </section>
+        }
+      }
+    } @else {
+      @if (!movimientos().length) {
+        <div class="empty-state">
+          <p>Todavía no tenés movimientos de crédito. Se generan al cancelar una compra.</p>
+        </div>
+      } @else {
+        <div class="tabla-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Concepto</th>
+                <th class="derecha">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (mov of movimientos(); track mov.id) {
+                <tr>
+                  <td>{{ mov.created_at | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>
+                    {{ mov.motivo === 'cancelacion' ? 'Cancelación de compra' : 'Usado en una compra' }}
+                    @if (mov.compraCodigoCorto) {
+                      <span class="mono">{{ formatearCodigoCorto(mov.compraCodigoCorto) }}</span>
+                    }
+                  </td>
+                  <td class="derecha" [class.positivo]="mov.monto > 0" [class.negativo]="mov.monto < 0">
+                    {{ mov.monto > 0 ? '+' : '−' }}${{ mov.monto < 0 ? -mov.monto : mov.monto }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</div>
+
+<ng-template #tarjetaCompra let-compra>
+  <article class="compra" [class.cancelada]="compra.estado === 'cancelada'">
+    <div class="poster" [class.sin-imagen]="!compra.imagenUrl">
+      @if (compra.imagenUrl) {
+        <img [src]="compra.imagenUrl" [alt]="compra.pelicula" />
+      } @else {
+        <span>🎬</span>
+      }
+    </div>
+
+    <div class="cuerpo">
+      <div class="titulo-fila">
+        <h3>{{ compra.pelicula }}</h3>
+        <span class="badge clasificacion">{{ compra.clasificacion }}</span>
+        <span class="badge estado" [ngClass]="compra.estado">{{ etiquetaEstado(compra) }}</span>
+      </div>
+
+      <p class="meta">
+        {{ compra.sala }} · {{ formatearFecha(compra.fecha) }} {{ horaCorta(compra.horaInicio) }} ·
+        {{ compra.formato }} · {{ compra.idioma }}
+      </p>
+
+      <p class="butacas">
+        @for (entrada of compra.entradas; track entrada.ubicacion) {
+          <span class="butaca" [ngClass]="entrada.tipo">{{ entrada.ubicacion }}</span>
+        }
+      </p>
+
+      @if (compra.candy.length) {
+        <ul class="candy">
+          @for (item of compra.candy; track $index) {
+            <li>
+              {{ item.cantidad }}× {{ item.nombre }}
+              @if (item.contenido) {
+                <span class="contenido">({{ item.contenido }})</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <p class="importes">
+        <strong>Total ${{ compra.total }}</strong>
+        @if (compra.creditoUsado > 0) {
+          <span> · ${{ compra.creditoUsado }} pagados con crédito</span>
+        }
+        · Código <span class="mono">{{ formatearCodigoCorto(compra.codigoCorto) }}</span>
+      </p>
+
+      @if (compra.estado === 'cancelada') {
+        <p class="nota">
+          Cancelada el {{ compra.canceladaEl | date: 'dd/MM/yyyy HH:mm' }}. El importe se acreditó en tu cuenta.
+        </p>
+      }
+    </div>
+
+    @if (compra.estadoBase === 'confirmada') {
+      <div class="acciones">
+        <button
+          type="button"
+          class="btn-secundario"
+          [disabled]="descargandoId() === compra.id"
+          (click)="descargarComprobante(compra)"
+        >
+          {{ descargandoId() === compra.id ? 'Generando…' : 'Descargar comprobante' }}
+        </button>
+
+        @if (compra.cancelable) {
+          <button
+            type="button"
+            class="btn-peligro"
+            [disabled]="cancelandoId() === compra.id"
+            (click)="cancelar(compra)"
+          >
+            {{ cancelandoId() === compra.id ? 'Cancelando…' : 'Cancelar compra' }}
+          </button>
+          <span class="hint">Hasta {{ horasLimite }} h antes de la función.</span>
+        } @else if (compra.estado === 'confirmada') {
+          <span class="hint">{{ compra.motivoNoCancelable }}</span>
+        }
+      </div>
+    }
+  </article>
+</ng-template>

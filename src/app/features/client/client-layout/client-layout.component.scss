@@ -94,3 +94,38 @@ nav {
 .content {
   flex: 1;
 }
+.sesion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.usuario {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-tinta);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.logout-btn {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  border: var(--border-comic);
+  background: var(--color-papel);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-coral);
+  }
+}
