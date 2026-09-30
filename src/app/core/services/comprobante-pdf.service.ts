@@ -6,6 +6,8 @@ export interface EntradaComprobante {
   ubicacion: string;
   tipo: 'estandar' | 'accesible' | 'vip';
   precio: number;
+  /** La entrada está cubierta por un combo "entrada + candy". */
+  incluidaEnCombo?: boolean;
 }
 
 export interface ProductoComprobante {
@@ -16,6 +18,8 @@ export interface ProductoComprobante {
 
 export interface DatosComprobante {
   codigoQr: string;
+  /** Código corto (ya formateado, ej. K7F3-9QXM) para carga manual. */
+  codigoCorto?: string;
   pelicula: string;
   sala: string;
   fecha: string;
@@ -62,12 +66,18 @@ export class ComprobantePdfService {
     pdf.text(`Sala: ${datos.sala}`, margen, y + 32);
     pdf.text(`Funcion: ${datos.fecha} - ${datos.hora}`, margen, y + 39);
     pdf.text(`${datos.formato} - ${datos.idioma}`, margen, y + 46);
+    if (datos.codigoCorto) {
+      pdf.setFont('courier', 'bold');
+      pdf.setFontSize(15);
+      pdf.text(datos.codigoCorto, 169.5, 91, { align: 'center' });
+      pdf.setFont('helvetica', 'normal');
+    }
     pdf.setFontSize(8);
-    pdf.text('Presenta este QR para ingresar a la sala y retirar productos de Candy Bar.', 147, 89, {
+    pdf.text('Presenta este QR para ingresar a la sala y retirar productos de Candy Bar.', 169.5, datos.codigoCorto ? 97 : 89, {
       maxWidth: 45,
       align: 'center'
     });
-    y = 83;
+    y = datos.codigoCorto ? 91 : 83;
 
     if (datos.advertenciaEdad) {
       pdf.setFillColor(255, 244, 214);
@@ -84,11 +94,17 @@ export class ComprobantePdfService {
     y = this.dibujarSeccion(pdf, 'ENTRADAS', y);
     for (const entrada of datos.entradas) {
       const etiquetaTipo = entrada.tipo === 'vip' ? 'VIP' : entrada.tipo === 'accesible' ? 'Accesible' : 'Estandar';
-      y = this.dibujarFila(pdf, `${entrada.ubicacion} (${etiquetaTipo})`, entrada.precio, y);
+      const detalle = entrada.incluidaEnCombo
+        ? entrada.tipo === 'vip'
+          ? ' - incluida en combo (recargo VIP)'
+          : ' - incluida en combo'
+        : '';
+      y = this.dibujarFila(pdf, `${entrada.ubicacion} (${etiquetaTipo})${detalle}`, entrada.precio, y);
     }
 
     if (datos.productos?.length) {
       y += 4;
+      y = this.saltoDePaginaSiHaceFalta(pdf, y, 20);
       y = this.dibujarSeccion(pdf, 'CANDY BAR', y);
       for (const producto of datos.productos) {
         y = this.dibujarFila(pdf, `${producto.cantidad} x ${producto.nombre}`, producto.precio * producto.cantidad, y);
@@ -96,6 +112,7 @@ export class ComprobantePdfService {
     }
 
     y += 8;
+    y = this.saltoDePaginaSiHaceFalta(pdf, y, 20);
     pdf.setDrawColor(210, 215, 225);
     pdf.line(margen, y, 192, y);
     y += 9;
@@ -128,9 +145,19 @@ export class ComprobantePdfService {
     pdf.setTextColor(16, 19, 27);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
-    pdf.text(descripcion, 22, y);
+    // Los combos pueden tener descripciones largas: se parten en varias líneas.
+    const lineas: string[] = pdf.splitTextToSize(descripcion, 135);
+    y = this.saltoDePaginaSiHaceFalta(pdf, y, lineas.length * 5 + 2);
+    pdf.text(lineas, 22, y);
     pdf.text(this.formatearImporte(importe), 188, y, { align: 'right' });
-    return y + 7;
+    return y + 2 + lineas.length * 5;
+  }
+
+  /** Agrega una página si lo que sigue no entra antes del pie (y = 270 mm). */
+  private saltoDePaginaSiHaceFalta(pdf: jsPDF, y: number, alto: number): number {
+    if (y + alto <= 270) return y;
+    pdf.addPage();
+    return 22;
   }
 
   private formatearImporte(valor: number): string {

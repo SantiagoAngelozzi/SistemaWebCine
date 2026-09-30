@@ -24,6 +24,8 @@ export class AdminLayoutComponent {
     { path: 'peliculas', label: 'Películas' },
     { path: 'salas-funciones', label: 'Salas y Funciones' },
     { path: 'candy-bar', label: 'Candy Bar' },
+    { path: 'empleados', label: 'Empleados' },
+    { path: '/empleado', label: 'Validar QR' },
     { path: 'cupones-puntos', label: 'Cupones y Puntos' },
     { path: 'reportes', label: 'Reportes' },
     { path: 'auditoria', label: 'Auditoría', },

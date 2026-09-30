@@ -1,0 +1,195 @@
+<div class="empleado-shell" [class.modo-candy]="modo() === 'candy'">
+  <header class="topbar">
+    <div class="marca">
+      <span class="logo">CINE</span>
+      <small>Validación de QR</small>
+    </div>
+    <div class="cuenta">
+      <span class="email">{{ emailEmpleado }}</span>
+      @if (esAdmin()) {
+        <button type="button" class="btn-chico" (click)="irAlPanel()">Panel admin</button>
+      }
+      <button type="button" class="btn-chico" (click)="cerrarSesion()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="contenido">
+    <div class="modos" role="tablist" aria-label="Qué se valida">
+      <button
+        type="button"
+        role="tab"
+        class="modo sala"
+        [class.activo]="modo() === 'sala'"
+        [attr.aria-selected]="modo() === 'sala'"
+        (click)="cambiarModo('sala')"
+      >
+        🎟️ Acceso a sala
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="modo candy"
+        [class.activo]="modo() === 'candy'"
+        [attr.aria-selected]="modo() === 'candy'"
+        (click)="cambiarModo('candy')"
+      >
+        🍿 Candy Bar
+      </button>
+    </div>
+
+    <div class="columnas">
+      <section class="lectura">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Escanear QR</h2>
+            <button type="button" class="btn-chico" (click)="alternarCamara()">
+              {{ camaraEncendida() ? 'Apagar cámara' : 'Activar cámara' }}
+            </button>
+          </div>
+
+          @if (camaraEncendida()) {
+            <app-qr-scanner [pausado]="validando()" (codigoLeido)="alLeerQr($event)" />
+          } @else {
+            <button type="button" class="camara-apagada" (click)="alternarCamara()">
+              📷 Tocá para activar la cámara
+            </button>
+          }
+        </div>
+
+        <form class="panel manual" (ngSubmit)="validarManual()">
+          <label for="codigo">¿No lee el QR? Ingresá el código del comprobante</label>
+          <div class="fila-manual">
+            <input
+              #inputCodigo
+              id="codigo"
+              name="codigo"
+              type="text"
+              inputmode="text"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              maxlength="40"
+              placeholder="Ej: K7F3-9QXM"
+              [(ngModel)]="codigoManual"
+            />
+            <button type="submit" class="btn-validar" [disabled]="!codigoManual.trim() || validando()">
+              {{ validando() ? 'Validando…' : 'Validar' }}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="resultado-col" aria-live="polite">
+        @if (errorConexion()) {
+          <div class="resultado rechazado">
+            <p class="titulo">⚠️ No se pudo validar</p>
+            <p class="mensaje">{{ errorConexion() }}</p>
+            <button type="button" class="btn-siguiente" (click)="limpiarResultado()">Siguiente</button>
+          </div>
+        } @else {
+          @if (resultado(); as r) {
+            <div class="resultado" [class.ok]="r.ok" [class.rechazado]="!r.ok">
+              <p class="titulo">
+                @if (r.ok) {
+                  {{ r.tipo === 'candy' ? '✔ ENTREGAR PRODUCTOS' : '✔ ACCESO HABILITADO' }}
+                } @else {
+                  ✖ RECHAZADO
+                }
+              </p>
+              <p class="mensaje">{{ r.mensaje }}</p>
+
+              @if (r.pelicula) {
+                <dl class="detalle">
+                  <div>
+                    <dt>Código</dt>
+                    <dd class="mono">{{ formatearCodigoCorto(r.codigo_corto) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Película</dt>
+                    <dd>{{ r.pelicula }} · {{ r.formato }} · {{ r.idioma }}</dd>
+                  </div>
+                  <div>
+                    <dt>Función</dt>
+                    <dd>
+                      {{ r.sala }} · {{ r.fecha ? formatearFecha(r.fecha) : '' }} ·
+                      {{ r.hora_inicio?.slice(0, 5) }} a {{ r.hora_fin?.slice(0, 5) }}
+                    </dd>
+                  </div>
+                </dl>
+              }
+
+              @if (r.tipo === 'sala' && r.entradas?.length) {
+                <div class="bloque">
+                  <h3>{{ r.entradas!.length }} entrada(s)</h3>
+                  <p class="butacas">
+                    @for (entrada of r.entradas!; track entrada.ubicacion) {
+                      <span class="butaca" [class.vip]="entrada.tipo === 'vip'" [class.accesible]="entrada.tipo === 'accesible'">
+                        {{ entrada.ubicacion }}
+                      </span>
+                    }
+                  </p>
+                </div>
+              }
+
+              @if (r.ok && r.tipo === 'sala' && r.clasificacion && r.clasificacion !== 'ATP') {
+                <p class="aviso-edad">
+                  Película {{ r.clasificacion }}: los menores deben ingresar con un adulto responsable.
+                </p>
+              }
+
+              @if (r.tipo === 'candy' && r.candy?.length) {
+                <div class="bloque">
+                  <h3>{{ r.ok ? 'Entregar' : 'Productos de la compra' }}</h3>
+                  <ul class="productos">
+                    @for (item of r.candy!; track $index) {
+                      <li>
+                        <strong>{{ item.cantidad }}× {{ item.nombre }}</strong>
+                        @if (item.contenido.length) {
+                          <ul>
+                            @for (prod of item.contenido; track $index) {
+                              <li>{{ prod.cantidad }}× {{ prod.nombre }}</li>
+                            }
+                          </ul>
+                        }
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              @if (r.candy_pendiente) {
+                <p class="aviso-candy">🍿 Esta compra tiene productos para retirar en el Candy Bar.</p>
+              }
+
+              <button type="button" class="btn-siguiente" (click)="limpiarResultado()">Siguiente</button>
+            </div>
+          } @else {
+            <div class="resultado vacio">
+              <p>
+                Escaneá un QR o ingresá el código para validar
+                {{ modo() === 'sala' ? 'el acceso a la sala' : 'la entrega en el Candy Bar' }}.
+              </p>
+            </div>
+          }
+        }
+
+        @if (historial().length) {
+          <div class="panel historial">
+            <h2>Últimas validaciones</h2>
+            <ul>
+              @for (registro of historial(); track $index) {
+                <li [class.ok]="registro.ok">
+                  <span class="hora">{{ registro.hora | date: 'HH:mm:ss' }}</span>
+                  <span class="icono">{{ registro.ok ? '✔' : '✖' }}</span>
+                  <span class="mono">{{ registro.codigo }}</span>
+                  <span class="tipo">{{ registro.tipo === 'sala' ? 'Sala' : 'Candy' }}</span>
+                  <span class="msg">{{ registro.mensaje }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </section>
+    </div>
+  </main>
+</div>

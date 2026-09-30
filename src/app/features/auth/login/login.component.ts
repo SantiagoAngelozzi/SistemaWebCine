@@ -111,13 +111,9 @@ export class LoginComponent {
       return;
     }
 
-    const { data: usuario } = await this.supabase.client
-      .from('usuarios')
-      .select('rol')
-      .eq('id', userId)
-      .single();
-
-    this.router.navigateByUrl(usuario?.rol === 'administrador' ? '/admin' : '/inicio');
+    // Admin -> /admin, empleado -> /empleado, cliente -> /inicio
+    const rol = await this.auth.obtenerRolActual();
+    this.router.navigateByUrl(this.auth.rutaInicioSegunRol(rol));
   }
 
   private traducirError(message: string): string {

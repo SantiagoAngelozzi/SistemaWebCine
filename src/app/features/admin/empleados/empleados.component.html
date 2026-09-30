@@ -1,0 +1,78 @@
+<div class="page">
+  <div class="header-row">
+    <div>
+      <h2>Empleados</h2>
+      <p class="hint">
+        El empleado se registra como cualquier usuario y acá se le asigna el rol. Con ese rol sólo
+        accede a la validación de QR (sala y Candy Bar).
+      </p>
+    </div>
+    <span class="contador">{{ cantidadEmpleados() }} empleado(s)</span>
+  </div>
+
+  <div class="filtros">
+    <input
+      type="search"
+      placeholder="Buscar por email o nombre…"
+      [value]="busqueda()"
+      (input)="busqueda.set($any($event.target).value)"
+    />
+    <div class="chips">
+      <button type="button" class="chip" [class.activa]="filtro() === 'todos'" (click)="filtro.set('todos')">Todos</button>
+      <button type="button" class="chip" [class.activa]="filtro() === 'empleado'" (click)="filtro.set('empleado')">Empleados</button>
+      <button type="button" class="chip" [class.activa]="filtro() === 'cliente'" (click)="filtro.set('cliente')">Clientes</button>
+      <button type="button" class="chip" [class.activa]="filtro() === 'administrador'" (click)="filtro.set('administrador')">Administradores</button>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <p class="hint">Cargando usuarios…</p>
+  } @else if (!usuariosFiltrados().length) {
+    <div class="empty-state"><p>No hay usuarios que coincidan con la búsqueda.</p></div>
+  } @else {
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (usuario of usuariosFiltrados(); track usuario.id) {
+            <tr>
+              <td>{{ usuario.email }}</td>
+              <td>{{ nombreCompleto(usuario) }}</td>
+              <td><span class="rol" [ngClass]="usuario.rol">{{ usuario.rol }}</span></td>
+              <td class="acciones">
+                @if (usuario.id === miId) {
+                  <span class="hint">(vos)</span>
+                } @else if (usuario.rol === 'cliente') {
+                  <button
+                    type="button"
+                    class="btn-secundario"
+                    [disabled]="guardandoId() === usuario.id"
+                    (click)="hacerEmpleado(usuario)"
+                  >
+                    Hacer empleado
+                  </button>
+                } @else if (usuario.rol === 'empleado') {
+                  <button
+                    type="button"
+                    class="btn-secundario danger"
+                    [disabled]="guardandoId() === usuario.id"
+                    (click)="quitarEmpleado(usuario)"
+                  >
+                    Quitar rol
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

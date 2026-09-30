@@ -1,0 +1,263 @@
+:host {
+  display: block;
+}
+
+.titulo-bloque {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+
+  .sub {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.7;
+  }
+}
+
+// ---------- Combos destacados ----------
+
+.combos-destacados {
+  margin-bottom: 28px;
+  padding: 18px;
+  border: var(--border-comic-lg);
+  border-radius: 18px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--color-lima),
+    var(--color-lima) 14px,
+    #f7dc6f 14px,
+    #f7dc6f 28px
+  );
+  box-shadow: var(--shadow-comic-md);
+}
+
+.grid-combos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.combo-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: var(--border-comic);
+  border-radius: 14px;
+  background: var(--color-papel-2);
+  box-shadow: var(--shadow-comic-sm);
+  transition: transform 0.12s ease;
+
+  &.en-carrito {
+    transform: translate(-2px, -2px);
+    box-shadow: var(--shadow-comic-md);
+    outline: 3px solid var(--color-magenta);
+    outline-offset: -6px;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    margin: 0;
+  }
+}
+
+.badge.entrada {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 999px;
+  background: var(--color-turquesa);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.contenido {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.precios {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+
+  .precio {
+    font-family: var(--font-display);
+    font-size: 24px;
+  }
+
+  .tachado {
+    text-decoration: line-through;
+    opacity: 0.6;
+    font-size: 13px;
+  }
+
+  .ahorro {
+    padding: 1px 8px;
+    border: 2px solid var(--color-tinta);
+    border-radius: 999px;
+    background: var(--color-coral);
+    font-size: 11px;
+    font-weight: 700;
+  }
+}
+
+.limite {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+// ---------- Productos por categoría ----------
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  padding: 5px 14px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 999px;
+  background: var(--color-papel-2);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.activa {
+    background: var(--color-turquesa);
+  }
+}
+
+.categoria {
+  font-family: var(--font-display);
+  font-size: 18px;
+  margin: 16px 0 10px;
+}
+
+.grid-productos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.producto-card {
+  display: flex;
+  flex-direction: column;
+  border: var(--border-comic);
+  border-radius: 14px;
+  background: var(--color-papel-2);
+  box-shadow: var(--shadow-comic-sm);
+  overflow: hidden;
+
+  &.en-carrito {
+    box-shadow: var(--shadow-comic-md);
+    border-color: var(--color-magenta);
+  }
+}
+
+.foto {
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  background: var(--color-lima);
+  border-bottom: 2px solid var(--color-tinta);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &.sin-imagen {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--color-lima),
+      var(--color-lima) 8px,
+      var(--color-naranja) 8px,
+      var(--color-naranja) 16px
+    );
+  }
+}
+
+.info {
+  padding: 10px 12px 4px;
+  flex: 1;
+
+  h4 {
+    margin: 0 0 4px;
+    font-size: 14px;
+  }
+
+  .precio {
+    font-weight: 700;
+  }
+}
+
+// ---------- Stepper compartido ----------
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px;
+
+  button {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--color-tinta);
+    border-radius: 8px;
+    background: var(--color-naranja);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--color-tinta);
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  }
+
+  .cantidad {
+    min-width: 20px;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 20px;
+  }
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  opacity: 0.7;
+  border: 2px dashed var(--color-tinta);
+  border-radius: 14px;
+}

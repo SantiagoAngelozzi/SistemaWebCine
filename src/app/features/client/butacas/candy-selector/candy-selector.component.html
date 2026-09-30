@@ -1,0 +1,138 @@
+<section class="candy">
+  @if (!catalogo.combos.length && !catalogo.categorias.length) {
+    <div class="empty-state"><p>El Candy Bar no tiene productos a la venta por ahora.</p></div>
+  }
+
+  @if (catalogo.combos.length) {
+    <div class="combos-destacados">
+      <div class="titulo-bloque">
+        <h2>⭐ Combos especiales</h2>
+        <span class="sub">Precio promocional fijo</span>
+      </div>
+
+      <div class="grid-combos">
+        @for (combo of catalogo.combos; track combo.id) {
+          <article class="combo-card" [class.en-carrito]="cantidad('combo', combo.id) > 0">
+            @if (combo.incluye_entrada) {
+              <span class="badge entrada">🎟️ Incluye entrada</span>
+            }
+            <h3>{{ combo.nombre }}</h3>
+            <ul class="contenido">
+              @if (combo.incluye_entrada) {
+                <li>1 entrada</li>
+              }
+              @for (item of combo.items; track item.candyProductoId) {
+                <li>{{ item.cantidad }}× {{ item.nombre }}</li>
+              }
+            </ul>
+
+            <div class="precios">
+              <span class="precio">${{ combo.precio }}</span>
+              @if (ahorro(combo) > 0) {
+                <span class="tachado">${{ precioPorSeparado(combo) }}</span>
+                <span class="ahorro">Ahorrás ${{ ahorro(combo) }}</span>
+              }
+            </div>
+
+            <div class="stepper">
+              <button
+                type="button"
+                aria-label="Quitar uno"
+                [disabled]="cantidad('combo', combo.id) === 0"
+                (click)="restar('combo', combo.id)"
+              >
+                −
+              </button>
+              <span class="cantidad">{{ cantidad('combo', combo.id) }}</span>
+              <button
+                type="button"
+                aria-label="Agregar uno"
+                [disabled]="!puedeSumar('combo', combo.id, combo.incluye_entrada)"
+                (click)="sumar('combo', combo.id, combo.incluye_entrada)"
+              >
+                +
+              </button>
+            </div>
+
+            @if (combo.incluye_entrada && !puedeSumar('combo', combo.id, true) && cantidad('combo', combo.id) < maxUnidades) {
+              <p class="limite">
+                Ya cubriste tus {{ cantidadButacas }} butaca(s) con combos. Sumá más butacas para agregar otro.
+              </p>
+            }
+          </article>
+        }
+      </div>
+    </div>
+  }
+
+  @if (catalogo.categorias.length) {
+    <div class="productos">
+      <div class="titulo-bloque">
+        <h2>🍿 Candy Bar</h2>
+      </div>
+
+      @if (catalogo.categorias.length > 1) {
+        <div class="chips" role="tablist">
+          <button
+            type="button"
+            class="chip"
+            [class.activa]="categoriaActiva() === 'todas'"
+            (click)="categoriaActiva.set('todas')"
+          >
+            Todas
+          </button>
+          @for (categoria of catalogo.categorias; track categoria.id) {
+            <button
+              type="button"
+              class="chip"
+              [class.activa]="categoriaActiva() === categoria.id"
+              (click)="categoriaActiva.set(categoria.id)"
+            >
+              {{ categoria.nombre }}
+            </button>
+          }
+        </div>
+      }
+
+      @for (categoria of categoriasVisibles(); track categoria.id) {
+        <h3 class="categoria">{{ categoria.nombre }}</h3>
+        <div class="grid-productos">
+          @for (producto of categoria.productos; track producto.id) {
+            <article class="producto-card" [class.en-carrito]="cantidad('producto', producto.id) > 0">
+              <div class="foto" [class.sin-imagen]="!producto.imagen_url">
+                @if (producto.imagen_url) {
+                  <img [src]="producto.imagen_url" [alt]="producto.nombre" loading="lazy" />
+                } @else {
+                  <span>🍿</span>
+                }
+              </div>
+              <div class="info">
+                <h4>{{ producto.nombre }}</h4>
+                <span class="precio">${{ producto.precio }}</span>
+              </div>
+              <div class="stepper">
+                <button
+                  type="button"
+                  aria-label="Quitar uno"
+                  [disabled]="cantidad('producto', producto.id) === 0"
+                  (click)="restar('producto', producto.id)"
+                >
+                  −
+                </button>
+                <span class="cantidad">{{ cantidad('producto', producto.id) }}</span>
+                <button
+                  type="button"
+                  aria-label="Agregar uno"
+                  [disabled]="!puedeSumar('producto', producto.id)"
+                  (click)="sumar('producto', producto.id)"
+                >
+                  +
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { AdminPlaceholderComponent } from './shared/admin-placeholder/admin-placeholder.component';
 
 import { adminGuard } from './core/guards/admin.guard';
+import { empleadoGuard, sinEmpleadoGuard } from './core/guards/rol.guard';
 
 export const routes: Routes = [
   {
@@ -35,11 +36,17 @@ export const routes: Routes = [
       },
       {
         path: 'candy-bar',
-        component: AdminPlaceholderComponent,
-        data: {
-          title: 'Candy Bar',
-          description: 'Catálogo de productos por categoría y armado de combos especiales a precio fijo.'
-        }
+        loadComponent: () =>
+          import('./features/admin/candy-bar/candy-bar.component').then(
+            (m) => m.CandyBarComponent
+          )
+      },
+      {
+        path: 'empleados',
+        loadComponent: () =>
+          import('./features/admin/empleados/empleados.component').then(
+            (m) => m.EmpleadosComponent
+          )
       },
       {
         path: 'cupones-puntos',
@@ -68,7 +75,19 @@ export const routes: Routes = [
     ]
   },
   {
+    // Módulo del empleado: validación de QR (acceso a sala y Candy Bar).
+    path: 'empleado',
+    canActivate: [empleadoGuard],
+    loadComponent: () =>
+      import('./features/empleado/validar-qr/validar-qr.component').then(
+        (m) => m.ValidarQrComponent
+      )
+  },
+  {
     path: '',
+    // El empleado tiene acceso exclusivo a su módulo.
+    canActivate: [sinEmpleadoGuard],
+    canActivateChild: [sinEmpleadoGuard],
     loadComponent: () =>
       import('./features/client/client-layout/client-layout.component').then(
         (m) => m.ClientLayoutComponent

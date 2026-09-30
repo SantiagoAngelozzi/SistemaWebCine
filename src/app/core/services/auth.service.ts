@@ -3,6 +3,8 @@ import { Session } from '@supabase/supabase-js';
 
 import { SupabaseService } from './supabase.service';
 
+export type RolUsuario = 'cliente' | 'empleado' | 'administrador';
+
 export interface RegistroData {
   nombre: string;
   apellido: string;
@@ -18,6 +20,9 @@ export class AuthService {
 
   readonly session = signal<Session | null>(null);
 
+  /** Rol por usuario, para no consultar la base en cada navegación. */
+  private rolesCache = new Map<string, RolUsuario>();
+
   constructor() {
     this.supabase.client.auth.getSession().then(({ data }) => {
       this.session.set(data.session);
@@ -25,7 +30,42 @@ export class AuthService {
 
     this.supabase.client.auth.onAuthStateChange((_event, session) => {
       this.session.set(session);
+      if (!session) this.rolesCache.clear();
     });
+  }
+
+  /**
+   * Rol del usuario logueado, o null si no hay sesión (visitante anónimo).
+   * Si no se puede leer el perfil se asume 'cliente', el rol sin permisos.
+   */
+  async obtenerRolActual(): Promise<RolUsuario | null> {
+    const {
+      data: { session }
+    } = await this.supabase.client.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return null;
+
+    const cacheado = this.rolesCache.get(userId);
+    if (cacheado) return cacheado;
+
+    const { data, error } = await this.supabase.client
+      .from('usuarios')
+      .select('rol')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) return 'cliente';
+
+    const rol = data.rol as RolUsuario;
+    this.rolesCache.set(userId, rol);
+    return rol;
+  }
+
+  /** Ruta de inicio según el rol: cada perfil tiene su propia pantalla. */
+  rutaInicioSegunRol(rol: RolUsuario | null): string {
+    if (rol === 'administrador') return '/admin';
+    if (rol === 'empleado') return '/empleado';
+    return '/inicio';
   }
 
   signIn(email: string, password: string) {
@@ -62,6 +102,7 @@ export class AuthService {
   }
 
   signOut() {
+    this.rolesCache.clear();
     return this.supabase.client.auth.signOut();
   }
 }

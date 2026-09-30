@@ -1,0 +1,15 @@
+<div class="visor" [class.pausado]="pausado">
+  <video #video playsinline muted autoplay></video>
+
+  @if (estado() === 'activa') {
+    <div class="marco" aria-hidden="true"></div>
+  }
+
+  @if (estado() === 'iniciando') {
+    <p class="overlay">Iniciando cámara…</p>
+  } @else if (estado() === 'error') {
+    <p class="overlay error">{{ error() }}</p>
+  } @else if (pausado) {
+    <p class="overlay">Validando…</p>
+  }
+</div>

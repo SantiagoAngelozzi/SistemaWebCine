@@ -1,0 +1,161 @@
+:host {
+  display: block;
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin: 0 0 4px;
+  }
+}
+
+.hint {
+  margin: 0;
+  opacity: 0.7;
+  font-size: 13px;
+  max-width: 640px;
+}
+
+.contador {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: var(--border-comic);
+  border-radius: 999px;
+  background: var(--color-turquesa);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+
+  input {
+    flex: 1;
+    min-width: 220px;
+    padding: 9px 12px;
+    border: var(--border-comic);
+    border-radius: 10px;
+    background: var(--color-papel);
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 5px 12px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 999px;
+  background: var(--color-papel-2);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.activa {
+    background: var(--color-lima);
+  }
+}
+
+.tabla-wrap {
+  overflow-x: auto;
+  border: var(--border-comic);
+  border-radius: 14px;
+  background: var(--color-papel-2);
+  box-shadow: var(--shadow-comic-sm);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(27, 26, 46, 0.15);
+  }
+
+  th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--color-papel);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.rol {
+  padding: 2px 10px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--color-papel);
+
+  &.empleado {
+    background: var(--color-turquesa);
+  }
+
+  &.administrador {
+    background: var(--color-coral);
+  }
+}
+
+.acciones {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.btn-secundario {
+  padding: 6px 12px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 8px;
+  background: var(--color-papel-2);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--color-lima);
+  }
+
+  &.danger:hover:not(:disabled) {
+    background: var(--color-coral);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  opacity: 0.7;
+  border: 2px dashed var(--color-tinta);
+  border-radius: 14px;
+}
