@@ -11,7 +11,23 @@
           🍿 Con este mismo QR retirás tus productos en el Candy Bar.
         </p>
       }
+      @if (compraExitosa()!.descuento_monto > 0) {
+        <p class="credito-usado">
+          Ahorraste ${{ compraExitosa()!.descuento_monto }} con
+          {{ compraExitosa()!.descuento_origen === 'bienvenida' ? 'tu descuento de bienvenida' : 'el cupón ' + compraExitosa()!.descuento_codigo }}.
+        </p>
+      }
       <p class="total">Total: ${{ compraExitosa()!.total }}</p>
+      @if (compraExitosa()!.puntos_ganados > 0 || compraExitosa()!.puntos_canjeados > 0) {
+        <p class="puntos-a-ganar">
+          @if (compraExitosa()!.puntos_canjeados > 0) {
+            Canjeaste {{ compraExitosa()!.puntos_canjeados }} puntos.
+          }
+          @if (compraExitosa()!.puntos_ganados > 0) {
+            ⭐ Sumaste {{ compraExitosa()!.puntos_ganados }} puntos.
+          }
+        </p>
+      }
       @if (compraExitosa()!.credito_usado > 0) {
         <p class="credito-usado">
           Pagaste ${{ compraExitosa()!.credito_usado }} con tu crédito en cuenta y
@@ -145,6 +161,22 @@
               (cambiarCantidad)="cambiarCantidadCandy($event)"
             />
           }
+
+          <app-beneficios-compra
+            [logueado]="logueado()"
+            [descuento]="descuento()"
+            [cuponAplicado]="cuponAplicado()"
+            [errorCupon]="errorCupon()"
+            [validandoCupon]="validandoCupon()"
+            [puntosDisponibles]="puntosDisponibles()"
+            [puntosComprometidos]="puntosComprometidos()"
+            [recompensas]="recompensas()"
+            [canjes]="canjes()"
+            [butacasLibresParaCanje]="butacasLibresParaCanje()"
+            (aplicarCupon)="aplicarCupon($event)"
+            (quitarCupon)="quitarCupon()"
+            (cambiarCanje)="cambiarCanje($event)"
+          />
         </div>
 
         <aside class="resumen resumen-final">
@@ -165,10 +197,35 @@
                 <span>${{ linea.subtotal }}</span>
               </li>
             }
+            @for (linea of lineasCanje(); track linea.recompensa.id) {
+              <li class="canje">
+                <span>
+                  {{ linea.cantidad }}× {{ linea.recompensa.nombre }}
+                  <small>({{ linea.cantidad * linea.recompensa.costo_puntos }} pts)</small>
+                </span>
+                <span>{{ linea.recompensa.otorga_entrada ? '' : '$0' }}</span>
+              </li>
+            }
             @if (descuentoEntradasEnCombos() > 0) {
               <li class="descuento">
                 <span>Entradas incluidas en combos</span>
                 <span>−${{ descuentoEntradasEnCombos() }}</span>
+              </li>
+            }
+            @if (descuentoEntradasEnCanjes() > 0) {
+              <li class="descuento">
+                <span>Entradas canjeadas con puntos</span>
+                <span>−${{ descuentoEntradasEnCanjes() }}</span>
+              </li>
+            }
+            @if (descuentoMonto() > 0) {
+              <li>
+                <span>Subtotal</span>
+                <span>${{ subtotal() }}</span>
+              </li>
+              <li class="descuento">
+                <span>Descuento {{ etiquetaDescuento() }}</span>
+                <span>−${{ descuentoMonto() }}</span>
               </li>
             }
           </ul>
@@ -203,6 +260,10 @@
                 </li>
               </ul>
             }
+          }
+
+          @if (puntosAGanar() > 0) {
+            <p class="puntos-a-ganar">⭐ Con esta compra sumás {{ puntosAGanar() }} puntos.</p>
           }
 
           <button

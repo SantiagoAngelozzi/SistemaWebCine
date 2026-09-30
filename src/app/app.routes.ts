@@ -50,11 +50,10 @@ export const routes: Routes = [
       },
       {
         path: 'cupones-puntos',
-        component: AdminPlaceholderComponent,
-        data: {
-          title: 'Cupones y Puntos',
-          description: 'Configuración de cupones (bienvenida, segmentados por edad) y del programa de puntos de fidelización.'
-        }
+        loadComponent: () =>
+          import('./features/admin/cupones-puntos/cupones-puntos.component').then(
+            (m) => m.CuponesPuntosComponent
+          )
       },
       {
         path: 'reportes',

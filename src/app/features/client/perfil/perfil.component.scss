@@ -361,3 +361,62 @@ table {
     font-weight: 700;
   }
 }
+
+// ---------- Puntos ----------
+
+.saldos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.tarjeta-puntos {
+  background: var(--color-lima);
+}
+
+.banner-bienvenida {
+  margin: -8px 0 20px;
+  padding: 12px 16px;
+  border: var(--border-comic);
+  border-radius: 12px;
+  background: var(--color-coral);
+  font-size: 14px;
+
+  a {
+    margin-left: 8px;
+    font-weight: 700;
+    color: var(--color-tinta);
+  }
+}
+
+.recompensas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.recompensa {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 12px;
+  background: var(--color-papel-2);
+  opacity: 0.65;
+
+  &.alcanza {
+    opacity: 1;
+    background: var(--color-lima);
+    box-shadow: var(--shadow-comic-sm);
+  }
+
+  .icono {
+    font-size: 22px;
+  }
+}
+
+.detalle-mov {
+  opacity: 0.75;
+}

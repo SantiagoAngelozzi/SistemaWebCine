@@ -420,3 +420,21 @@
 .exito .credito-usado {
   font-weight: 700;
 }
+
+.detalle li.canje {
+  font-weight: 700;
+  color: var(--color-magenta);
+
+  small {
+    font-weight: 400;
+  }
+}
+
+.puntos-a-ganar {
+  margin: 0 0 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--color-lima);
+  font-weight: 700;
+  font-size: 13px;
+}

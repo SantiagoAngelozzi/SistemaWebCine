@@ -18,6 +18,7 @@ export interface EntradaMiCompra {
   tipo: TipoButaca;
   precio: number;
   incluidaEnCombo: boolean;
+  canjeadaConPuntos: boolean;
 }
 
 export interface CandyMiCompra {
@@ -28,6 +29,8 @@ export interface CandyMiCompra {
   /** Para combos: "1x Pochoclo grande, 1x Gaseosa". */
   contenido: string;
   incluyeEntrada: boolean;
+  /** Obtenido con un canje de puntos. */
+  canje: boolean;
 }
 
 /** Una compra del usuario, lista para mostrar en "Mis compras". */
@@ -36,7 +39,11 @@ export interface MiCompra {
   codigoQr: string;
   codigoCorto: string;
   total: number;
+  descuentoPorcentaje: number;
+  descuentoMonto: number;
   creditoUsado: number;
+  puntosGanados: number;
+  puntosCanjeados: number;
   estadoBase: 'confirmada' | 'cancelada';
   estado: EstadoMiCompra;
   creadaEl: string;
@@ -73,4 +80,6 @@ export interface ResultadoCancelacion {
   compra_id: string;
   credito_otorgado: number;
   credito_total: number;
+  puntos_revertidos: number;
+  puntos_devueltos: number;
 }

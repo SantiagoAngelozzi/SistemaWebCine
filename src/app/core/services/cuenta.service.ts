@@ -69,11 +69,12 @@ export class CuentaService {
       .select(
         `id, codigo_qr, codigo_corto, total, credito_usado, estado, created_at, cancelada_at,
          entrada_validada_at, candy_entregado_at,
-         compra_entradas(precio, incluida_en_combo,
+         descuento_porcentaje, descuento_monto, puntos_ganados, puntos_canjeados,
+         compra_entradas(precio, incluida_en_combo, canjeada_con_puntos,
            butacas(fila, columna, tipo),
            funciones(fecha, hora_inicio, hora_fin, formato, idioma,
              salas(nombre), peliculas(nombre, clasificacion, imagen_url))),
-         compra_candy_items(cantidad, precio_unitario,
+         compra_candy_items(cantidad, precio_unitario, recompensa_id,
            candy_productos(nombre),
            combos(nombre, incluye_entrada, combo_productos(cantidad, candy_productos(nombre))))`
       )
@@ -113,7 +114,9 @@ export class CuentaService {
     return {
       compra_id: data.compra_id,
       credito_otorgado: Number(data.credito_otorgado),
-      credito_total: Number(data.credito_total)
+      credito_total: Number(data.credito_total),
+      puntos_revertidos: Number(data.puntos_revertidos ?? 0),
+      puntos_devueltos: Number(data.puntos_devueltos ?? 0)
     };
   }
 
@@ -131,7 +134,8 @@ export class CuentaService {
         ubicacion: `${e.butacas?.fila ?? '?'}-${e.butacas?.columna ?? '?'}`,
         tipo: e.butacas?.tipo ?? 'estandar',
         precio: Number(e.precio),
-        incluidaEnCombo: !!e.incluida_en_combo
+        incluidaEnCombo: !!e.incluida_en_combo,
+        canjeadaConPuntos: !!e.canjeada_con_puntos
       }))
       .sort((a, b) => a.ubicacion.localeCompare(b.ubicacion, 'es', { numeric: true }));
 
@@ -148,7 +152,8 @@ export class CuentaService {
         precioUnitario: Number(i.precio_unitario),
         esCombo,
         contenido,
-        incluyeEntrada: esCombo && !!i.combos.incluye_entrada
+        incluyeEntrada: esCombo && !!i.combos.incluye_entrada,
+        canje: !!i.recompensa_id
       };
     });
 
@@ -177,7 +182,11 @@ export class CuentaService {
       codigoQr: fila.codigo_qr,
       codigoCorto: fila.codigo_corto,
       total: Number(fila.total),
+      descuentoPorcentaje: Number(fila.descuento_porcentaje ?? 0),
+      descuentoMonto: Number(fila.descuento_monto ?? 0),
       creditoUsado: Number(fila.credito_usado ?? 0),
+      puntosGanados: Number(fila.puntos_ganados ?? 0),
+      puntosCanjeados: Number(fila.puntos_canjeados ?? 0),
       estadoBase: fila.estado,
       estado,
       creadaEl: fila.created_at,

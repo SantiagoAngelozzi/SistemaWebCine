@@ -4,7 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 import { CatalogoCandy } from '../../../core/models/candy.model';
+import { DescuentoAplicable, Recompensa } from '../../../core/models/fidelizacion.model';
 import {
+  CanjeSeleccionado,
   CompraConfirmada,
   FuncionParaCompra,
   ItemCandySeleccionado,
@@ -14,12 +16,14 @@ import { Butaca, TipoButaca } from '../../../core/models/sala.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { CandyService } from '../../../core/services/candy.service';
 import { CuentaService } from '../../../core/services/cuenta.service';
+import { FidelizacionService } from '../../../core/services/fidelizacion.service';
 import { ComprasService } from '../../../core/services/compras.service';
 import { ComprobantePdfService } from '../../../core/services/comprobante-pdf.service';
 import { formatearCodigoCorto } from '../../../core/services/validacion.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { estadoVenta } from '../../../core/utils/pelicula-fechas';
+import { BeneficiosCompraComponent, CambioCanje } from './beneficios-compra/beneficios-compra.component';
 import {
   CambioCantidadCandy,
   CandySelectorComponent,
@@ -61,7 +65,7 @@ const CLIENTE_ID = crypto.randomUUID();
 @Component({
   selector: 'app-butacas',
   standalone: true,
-  imports: [CommonModule, CandySelectorComponent],
+  imports: [CommonModule, CandySelectorComponent, BeneficiosCompraComponent],
   templateUrl: './butacas.component.html',
   styleUrl: './butacas.component.scss'
 })
@@ -72,6 +76,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
   private comprasService = inject(ComprasService);
   private candyService = inject(CandyService);
   private cuentaService = inject(CuentaService);
+  private fidelizacion = inject(FidelizacionService);
   private comprobantePdf = inject(ComprobantePdfService);
   private supabase = inject(SupabaseService);
   private toastService = inject(ToastService);
@@ -184,9 +189,70 @@ export class ButacasComponent implements OnInit, OnDestroy {
     redondear(this.lineasCarrito().reduce((acc, l) => acc + l.subtotal, 0))
   );
 
-  total = computed(() =>
-    redondear(this.subtotalEntradas() - this.descuentoEntradasEnCombos() + this.subtotalCandy())
+  // ---------- Beneficios del usuario registrado ----------
+
+  logueado = computed(() => !!this.authService.session());
+  puntosDisponibles = signal(0);
+  recompensas = signal<Recompensa[]>([]);
+  /** recompensaId -> cantidad */
+  canjes = signal<Map<string, number>>(new Map());
+  descuento = signal<DescuentoAplicable | null>(null);
+  cuponAplicado = signal<string | null>(null);
+  errorCupon = signal<string | null>(null);
+  validandoCupon = signal(false);
+
+  lineasCanje = computed(() =>
+    this.recompensas()
+      .map((recompensa) => ({ recompensa, cantidad: this.canjes().get(recompensa.id) ?? 0 }))
+      .filter((linea) => linea.cantidad > 0)
   );
+
+  canjesEntrada = computed(() =>
+    this.lineasCanje()
+      .filter((l) => l.recompensa.otorga_entrada)
+      .reduce((acc, l) => acc + l.cantidad, 0)
+  );
+
+  puntosComprometidos = computed(() =>
+    this.lineasCanje().reduce((acc, l) => acc + l.cantidad * l.recompensa.costo_puntos, 0)
+  );
+
+  butacasLibresParaCanje = computed(() =>
+    Math.max(0, this.seleccionadas().size - this.combosConEntrada() - this.canjesEntrada())
+  );
+
+  /** Igual que los combos: cada entrada canjeada cubre el precio base de una butaca. */
+  descuentoEntradasEnCanjes = computed(() => {
+    const funcion = this.funcion();
+    if (!funcion) return 0;
+    const disponibles = Math.max(0, this.seleccionadas().size - this.combosConEntrada());
+    return redondear(Math.min(this.canjesEntrada(), disponibles) * funcion.precio);
+  });
+
+  // ---------- Totales (vista previa: la base recalcula todo) ----------
+
+  subtotal = computed(() =>
+    redondear(
+      this.subtotalEntradas() -
+        this.descuentoEntradasEnCombos() -
+        this.descuentoEntradasEnCanjes() +
+        this.subtotalCandy()
+    )
+  );
+
+  porcentajeDescuento = computed(() => this.descuento()?.porcentaje ?? 0);
+
+  descuentoMonto = computed(() => redondear((this.subtotal() * this.porcentajeDescuento()) / 100));
+
+  etiquetaDescuento = computed(() => {
+    const d = this.descuento();
+    if (!d?.origen) return '';
+    return d.origen === 'bienvenida'
+      ? `${d.porcentaje}% de bienvenida`
+      : `${d.porcentaje}% (cupón ${d.codigo})`;
+  });
+
+  total = computed(() => redondear(this.subtotal() - this.descuentoMonto()));
 
   /** Crédito en cuenta del usuario logueado (0 para anónimos). */
   creditoDisponible = signal(0);
@@ -198,6 +264,9 @@ export class ButacasComponent implements OnInit, OnDestroy {
   );
 
   aPagar = computed(() => redondear(this.total() - this.creditoAplicado()));
+
+  /** 1 punto por cada $1 abonado con otros medios (sólo registrados). */
+  puntosAGanar = computed(() => (this.logueado() ? Math.floor(this.aPagar()) : 0));
 
   async ngOnInit(): Promise<void> {
     const funcionId = this.route.snapshot.paramMap.get('funcionId');
@@ -235,7 +304,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
         this.comprasService.listarButacasDeSala(funcion.sala_id),
         this.comprasService.listarButacasOcupadas(this.funcionId),
         this.cargarCatalogoCandy(),
-        this.cargarCredito()
+        this.cargarSaldosYBeneficios()
       ]);
 
       this.armarFilas(butacas, ocupadas);
@@ -247,14 +316,98 @@ export class ButacasComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async cargarCredito(): Promise<void> {
+  /**
+   * Crédito, puntos, recompensas y descuento del usuario logueado. Si algo
+   * falla se sigue pudiendo comprar sin beneficios.
+   */
+  private async cargarSaldosYBeneficios(): Promise<void> {
+    const {
+      data: { session }
+    } = await this.supabase.client.auth.getSession();
+
+    if (!session) {
+      this.creditoDisponible.set(0);
+      this.puntosDisponibles.set(0);
+      this.recompensas.set([]);
+      this.canjes.set(new Map());
+      this.descuento.set(null);
+      this.cuponAplicado.set(null);
+      this.usarCredito.set(false);
+      return;
+    }
+
     try {
-      this.creditoDisponible.set(await this.cuentaService.obtenerCredito());
+      const [perfil, recompensas, descuento] = await Promise.all([
+        this.cuentaService.obtenerPerfil(),
+        this.fidelizacion.listarRecompensas(true),
+        this.fidelizacion.consultarDescuento(this.cuponAplicado())
+      ]);
+      this.creditoDisponible.set(perfil?.credito ?? 0);
+      this.puntosDisponibles.set(perfil?.puntos ?? 0);
+      this.recompensas.set(recompensas);
+
+      // Se descartan canjes de recompensas que ya no están disponibles.
+      const vigentes = new Set(recompensas.map((r) => r.id));
+      this.canjes.update((mapa) => new Map(Array.from(mapa).filter(([id]) => vigentes.has(id))));
+
+      this.descuento.set(descuento);
+      if (this.cuponAplicado() && descuento.error_cupon) {
+        this.errorCupon.set(descuento.error_cupon);
+        this.cuponAplicado.set(null);
+      }
     } catch (err) {
       console.error(err);
       this.creditoDisponible.set(0);
+      this.puntosDisponibles.set(0);
+      this.recompensas.set([]);
     }
     if (this.creditoDisponible() <= 0) this.usarCredito.set(false);
+  }
+
+  // ---------- Cupón y canjes ----------
+
+  async aplicarCupon(codigo: string): Promise<void> {
+    this.validandoCupon.set(true);
+    this.errorCupon.set(null);
+    try {
+      const resultado = await this.fidelizacion.consultarDescuento(codigo);
+      this.descuento.set(resultado);
+      if (resultado.error_cupon) {
+        this.errorCupon.set(resultado.error_cupon);
+        this.cuponAplicado.set(null);
+      } else {
+        this.cuponAplicado.set(codigo.trim().toUpperCase());
+      }
+    } catch (err: any) {
+      console.error(err);
+      this.errorCupon.set(err?.message ?? 'No se pudo validar el cupón.');
+    } finally {
+      this.validandoCupon.set(false);
+    }
+  }
+
+  async quitarCupon(): Promise<void> {
+    this.cuponAplicado.set(null);
+    this.errorCupon.set(null);
+    try {
+      this.descuento.set(await this.fidelizacion.consultarDescuento(null));
+    } catch (err) {
+      console.error(err);
+      this.descuento.set(null);
+    }
+  }
+
+  cambiarCanje(cambio: CambioCanje): void {
+    this.canjes.update((mapa) => {
+      const copia = new Map(mapa);
+      if (cambio.cantidad > 0) copia.set(cambio.id, cambio.cantidad);
+      else copia.delete(cambio.id);
+      return copia;
+    });
+  }
+
+  private canjesParaCompra(): CanjeSeleccionado[] {
+    return this.lineasCanje().map((l) => ({ id: l.recompensa.id, cantidad: l.cantidad }));
   }
 
   /** Si el Candy Bar falla se puede seguir comprando sólo entradas. */
@@ -430,13 +583,33 @@ export class ButacasComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * No puede haber más combos con entrada que butacas elegidas. Si el
-   * cliente suelta una butaca (o se la ganan), se quitan combos con entrada
-   * empezando por el último del listado.
+   * No puede haber más entradas cubiertas (combos con entrada + canjes de
+   * entrada) que butacas elegidas. Si el cliente suelta una butaca (o se la
+   * ganan), se quitan primero los canjes de entrada y después los combos.
    */
   private ajustarCombosAButacas(): void {
-    let sobrante = this.combosConEntrada() - this.seleccionadas().size;
+    let sobrante = this.combosConEntrada() + this.canjesEntrada() - this.seleccionadas().size;
     if (sobrante <= 0) return;
+
+    const canjesEntrada = this.lineasCanje().filter((l) => l.recompensa.otorga_entrada).reverse();
+    if (canjesEntrada.length) {
+      this.canjes.update((mapa) => {
+        const copia = new Map(mapa);
+        for (const linea of canjesEntrada) {
+          if (sobrante <= 0) break;
+          const quitar = Math.min(sobrante, linea.cantidad);
+          const restante = linea.cantidad - quitar;
+          if (restante > 0) copia.set(linea.recompensa.id, restante);
+          else copia.delete(linea.recompensa.id);
+          sobrante -= quitar;
+        }
+        return copia;
+      });
+    }
+    if (sobrante <= 0) {
+      this.toastService.mostrar('Ajustamos tus canjes de entrada a la cantidad de butacas elegidas.');
+      return;
+    }
 
     const lineas = this.lineasCarrito().filter((l) => l.incluyeEntrada).reverse();
     this.carrito.update((mapa) => {
@@ -511,10 +684,15 @@ export class ButacasComponent implements OnInit, OnDestroy {
         funcion.id,
         butacas,
         this.itemsCandyParaCompra(),
-        this.usarCredito() && this.creditoDisponible() > 0
+        this.usarCredito() && this.creditoDisponible() > 0,
+        this.cuponAplicado(),
+        this.canjesParaCompra()
       );
       this.compraExitosa.set(compra);
       this.carrito.set(new Map());
+      this.canjes.set(new Map());
+      this.cuponAplicado.set(null);
+      this.puntosDisponibles.update((p) => p - compra.puntos_canjeados + compra.puntos_ganados);
       if (compra.credito_usado > 0) {
         this.creditoDisponible.update((c) => redondear(Math.max(0, c - compra.credito_usado)));
         this.usarCredito.set(false);
@@ -555,13 +733,15 @@ export class ButacasComponent implements OnInit, OnDestroy {
       ubicacion: entrada.ubicacion,
       tipo: entrada.tipo,
       precio: entrada.precio,
-      incluidaEnCombo: entrada.incluida_en_combo
+      incluidaEnCombo: entrada.incluida_en_combo,
+      canjeadaConPuntos: entrada.canjeada_con_puntos
     }));
 
     const productos = compra.candy.map((item) => ({
       nombre: item.tipo === 'combo' ? this.descripcionCombo(item.id, item.nombre) : item.nombre,
       cantidad: item.cantidad,
-      precio: item.precio_unitario
+      precio: item.precio_unitario,
+      canje: item.canje
     }));
 
     this.generandoPdf.set(true);
@@ -579,6 +759,18 @@ export class ButacasComponent implements OnInit, OnDestroy {
         productos,
         total: compra.total,
         creditoUsado: compra.credito_usado,
+        descuento:
+          compra.descuento_monto > 0
+            ? {
+                etiqueta:
+                  compra.descuento_origen === 'bienvenida'
+                    ? `${compra.descuento_porcentaje}% de bienvenida`
+                    : `${compra.descuento_porcentaje}% (cupon ${compra.descuento_codigo})`,
+                monto: compra.descuento_monto
+              }
+            : undefined,
+        puntosGanados: compra.puntos_ganados,
+        puntosCanjeados: compra.puntos_canjeados,
         advertenciaEdad:
           funcion.peliculaClasificacion === 'ATP'
             ? undefined

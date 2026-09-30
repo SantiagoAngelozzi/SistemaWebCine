@@ -15,12 +15,27 @@
         </p>
       </div>
 
-      <div class="tarjeta-credito">
-        <span class="etiqueta">Crédito en cuenta</span>
-        <span class="monto">${{ perfil()?.credito ?? 0 }}</span>
-        <span class="ayuda">Se genera al cancelar una compra y se usa en la próxima.</span>
+      <div class="saldos">
+        <div class="tarjeta-credito">
+          <span class="etiqueta">Crédito en cuenta</span>
+          <span class="monto">${{ perfil()?.credito ?? 0 }}</span>
+          <span class="ayuda">Se genera al cancelar una compra y se usa en la próxima.</span>
+        </div>
+        <div class="tarjeta-credito tarjeta-puntos">
+          <span class="etiqueta">Puntos</span>
+          <span class="monto">{{ perfil()?.puntos ?? 0 }} pts</span>
+          <span class="ayuda">1 punto por cada $1. Canjealos al comprar.</span>
+        </div>
       </div>
     </header>
+
+    @if (beneficio()?.origen === 'bienvenida') {
+      <div class="banner-bienvenida">
+        🎉 Tenés <strong>{{ beneficio()!.porcentaje }}% de descuento</strong> en tu primera compra. Se aplica solo
+        al pagar.
+        <a routerLink="/cartelera">Ver cartelera</a>
+      </div>
+    }
 
     <div class="tabs" role="tablist">
       <button
@@ -31,6 +46,15 @@
         (click)="pestania.set('compras')"
       >
         MIS COMPRAS
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        [class.active]="pestania() === 'puntos'"
+        (click)="pestania.set('puntos')"
+      >
+        PUNTOS
       </button>
       <button
         type="button"
@@ -73,6 +97,62 @@
           </section>
         }
       }
+    } @else if (pestania() === 'puntos') {
+      <section>
+        <h2>Qué podés canjear</h2>
+        @if (!recompensas().length) {
+          <p class="hint">Por ahora no hay recompensas disponibles.</p>
+        } @else {
+          <div class="recompensas">
+            @for (recompensa of recompensas(); track recompensa.id) {
+              <div class="recompensa" [class.alcanza]="(perfil()?.puntos ?? 0) >= recompensa.costo_puntos">
+                <span class="icono">{{ recompensa.otorga_entrada ? '🎟️' : '🍿' }}</span>
+                <strong>{{ recompensa.nombre }}</strong>
+                <span>{{ recompensa.costo_puntos }} pts</span>
+              </div>
+            }
+          </div>
+          <p class="hint">Los canjes se eligen en la pantalla de compra, en "Canjear puntos". Los puntos son personales e intransferibles.</p>
+        }
+      </section>
+
+      <section>
+        <h2>Historial de puntos</h2>
+        @if (!movimientosPuntos().length) {
+          <p class="hint">Todavía no tenés movimientos. Sumás 1 punto por cada $1 en tus compras.</p>
+        } @else {
+          <div class="tabla-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Concepto</th>
+                  <th class="derecha">Puntos</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (mov of movimientosPuntos(); track mov.id) {
+                  <tr>
+                    <td>{{ mov.created_at | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td>
+                      {{ etiquetaMotivoPuntos(mov.motivo) }}
+                      @if (mov.detalle) {
+                        <span class="detalle-mov">: {{ mov.detalle }}</span>
+                      }
+                      @if (mov.compraCodigoCorto) {
+                        <span class="mono">{{ formatearCodigoCorto(mov.compraCodigoCorto) }}</span>
+                      }
+                    </td>
+                    <td class="derecha" [class.positivo]="mov.puntos > 0" [class.negativo]="mov.puntos < 0">
+                      {{ mov.puntos > 0 ? '+' : '' }}{{ mov.puntos }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
     } @else {
       @if (!movimientos().length) {
         <div class="empty-state">
@@ -144,6 +224,9 @@
           @for (item of compra.candy; track $index) {
             <li>
               {{ item.cantidad }}× {{ item.nombre }}
+              @if (item.canje) {
+                <span class="contenido">(canje de puntos)</span>
+              }
               @if (item.contenido) {
                 <span class="contenido">({{ item.contenido }})</span>
               }
@@ -154,8 +237,17 @@
 
       <p class="importes">
         <strong>Total ${{ compra.total }}</strong>
+        @if (compra.descuentoMonto > 0) {
+          <span> · {{ compra.descuentoPorcentaje }}% off (−${{ compra.descuentoMonto }})</span>
+        }
         @if (compra.creditoUsado > 0) {
           <span> · ${{ compra.creditoUsado }} pagados con crédito</span>
+        }
+        @if (compra.puntosGanados > 0 && compra.estadoBase === 'confirmada') {
+          <span> · +{{ compra.puntosGanados }} pts</span>
+        }
+        @if (compra.puntosCanjeados > 0) {
+          <span> · {{ compra.puntosCanjeados }} pts canjeados</span>
         }
         · Código <span class="mono">{{ formatearCodigoCorto(compra.codigoCorto) }}</span>
       </p>

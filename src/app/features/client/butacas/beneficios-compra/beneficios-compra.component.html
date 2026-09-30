@@ -1,0 +1,105 @@
+<section class="beneficios">
+  @if (!logueado) {
+    <div class="invitacion">
+      <strong>🎁 ¿Tenés cuenta?</strong>
+      <span>
+        Los usuarios registrados tienen descuento de bienvenida en su primera compra, usan cupones y
+        suman 1 punto por cada $1 para canjear por entradas y pochoclos.
+      </span>
+      <a routerLink="/auth/login">Ingresar o registrarme</a>
+    </div>
+  } @else {
+    <div class="bloque">
+      <h2>🎟️ Descuentos</h2>
+
+      @if (esBienvenida) {
+        <p class="bienvenida">
+          🎉 Tenés <strong>{{ descuento!.porcentaje }}% de descuento</strong> por ser tu primera compra.
+        </p>
+      }
+
+      @if (cuponAplicado) {
+        <div class="cupon-aplicado">
+          @if (descuento?.origen === 'cupon') {
+            <span>Cupón <strong class="mono">{{ cuponAplicado }}</strong>: {{ descuento!.porcentaje }}% off</span>
+          } @else {
+            <span>
+              Cupón <strong class="mono">{{ cuponAplicado }}</strong> válido, pero tu descuento de bienvenida es
+              mayor, así que se aplica ese.
+            </span>
+          }
+          <button type="button" class="link" (click)="sacarCupon()">Quitar</button>
+        </div>
+      } @else {
+        <form class="fila-cupon" (ngSubmit)="enviarCupon()">
+          <input
+            type="text"
+            name="codigo"
+            placeholder="Código de cupón"
+            autocomplete="off"
+            autocapitalize="characters"
+            maxlength="20"
+            [(ngModel)]="codigo"
+          />
+          <button type="submit" [disabled]="!codigo.trim() || validandoCupon">
+            {{ validandoCupon ? '…' : 'Aplicar' }}
+          </button>
+        </form>
+      }
+
+      @if (errorCupon) {
+        <p class="error-cupon">{{ errorCupon }}</p>
+      }
+      <p class="nota">Un solo descuento por compra: si corresponden varios, se aplica el mayor.</p>
+    </div>
+
+    <div class="bloque">
+      <h2>⭐ Canjear puntos</h2>
+      <p class="saldo">
+        Tenés <strong>{{ puntosDisponibles }} pts</strong>
+        @if (puntosComprometidos > 0) {
+          · usás {{ puntosComprometidos }} · te quedan {{ puntosRestantes }}
+        }
+      </p>
+
+      @if (!recompensas.length) {
+        <p class="nota">Por ahora no hay recompensas para canjear.</p>
+      } @else {
+        <ul class="recompensas">
+          @for (recompensa of recompensas; track recompensa.id) {
+            <li [class.elegida]="cantidad(recompensa) > 0">
+              <span class="icono">{{ recompensa.otorga_entrada ? '🎟️' : '🍿' }}</span>
+              <span class="nombre">
+                {{ recompensa.nombre }}
+                <small>{{ recompensa.costo_puntos }} pts</small>
+                @if (cantidad(recompensa) === 0 && motivoNoSuma(recompensa); as motivo) {
+                  <small class="motivo">{{ motivo }}</small>
+                }
+              </span>
+              <span class="stepper">
+                <button
+                  type="button"
+                  aria-label="Quitar uno"
+                  [disabled]="cantidad(recompensa) === 0"
+                  (click)="restar(recompensa)"
+                >
+                  −
+                </button>
+                <span class="cantidad">{{ cantidad(recompensa) }}</span>
+                <button
+                  type="button"
+                  aria-label="Agregar uno"
+                  [disabled]="!puedeSumar(recompensa)"
+                  (click)="sumar(recompensa)"
+                >
+                  +
+                </button>
+              </span>
+            </li>
+          }
+        </ul>
+        <p class="nota">Una entrada canjeada cubre el precio base de una butaca; la VIP paga sólo el recargo.</p>
+      }
+    </div>
+  }
+</section>

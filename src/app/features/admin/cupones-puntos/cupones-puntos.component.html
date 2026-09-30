@@ -1,0 +1,242 @@
+<div class="page">
+  <div class="tabs">
+    <button type="button" class="tab" [class.active]="tabActiva() === 'cupones'" (click)="tabActiva.set('cupones')">
+      CUPONES
+    </button>
+    <button type="button" class="tab" [class.active]="tabActiva() === 'puntos'" (click)="tabActiva.set('puntos')">
+      CANJE DE PUNTOS
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <p class="hint">Cargando…</p>
+  } @else if (tabActiva() === 'cupones') {
+    <!-- ---------- Bienvenida ---------- -->
+    <form class="form-card bienvenida" [formGroup]="formBienvenida" (ngSubmit)="guardarBienvenida()">
+      <div>
+        <h3>🎉 Cupón de bienvenida</h3>
+        <p class="hint">
+          Se aplica solo en la primera compra de cada usuario registrado. Si además ingresa un cupón,
+          se usa el de mayor descuento.
+        </p>
+      </div>
+      <div class="fila-bienvenida">
+        <div class="field">
+          <label>Descuento (%)</label>
+          <input type="number" formControlName="porcentaje" min="1" max="100" />
+          <app-form-error [control]="formBienvenida.controls.porcentaje" />
+        </div>
+        <label class="check">
+          <input type="checkbox" formControlName="activo" />
+          Activo
+        </label>
+        <button type="submit" class="btn-primary" [disabled]="guardandoBienvenida()">
+          {{ guardandoBienvenida() ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+    </form>
+
+    <!-- ---------- Cupones ---------- -->
+    <div class="header-row">
+      <h2>Cupones</h2>
+      <button type="button" class="btn-primary" (click)="abrirNuevoCupon()">+ Nuevo cupón</button>
+    </div>
+
+    @if (mostrandoFormCupon()) {
+      <form [formGroup]="formCupon" (ngSubmit)="guardarCupon()" class="form-card">
+        <h3>{{ editandoCuponId() ? 'Editar cupón' : 'Nuevo cupón' }}</h3>
+
+        <div class="row2">
+          <div class="field">
+            <label>Código</label>
+            <input type="text" formControlName="codigo" placeholder="Ej: MAYORES50" class="mono" />
+            <app-form-error [control]="formCupon.controls.codigo" />
+          </div>
+          <div class="field">
+            <label>Descuento (%)</label>
+            <input type="number" formControlName="porcentaje" min="1" max="100" />
+            <app-form-error [control]="formCupon.controls.porcentaje" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Para quién</label>
+          <select formControlName="tipo">
+            <option value="general">Todos los usuarios registrados</option>
+            <option value="segmentado_edad">Un rango de edad</option>
+          </select>
+        </div>
+
+        @if (formCupon.controls.tipo.value === 'segmentado_edad') {
+          <div class="row2">
+            <div class="field">
+              <label>Edad mínima</label>
+              <input type="number" formControlName="edadMinima" min="0" max="120" placeholder="Ej: 50" />
+            </div>
+            <div class="field">
+              <label>Edad máxima (opcional)</label>
+              <input type="number" formControlName="edadMaxima" min="0" max="120" />
+            </div>
+          </div>
+          @if (formCupon.errors?.['rangoEdad'] && formCupon.touched) {
+            <p class="form-error">{{ formCupon.errors?.['rangoEdad'] }}</p>
+          }
+        }
+
+        <div class="row3">
+          <div class="field">
+            <label>Válido desde</label>
+            <input type="date" formControlName="fechaDesde" />
+          </div>
+          <div class="field">
+            <label>Hasta (opcional)</label>
+            <input type="date" formControlName="fechaHasta" />
+          </div>
+          <div class="field">
+            <label>Usos máximos (opcional)</label>
+            <input type="number" formControlName="usosMaximos" min="1" />
+          </div>
+        </div>
+
+        <label class="check">
+          <input type="checkbox" formControlName="activo" />
+          Activo
+        </label>
+
+        <div class="actions">
+          <button type="button" class="btn-secundario" (click)="mostrandoFormCupon.set(false)">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="guardandoCupon()">
+            {{ guardandoCupon() ? 'Guardando…' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (!cupones().length) {
+      <div class="empty-state"><p>Todavía no hay cupones. Creá uno, por ejemplo para mayores de 50.</p></div>
+    } @else {
+      <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descuento</th>
+              <th>Para</th>
+              <th>Vigencia</th>
+              <th>Usos</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cupon of cupones(); track cupon.id) {
+              <tr [class.inactivo]="!cupon.activo">
+                <td class="mono">{{ cupon.codigo }}</td>
+                <td>{{ cupon.porcentaje_descuento }}%</td>
+                <td>{{ condicionCupon(cupon) }}</td>
+                <td>{{ vigenciaCupon(cupon) }}</td>
+                <td>{{ cupon.usos }}{{ cupon.usos_maximos ? ' / ' + cupon.usos_maximos : '' }}</td>
+                <td>
+                  <span class="badge" [class.activo]="cupon.activo">{{ cupon.activo ? 'Activo' : 'Inactivo' }}</span>
+                </td>
+                <td class="acciones-fila">
+                  <button type="button" (click)="abrirEdicionCupon(cupon)">✏️</button>
+                  <button type="button" class="danger" (click)="eliminarCupon(cupon)">🗑️</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  } @else {
+    <!-- ---------- Recompensas ---------- -->
+    <div class="info">
+      Los usuarios registrados suman <strong>1 punto por cada $1</strong> que abonan (el crédito en cuenta no
+      suma). Acá definís qué pueden canjear y cuántos puntos cuesta.
+    </div>
+
+    <div class="header-row">
+      <h2>Tabla de canje</h2>
+      <button type="button" class="btn-primary" (click)="abrirNuevaRecompensa()">+ Nueva recompensa</button>
+    </div>
+
+    @if (mostrandoFormRecompensa()) {
+      <form [formGroup]="formRecompensa" (ngSubmit)="guardarRecompensa()" class="form-card">
+        <h3>{{ editandoRecompensaId() ? 'Editar recompensa' : 'Nueva recompensa' }}</h3>
+
+        <div class="row2">
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" formControlName="nombre" placeholder="Ej: Entrada gratis" />
+            <app-form-error [control]="formRecompensa.controls.nombre" />
+          </div>
+          <div class="field">
+            <label>Costo en puntos</label>
+            <input type="number" formControlName="costoPuntos" min="1" />
+            <app-form-error [control]="formRecompensa.controls.costoPuntos" />
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Qué se canjea</label>
+            <select formControlName="tipo">
+              <option value="entrada">Una entrada (cubre el precio base)</option>
+              <option value="producto">Un producto del Candy Bar</option>
+            </select>
+          </div>
+          @if (formRecompensa.controls.tipo.value === 'producto') {
+            <div class="field">
+              <label>Producto</label>
+              <select formControlName="candyProductoId">
+                <option value="">Elegí un producto…</option>
+                @for (producto of productos(); track producto.id) {
+                  <option [value]="producto.id">
+                    {{ producto.nombre }} (${{ producto.precio }}){{ producto.activo ? '' : ' — oculto' }}
+                  </option>
+                }
+              </select>
+            </div>
+          }
+        </div>
+
+        <label class="check">
+          <input type="checkbox" formControlName="activo" />
+          Activa
+        </label>
+
+        <div class="actions">
+          <button type="button" class="btn-secundario" (click)="mostrandoFormRecompensa.set(false)">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="guardandoRecompensa()">
+            {{ guardandoRecompensa() ? 'Guardando…' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (!recompensas().length) {
+      <div class="empty-state"><p>Todavía no hay recompensas. Ej: "Entrada gratis" por 500 puntos.</p></div>
+    } @else {
+      <div class="grid">
+        @for (recompensa of recompensas(); track recompensa.id) {
+          <article class="recompensa" [class.inactivo]="!recompensa.activo">
+            <span class="icono">{{ recompensa.otorga_entrada ? '🎟️' : '🍿' }}</span>
+            <h3>{{ recompensa.nombre }}</h3>
+            <p class="costo">{{ recompensa.costo_puntos }} pts</p>
+            <p class="hint">
+              {{ recompensa.otorga_entrada ? 'Una entrada (la VIP paga el recargo)' : recompensa.productoNombre }}
+            </p>
+            @if (!recompensa.activo) {
+              <span class="badge">Inactiva</span>
+            }
+            <div class="card-actions">
+              <button type="button" (click)="abrirEdicionRecompensa(recompensa)">✏️ Editar</button>
+              <button type="button" class="danger" (click)="eliminarRecompensa(recompensa)">🗑️ Eliminar</button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  }
+</div>

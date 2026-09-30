@@ -8,12 +8,16 @@ export interface EntradaComprobante {
   precio: number;
   /** La entrada está cubierta por un combo "entrada + candy". */
   incluidaEnCombo?: boolean;
+  /** La entrada se obtuvo canjeando puntos. */
+  canjeadaConPuntos?: boolean;
 }
 
 export interface ProductoComprobante {
   nombre: string;
   cantidad: number;
   precio: number;
+  /** Producto obtenido con un canje de puntos. */
+  canje?: boolean;
 }
 
 export interface DatosComprobante {
@@ -29,6 +33,10 @@ export interface DatosComprobante {
   entradas: EntradaComprobante[];
   productos?: ProductoComprobante[];
   total: number;
+  /** Descuento aplicado (cupón o bienvenida), si hubo. */
+  descuento?: { etiqueta: string; monto: number };
+  puntosGanados?: number;
+  puntosCanjeados?: number;
   /** Crédito en cuenta aplicado al pago (si hubo). */
   creditoUsado?: number;
   advertenciaEdad?: string;
@@ -96,11 +104,12 @@ export class ComprobantePdfService {
     y = this.dibujarSeccion(pdf, 'ENTRADAS', y);
     for (const entrada of datos.entradas) {
       const etiquetaTipo = entrada.tipo === 'vip' ? 'VIP' : entrada.tipo === 'accesible' ? 'Accesible' : 'Estandar';
-      const detalle = entrada.incluidaEnCombo
-        ? entrada.tipo === 'vip'
-          ? ' - incluida en combo (recargo VIP)'
-          : ' - incluida en combo'
-        : '';
+      const cubierta = entrada.incluidaEnCombo
+        ? 'incluida en combo'
+        : entrada.canjeadaConPuntos
+          ? 'canjeada con puntos'
+          : '';
+      const detalle = cubierta ? ` - ${cubierta}${entrada.tipo === 'vip' ? ' (recargo VIP)' : ''}` : '';
       y = this.dibujarFila(pdf, `${entrada.ubicacion} (${etiquetaTipo})${detalle}`, entrada.precio, y);
     }
 
@@ -109,8 +118,14 @@ export class ComprobantePdfService {
       y = this.saltoDePaginaSiHaceFalta(pdf, y, 20);
       y = this.dibujarSeccion(pdf, 'CANDY BAR', y);
       for (const producto of datos.productos) {
-        y = this.dibujarFila(pdf, `${producto.cantidad} x ${producto.nombre}`, producto.precio * producto.cantidad, y);
+        const etiqueta = `${producto.cantidad} x ${producto.nombre}${producto.canje ? ' (canje de puntos)' : ''}`;
+        y = this.dibujarFila(pdf, etiqueta, producto.precio * producto.cantidad, y);
       }
+    }
+
+    if (datos.descuento && datos.descuento.monto > 0) {
+      y += 4;
+      y = this.dibujarFila(pdf, `Descuento ${datos.descuento.etiqueta}`, -datos.descuento.monto, y);
     }
 
     y += 8;
@@ -129,10 +144,21 @@ export class ComprobantePdfService {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(10);
       pdf.text('Credito en cuenta aplicado', margen, y);
-      pdf.text(`-${this.formatearImporte(datos.creditoUsado)}`, 192, y, { align: 'right' });
+      pdf.text(this.formatearImporte(-datos.creditoUsado), 192, y, { align: 'right' });
       y += 6;
       pdf.text('Abonado con otros medios', margen, y);
       pdf.text(this.formatearImporte(Math.max(0, datos.total - datos.creditoUsado)), 192, y, { align: 'right' });
+    }
+
+    if (datos.puntosCanjeados || datos.puntosGanados) {
+      y += 8;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(92, 99, 112);
+      const partes: string[] = [];
+      if (datos.puntosCanjeados) partes.push(`Puntos canjeados: ${datos.puntosCanjeados}`);
+      if (datos.puntosGanados) partes.push(`Puntos sumados: ${datos.puntosGanados}`);
+      pdf.text(partes.join('   ·   '), margen, y);
     }
 
     pdf.setFont('helvetica', 'normal');
@@ -174,7 +200,8 @@ export class ComprobantePdfService {
   }
 
   private formatearImporte(valor: number): string {
-    return `$${valor.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const signo = valor < 0 ? '-' : '';
+    return `${signo}$${Math.abs(valor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
   private nombreSeguro(valor: string): string {

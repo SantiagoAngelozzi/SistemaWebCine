@@ -1,7 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
-import { CompraConfirmada, FuncionParaCompra, ItemCandySeleccionado } from '../models/compra.model';
+import {
+  CanjeSeleccionado,
+  CompraConfirmada,
+  FuncionParaCompra,
+  ItemCandySeleccionado
+} from '../models/compra.model';
 import { Butaca, TipoButaca } from '../models/sala.model';
 import { SupabaseService } from './supabase.service';
 import { precioVigente } from '../utils/pelicula-fechas';
@@ -73,7 +78,9 @@ export class ComprasService {
     funcionId: string,
     butacas: { id: string; tipo: TipoButaca }[],
     candy: ItemCandySeleccionado[] = [],
-    usarCredito = false
+    usarCredito = false,
+    codigoCupon: string | null = null,
+    canjes: CanjeSeleccionado[] = []
   ): Promise<CompraConfirmada> {
     // Precio, disponibilidad, edad, Candy Bar y total se validan en la base.
     // No se aceptan montos ni usuario desde el navegador: del Candy Bar sólo
@@ -85,7 +92,10 @@ export class ComprasService {
         .filter((item) => item.cantidad > 0)
         .map((item) => ({ tipo: item.tipo, id: item.id, cantidad: item.cantidad })),
       // Sólo se indica SI se quiere usar el crédito; cuánto se usa lo decide la base.
-      p_usar_credito: usarCredito
+      p_usar_credito: usarCredito,
+      // El descuento y el costo en puntos también los calcula la base.
+      p_codigo_cupon: codigoCupon?.trim() || null,
+      p_canjes: canjes.filter((c) => c.cantidad > 0).map((c) => ({ id: c.id, cantidad: c.cantidad }))
     });
 
     if (error || !data) throw new Error(error?.message ?? 'No se pudo crear la compra.');
@@ -93,9 +103,14 @@ export class ComprasService {
     const compra = data as CompraConfirmada;
     return {
       ...compra,
+      subtotal: Number(compra.subtotal ?? compra.total),
+      descuento_porcentaje: Number(compra.descuento_porcentaje ?? 0),
+      descuento_monto: Number(compra.descuento_monto ?? 0),
       total: Number(compra.total),
       credito_usado: Number(compra.credito_usado ?? 0),
       a_pagar: Number(compra.a_pagar ?? compra.total),
+      puntos_ganados: Number(compra.puntos_ganados ?? 0),
+      puntos_canjeados: Number(compra.puntos_canjeados ?? 0),
       entradas: (compra.entradas ?? []).map((e) => ({ ...e, precio: Number(e.precio) })),
       candy: (compra.candy ?? []).map((c) => ({ ...c, precio_unitario: Number(c.precio_unitario) }))
     };
