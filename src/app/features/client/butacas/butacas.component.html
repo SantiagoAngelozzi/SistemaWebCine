@@ -4,8 +4,13 @@
   } @else if (compraExitosa()) {
     <div class="exito">
       <h2>¡Compra confirmada!</h2>
-      <p>Tu comprobante incluye este código QR único:</p>
-      <p class="codigo">{{ compraExitosa()!.codigo_qr }}</p>
+      <p>Tu comprobante incluye un código QR único. Si el lector falla, mostrá este código:</p>
+      <p class="codigo codigo-corto">{{ formatearCodigoCorto(compraExitosa()!.codigo_corto) }}</p>
+      @if (compraExitosa()!.candy.length) {
+        <p class="aviso-candy">
+          🍿 Con este mismo QR retirás tus productos en el Candy Bar.
+        </p>
+      }
       <p class="total">Total abonado: ${{ compraExitosa()!.total }}</p>
       <button type="button" class="btn-secondary" [disabled]="generandoPdf()" (click)="descargarComprobante()">
         {{ generandoPdf() ? 'GENERANDO PDF…' : 'VOLVER A DESCARGAR EL COMPROBANTE' }}
@@ -28,86 +33,159 @@
       }
     </header>
 
+    <ol class="pasos">
+      <li [class.activo]="paso() === 'butacas'" [class.hecho]="paso() === 'candy'">
+        <button type="button" (click)="volverAButacas()">1. Butacas</button>
+      </li>
+      <li [class.activo]="paso() === 'candy'">
+        <button type="button" [disabled]="!seleccionadas().size" (click)="irACandy()">2. Candy Bar y pago</button>
+      </li>
+    </ol>
+
     @if (errorMessage()) {
       <p class="error"> {{ errorMessage() }}</p>
     }
 
-    <div class="leyenda">
-      <span class="item"><span class="swatch libre"></span> Libre</span>
-      <span class="item"><span class="swatch accesible"></span> Accesible</span>
-      <span class="item"><span class="swatch vip"></span> VIP (+{{ recargoVipTexto }})</span>
-      <span class="item"><span class="swatch seleccionada"></span> Tu selección</span>
-      <span class="item"><span class="swatch reservada"></span> Eligiendo otra persona</span>
-      <span class="item"><span class="swatch ocupada"></span> Ocupada</span>
-    </div>
+    @if (paso() === 'butacas') {
+      <div class="leyenda">
+        <span class="item"><span class="swatch libre"></span> Libre</span>
+        <span class="item"><span class="swatch accesible"></span> Accesible</span>
+        <span class="item"><span class="swatch vip"></span> VIP (+{{ recargoVipTexto }})</span>
+        <span class="item"><span class="swatch seleccionada"></span> Tu selección</span>
+        <span class="item"><span class="swatch reservada"></span> Eligiendo otra persona</span>
+        <span class="item"><span class="swatch ocupada"></span> Ocupada</span>
+      </div>
 
-    <div class="pantalla">PANTALLA</div>
+      <div class="pantalla">PANTALLA</div>
 
-    <div class="mapa">
-      @for (fila of filas(); track fila.fila) {
-        <div class="fila">
-          <span class="label">{{ fila.fila }}</span>
-          <div class="bloque">
-            @for (b of fila.izquierda; track b.id) {
-              <button
-                type="button"
-                class="butaca"
-                [ngClass]="[b.tipo, b.estado]"
-                [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
-                (click)="toggleButaca(b)"
-              >
-                {{ b.columna }}
-              </button>
-            }
+      <div class="mapa">
+        @for (fila of filas(); track fila.fila) {
+          <div class="fila">
+            <span class="label">{{ fila.fila }}</span>
+            <div class="bloque">
+              @for (b of fila.izquierda; track b.id) {
+                <button
+                  type="button"
+                  class="butaca"
+                  [ngClass]="[b.tipo, b.estado]"
+                  [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
+                  (click)="toggleButaca(b)"
+                >
+                  {{ b.columna }}
+                </button>
+              }
+            </div>
+            <div class="bloque">
+              @for (b of fila.centro; track b.id) {
+                <button
+                  type="button"
+                  class="butaca"
+                  [ngClass]="[b.tipo, b.estado]"
+                  [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
+                  (click)="toggleButaca(b)"
+                >
+                  {{ b.columna }}
+                </button>
+              }
+            </div>
+            <div class="bloque">
+              @for (b of fila.derecha; track b.id) {
+                <button
+                  type="button"
+                  class="butaca"
+                  [ngClass]="[b.tipo, b.estado]"
+                  [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
+                  (click)="toggleButaca(b)"
+                >
+                  {{ b.columna }}
+                </button>
+              }
+            </div>
+            <span class="label">{{ fila.fila }}</span>
           </div>
-          <div class="bloque">
-            @for (b of fila.centro; track b.id) {
-              <button
-                type="button"
-                class="butaca"
-                [ngClass]="[b.tipo, b.estado]"
-                [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
-                (click)="toggleButaca(b)"
-              >
-                {{ b.columna }}
-              </button>
-            }
-          </div>
-          <div class="bloque">
-            @for (b of fila.derecha; track b.id) {
-              <button
-                type="button"
-                class="butaca"
-                [ngClass]="[b.tipo, b.estado]"
-                [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
-                (click)="toggleButaca(b)"
-              >
-                {{ b.columna }}
-              </button>
-            }
-          </div>
-          <span class="label">{{ fila.fila }}</span>
+        }
+      </div>
+
+      <div class="resumen">
+        @if (hayVipSeleccionada()) {
+          <p class="aviso-vip">
+            Elegiste al menos una butaca VIP: tiene un recargo del {{ recargoVipTexto }} sobre el
+            precio base.
+          </p>
+        }
+        <p class="seleccion-texto">Butacas seleccionadas: {{ seleccionadasTexto() }}</p>
+        <p class="total">Entradas: ${{ subtotalEntradas() }}</p>
+        <button
+          type="button"
+          class="btn-primary"
+          [disabled]="!seleccionadas().size"
+          (click)="irACandy()"
+        >
+          CONTINUAR AL CANDY BAR
+        </button>
+      </div>
+    } @else {
+      <div class="paso-candy">
+        <div class="catalogo">
+          @if (errorCandy()) {
+            <p class="error">{{ errorCandy() }}</p>
+          } @else if (catalogo()) {
+            <app-candy-selector
+              [catalogo]="catalogo()!"
+              [carrito]="carrito()"
+              [precioEntrada]="funcion()!.precio"
+              [cantidadButacas]="seleccionadas().size"
+              [combosConEntradaEnCarrito]="combosConEntrada()"
+              (cambiarCantidad)="cambiarCantidadCandy($event)"
+            />
+          }
         </div>
-      }
-    </div>
 
-    <div class="resumen">
-      @if (hayVipSeleccionada()) {
-        <p class="aviso-vip">
-          Elegiste al menos una butaca VIP: tiene un recargo del {{ recargoVipTexto }} sobre el
-          precio base.
-        </p>
-      }
-      <p class="seleccion-texto">Butacas seleccionadas: {{ seleccionadasTexto() }}</p>
-      <p class="total">Total: ${{ total() }}</p>
-      <button
-        type="button"
-        class="btn-primary"
-        [disabled]="!seleccionadas().size || comprando()"
-        (click)="confirmarCompra()"
-      >
-        {{ comprando() ? 'Confirmando…' : 'CONFIRMAR COMPRA' }}
-      </button>
-    </div>
+        <aside class="resumen resumen-final">
+          <h2>Tu compra</h2>
+          <p class="seleccion-texto">Butacas: {{ seleccionadasTexto() }}</p>
+
+          <ul class="detalle">
+            <li>
+              <span>{{ seleccionadas().size }} entrada(s)</span>
+              <span>${{ subtotalEntradas() }}</span>
+            </li>
+            @for (linea of lineasCarrito(); track linea.clave) {
+              <li>
+                <span>
+                  {{ linea.cantidad }}× {{ linea.nombre }}
+                  <button type="button" class="quitar" aria-label="Quitar" (click)="quitarDelCarrito(linea)">✕</button>
+                </span>
+                <span>${{ linea.subtotal }}</span>
+              </li>
+            }
+            @if (descuentoEntradasEnCombos() > 0) {
+              <li class="descuento">
+                <span>Entradas incluidas en combos</span>
+                <span>−${{ descuentoEntradasEnCombos() }}</span>
+              </li>
+            }
+          </ul>
+
+          @if (hayVipSeleccionada()) {
+            <p class="aviso-vip">
+              Incluye butaca(s) VIP con recargo del {{ recargoVipTexto }}. Si un combo cubre una butaca VIP,
+              se cobra sólo el recargo.
+            </p>
+          }
+
+          <p class="total">Total: ${{ total() }}</p>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="!seleccionadas().size || comprando()"
+            (click)="confirmarCompra()"
+          >
+            {{ comprando() ? 'Confirmando…' : 'CONFIRMAR COMPRA' }}
+          </button>
+          <button type="button" class="btn-link" (click)="volverAButacas()">← Cambiar butacas</button>
+        </aside>
+      </div>
+    }
   }
 </div>

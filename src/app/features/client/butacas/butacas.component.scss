@@ -251,3 +251,150 @@
   text-align: center;
   opacity: 0.7;
 }
+// ---------- Pasos de la compra ----------
+
+.pasos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  list-style: none;
+  margin: 16px 0 8px;
+  padding: 0;
+
+  li button {
+    padding: 6px 14px;
+    border: 2px solid var(--color-tinta);
+    border-radius: 999px;
+    background: var(--color-papel-2);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  li.activo button {
+    background: var(--color-lima);
+    box-shadow: var(--shadow-comic-sm);
+  }
+
+  li.hecho button {
+    background: var(--color-turquesa);
+  }
+}
+
+// ---------- Paso Candy Bar ----------
+
+.paso-candy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+  margin-top: 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.resumen-final {
+  margin-top: 0;
+  position: sticky;
+  top: 16px;
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin: 0 0 8px;
+  }
+}
+
+.detalle {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed rgba(27, 26, 46, 0.25);
+  }
+
+  li.descuento {
+    font-weight: 700;
+    color: var(--color-magenta);
+  }
+
+  .quitar {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 11px;
+    opacity: 0.55;
+    padding: 0 2px;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.btn-secondary {
+  display: block;
+  margin: 0 auto 12px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  padding: 10px 18px;
+  border: var(--border-comic);
+  border-radius: 12px;
+  background: var(--color-papel-2);
+  cursor: pointer;
+  box-shadow: var(--shadow-comic-sm);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-link {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.aviso-candy {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 10px;
+  background: var(--color-lima);
+  font-weight: 700;
+}
+
+.exito .btn-primary {
+  max-width: 320px;
+}
+
+.exito .codigo-corto {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 4px;
+}

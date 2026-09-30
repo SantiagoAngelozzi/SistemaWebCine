@@ -1,3 +1,5 @@
+import { TipoButaca } from './sala.model';
+
 export interface FuncionParaCompra {
   id: string;
   fecha: string;
@@ -16,8 +18,40 @@ export interface FuncionParaCompra {
   peliculaDiasPreventa: number;
 }
 
+export type TipoItemCandy = 'producto' | 'combo';
+
+/** Ítem del carrito de Candy Bar que se envía a la RPC (sin precios). */
+export interface ItemCandySeleccionado {
+  tipo: TipoItemCandy;
+  id: string;
+  cantidad: number;
+}
+
+/** Entrada tal como quedó registrada en la base. */
+export interface EntradaConfirmada {
+  butaca_id: string;
+  ubicacion: string;
+  tipo: TipoButaca;
+  precio: number;
+  incluida_en_combo: boolean;
+}
+
+/** Ítem de Candy Bar tal como quedó registrado en la base. */
+export interface CandyConfirmado {
+  tipo: TipoItemCandy;
+  id: string;
+  nombre: string;
+  cantidad: number;
+  precio_unitario: number;
+  incluye_entrada: boolean;
+}
+
 export interface CompraConfirmada {
   compra_id: string;
   codigo_qr: string;
+  /** Código de 8 caracteres para carga manual si falla el lector. */
+  codigo_corto: string;
   total: number;
+  entradas: EntradaConfirmada[];
+  candy: CandyConfirmado[];
 }

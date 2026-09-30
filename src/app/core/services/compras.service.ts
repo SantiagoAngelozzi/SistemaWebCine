@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
-import { CompraConfirmada, FuncionParaCompra } from '../models/compra.model';
+import { CompraConfirmada, FuncionParaCompra, ItemCandySeleccionado } from '../models/compra.model';
 import { Butaca, TipoButaca } from '../models/sala.model';
 import { SupabaseService } from './supabase.service';
 import { precioVigente } from '../utils/pelicula-fechas';
@@ -70,17 +70,29 @@ export class ComprasService {
 
   async confirmarCompra(
     funcionId: string,
-    butacas: { id: string; tipo: TipoButaca }[]
+    butacas: { id: string; tipo: TipoButaca }[],
+    candy: ItemCandySeleccionado[] = []
   ): Promise<CompraConfirmada> {
-    // Precio, disponibilidad, edad y total se validan en la base. No se
-    // aceptan montos ni usuario desde el navegador.
+    // Precio, disponibilidad, edad, Candy Bar y total se validan en la base.
+    // No se aceptan montos ni usuario desde el navegador: del Candy Bar sólo
+    // viajan tipo, id y cantidad.
     const { data, error } = await this.supabase.client.rpc('crear_compra_entradas', {
       p_funcion_id: funcionId,
-      p_butaca_ids: butacas.map((butaca) => butaca.id)
+      p_butaca_ids: butacas.map((butaca) => butaca.id),
+      p_items: candy
+        .filter((item) => item.cantidad > 0)
+        .map((item) => ({ tipo: item.tipo, id: item.id, cantidad: item.cantidad }))
     });
 
     if (error || !data) throw new Error(error?.message ?? 'No se pudo crear la compra.');
-    return data as CompraConfirmada;
+
+    const compra = data as CompraConfirmada;
+    return {
+      ...compra,
+      total: Number(compra.total),
+      entradas: (compra.entradas ?? []).map((e) => ({ ...e, precio: Number(e.precio) })),
+      candy: (compra.candy ?? []).map((c) => ({ ...c, precio_unitario: Number(c.precio_unitario) }))
+    };
   }
 
   suscribirseAOcupacion(funcionId: string, onNuevaOcupacion: (butacaId: string) => void): RealtimeChannel {

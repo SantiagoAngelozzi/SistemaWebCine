@@ -1,0 +1,266 @@
+<div class="page">
+  <div class="tabs">
+    <div class="tab" [class.active]="tabActiva() === 'productos'" (click)="cambiarTab('productos')">
+       PRODUCTOS
+    </div>
+    <div class="tab" [class.active]="tabActiva() === 'combos'" (click)="cambiarTab('combos')">
+       COMBOS
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <p class="hint">Cargando…</p>
+  } @else {
+    @if (tabActiva() === 'productos') {
+      <section class="panel">
+        <div class="crear-categoria">
+          <input #nombreCategoriaInput type="text" placeholder="Nueva categoría (ej: Bebidas)" />
+          <button
+            type="button"
+            class="btn-secundario"
+            [disabled]="guardandoCategoria()"
+            (click)="crearCategoria(nombreCategoriaInput.value); nombreCategoriaInput.value = ''"
+          >
+            + Categoría
+          </button>
+        </div>
+
+        @if (categorias().length) {
+          <div class="chips">
+            @for (categoria of categorias(); track categoria.id) {
+              <span class="chip">
+                {{ categoria.nombre }}
+                <button type="button" (click)="eliminarCategoria(categoria)">✕</button>
+              </span>
+            }
+          </div>
+        }
+
+        <div class="header-row">
+          <h2>Productos</h2>
+          <button type="button" class="btn-primary" (click)="abrirNuevoProducto()">+ Nuevo producto</button>
+        </div>
+
+        @if (mostrandoFormProducto()) {
+          <form [formGroup]="formProducto" (ngSubmit)="guardarProducto()" class="form-card">
+            <h3>{{ editandoProductoId() ? 'Editar producto' : 'Nuevo producto' }}</h3>
+
+            <div class="field">
+              <label>Nombre</label>
+              <input
+                type="text"
+                formControlName="nombre"
+                placeholder="Ej: Pochoclo grande"
+                [class.input-invalido]="formProducto.controls.nombre.invalid && formProducto.controls.nombre.touched"
+              />
+              <app-form-error [control]="formProducto.controls.nombre" />
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label>Categoría</label>
+                <select formControlName="categoriaId">
+                  <option value="">Sin categoría</option>
+                  @for (categoria of categorias(); track categoria.id) {
+                    <option [value]="categoria.id">{{ categoria.nombre }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label>Precio</label>
+                <input
+                  type="number"
+                  formControlName="precio"
+                  min="0"
+                  step="0.01"
+                  [class.input-invalido]="formProducto.controls.precio.invalid && formProducto.controls.precio.touched"
+                />
+                <app-form-error [control]="formProducto.controls.precio" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label>URL de imagen (opcional)</label>
+              <input type="text" formControlName="imagenUrl" placeholder="https://..." />
+            </div>
+
+            <div class="field checkbox-field">
+              <label>
+                <input type="checkbox" formControlName="activo" />
+                Activo (visible para la venta)
+              </label>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="btn-secundario" (click)="cancelarProducto()">Cancelar</button>
+              <button type="submit" class="btn-primary" [disabled]="guardandoProducto()">
+                {{ guardandoProducto() ? 'Guardando…' : 'Guardar' }}
+              </button>
+            </div>
+          </form>
+        }
+
+        @if (!productos().length) {
+          <div class="empty-state"><p>Todavía no hay productos cargados.</p></div>
+        } @else {
+          <div class="grid">
+            @for (producto of productos(); track producto.id) {
+              <div class="producto-card">
+                <div class="poster" [class.sin-imagen]="!producto.imagen_url">
+                  @if (producto.imagen_url) {
+                    <img [src]="producto.imagen_url" [alt]="producto.nombre" />
+                  } @else {
+                    <span>🍿</span>
+                  }
+                  @if (!producto.activo) {
+                    <span class="badge inactivo">Oculto</span>
+                  }
+                </div>
+                <div class="info">
+                  <h3>{{ producto.nombre }}</h3>
+                  <p class="meta">{{ producto.categoriaNombre }}</p>
+                  <p class="precio">${{ producto.precio }}</p>
+                </div>
+                <div class="card-actions">
+                  <button type="button" (click)="abrirEdicionProducto(producto)">✏️ Editar</button>
+                  <button type="button" class="danger" (click)="eliminarProducto(producto)">🗑️ Eliminar</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    } @else {
+      <section class="panel">
+        <div class="header-row">
+          <h2>Combos</h2>
+          <button type="button" class="btn-primary" (click)="abrirNuevoCombo()">+ Nuevo combo</button>
+        </div>
+
+        @if (mostrandoFormCombo()) {
+          <form [formGroup]="formCombo" (ngSubmit)="guardarCombo()" class="form-card">
+            <h3>{{ editandoComboId() ? 'Editar combo' : 'Nuevo combo' }}</h3>
+
+            <div class="field">
+              <label>Nombre</label>
+              <input
+                type="text"
+                formControlName="nombre"
+                placeholder="Ej: Combo Pareja"
+                [class.input-invalido]="formCombo.controls.nombre.invalid && formCombo.controls.nombre.touched"
+              />
+              <app-form-error [control]="formCombo.controls.nombre" />
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label>Precio fijo del combo</label>
+                <input
+                  type="number"
+                  formControlName="precio"
+                  min="0"
+                  step="0.01"
+                  [class.input-invalido]="formCombo.controls.precio.invalid && formCombo.controls.precio.touched"
+                />
+                <app-form-error [control]="formCombo.controls.precio" />
+              </div>
+              <div class="field checkbox-field">
+                <label>
+                  <input type="checkbox" formControlName="incluyeEntrada" />
+                  Incluye una entrada
+                </label>
+                <small class="hint">
+                  Cubre el precio base de una entrada; si la butaca es VIP se cobra sólo el recargo.
+                </small>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Productos del combo</label>
+              <div class="lista-items">
+                @for (producto of productos(); track producto.id) {
+                  <div class="item-combo">
+                    <label class="check">
+                      <input
+                        type="checkbox"
+                        [checked]="cantidadDe(producto.id) > 0"
+                        (change)="toggleProductoEnCombo(producto.id, $any($event.target).checked)"
+                      />
+                      {{ producto.nombre }}
+                      <span class="precio-item">${{ producto.precio }}</span>
+                      @if (!producto.activo) {
+                        <span class="badge inactivo">Oculto</span>
+                      }
+                    </label>
+                    @if (cantidadDe(producto.id) > 0) {
+                      <input
+                        type="number"
+                        class="cantidad"
+                        min="1"
+                        [value]="cantidadDe(producto.id)"
+                        (change)="cambiarCantidad(producto.id, +$any($event.target).value)"
+                      />
+                    }
+                  </div>
+                }
+              </div>
+              @if (!productos().length) {
+                <p class="hint">Cargá productos en la pestaña Productos antes de armar un combo.</p>
+              } @else if (itemsCombo().size) {
+                <p class="hint">
+                  Por separado estos productos cuestan ${{ precioPorSeparado()
+                  }}{{ formCombo.controls.incluyeEntrada.value ? ' + la entrada' : '' }}. El precio del combo
+                  debería ser menor para que sea una promo.
+                </p>
+              }
+            </div>
+
+            <div class="field checkbox-field">
+              <label>
+                <input type="checkbox" formControlName="activo" />
+                Activo (visible para la venta)
+              </label>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="btn-secundario" (click)="cancelarCombo()">Cancelar</button>
+              <button type="submit" class="btn-primary" [disabled]="guardandoCombo()">
+                {{ guardandoCombo() ? 'Guardando…' : 'Guardar' }}
+              </button>
+            </div>
+          </form>
+        }
+
+        @if (!combos().length) {
+          <div class="empty-state"><p>Todavía no hay combos creados.</p></div>
+        } @else {
+          <div class="grid">
+            @for (combo of combos(); track combo.id) {
+              <div class="producto-card combo-card">
+                <div class="info">
+                  <h3>{{ combo.nombre }}</h3>
+                  @if (!combo.activo) {
+                    <span class="badge inactivo">Oculto</span>
+                  }
+                  <p class="precio">${{ combo.precio }}</p>
+                  <ul class="items">
+                    @if (combo.incluye_entrada) {
+                      <li>1 entrada</li>
+                    }
+                    @for (item of combo.items; track item.candyProductoId) {
+                      <li>{{ item.cantidad }}× {{ item.nombre }}</li>
+                    }
+                  </ul>
+                </div>
+                <div class="card-actions">
+                  <button type="button" (click)="abrirEdicionCombo(combo)">✏️ Editar</button>
+                  <button type="button" class="danger" (click)="eliminarCombo(combo)">🗑️ Eliminar</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+</div>
