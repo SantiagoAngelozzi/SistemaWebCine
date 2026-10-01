@@ -17,6 +17,13 @@
 
       <div class="info">
         <h1>{{ pelicula()!.nombre }}</h1>
+        @if (resumen()?.cantidad) {
+          <button type="button" class="puntaje-ficha" (click)="irAResenas()">
+            <app-estrellas [valor]="resumen()!.promedio" [soloLectura]="true" tamanio="chica" />
+            <strong>{{ resumen()!.promedio | number: '1.1-1' }}</strong>
+            <span>({{ resumen()!.cantidad }} {{ resumen()!.cantidad === 1 ? 'reseña' : 'reseñas' }})</span>
+          </button>
+        }
         <div class="tags">
           <span class="badge">{{ pelicula()!.clasificacion }}</span>
           <span class="tag">{{ pelicula()!.duracion_minutos }} min</span>
@@ -63,6 +70,87 @@
             </button>
           }
         </div>
+      }
+    </section>
+
+    <section class="resenas" id="resenas">
+      <h2>Reseñas</h2>
+
+      @if (resumen(); as r) {
+        <div class="resumen-resenas">
+          <div class="promedio-card">
+            <span class="numero">{{ r.cantidad ? (r.promedio | number: '1.1-1') : '—' }}</span>
+            <app-estrellas [valor]="r.promedio" [soloLectura]="true" />
+            <span class="hint">
+              {{ r.cantidad ? r.cantidad + (r.cantidad === 1 ? ' reseña' : ' reseñas') : 'Sin reseñas todavía' }}
+            </span>
+          </div>
+
+          <div class="distribucion">
+            @for (n of estrellasDesc; track n) {
+              <div class="barra-fila">
+                <span class="n">{{ n }} ★</span>
+                <div class="barra"><div class="relleno" [style.width.%]="porcentajeEstrellas(r, n)"></div></div>
+                <span class="cant">{{ r.distribucion[n - 1] }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Calificar: sólo quien ya vio la película -->
+        @if (r.puedeResenar) {
+          @if (miResena() && !editandoResena()) {
+            <div class="aviso aviso-ok">
+              Ya calificaste esta película.
+              <button type="button" class="link" (click)="editandoResena.set(true)">Editar mi reseña</button>
+            </div>
+          } @else {
+            <app-resena-form
+              [peliculaId]="pelicula()!.id"
+              [resena]="miResena()"
+              [mostrarCancelar]="!!miResena()"
+              (guardada)="alGuardarResena()"
+              (cancelar)="editandoResena.set(false)"
+            />
+          }
+        } @else if (!logueado()) {
+          <p class="aviso">
+            <a routerLink="/auth/login">Iniciá sesión</a> para calificar esta película después de verla.
+          </p>
+        } @else {
+          <p class="aviso">Vas a poder calificarla cuando la veas en el cine. 🍿</p>
+        }
+
+        @if (r.resenas.length) {
+          <ul class="lista-resenas">
+            @for (resena of r.resenas; track resena.id) {
+              <li class="resena" [class.mia]="resena.esMia">
+                <div class="resena-cabecera">
+                  <span class="avatar">{{ resena.autor.charAt(0) }}</span>
+                  <div>
+                    <strong>{{ resena.esMia ? 'Tu reseña' : resena.autor }}</strong>
+                    <span class="fecha">
+                      {{ resena.creadaEl | tiempoRelativo }}{{ resena.editada ? ' · editada' : '' }}
+                    </span>
+                  </div>
+                  <app-estrellas [valor]="resena.calificacion" [soloLectura]="true" tamanio="chica" />
+                  @if (resena.esMia || esAdmin()) {
+                    <button type="button" class="eliminar" title="Eliminar reseña" (click)="eliminarResena(resena)">
+                      🗑️
+                    </button>
+                  }
+                </div>
+                @if (resena.comentario) {
+                  <p class="comentario">{{ resena.comentario }}</p>
+                }
+              </li>
+            }
+          </ul>
+        }
+      } @else if (errorResenas()) {
+        <div class="empty-state"><p>No se pudieron cargar las reseñas.</p></div>
+      } @else {
+        <p class="hint">Cargando reseñas…</p>
       }
     </section>
   }

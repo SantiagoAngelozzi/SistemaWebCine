@@ -124,11 +124,11 @@ export const routes: Routes = [
       },
       {
         path: 'mis-peliculas',
-        component: AdminPlaceholderComponent,
-        data: {
-          title: 'Mis Películas',
-          description: 'Historial visual de funciones vistas: póster, fecha y calificación personal otorgada.'
-        }
+        canActivate: [sesionGuard],
+        loadComponent: () =>
+          import('./features/client/mis-peliculas/mis-peliculas.component').then(
+            (m) => m.MisPeliculasComponent
+          )
       },
       {
         path: 'perfil',

@@ -1,0 +1,133 @@
+<div class="page">
+  <header class="cabecera">
+    <div>
+      <h1>Mis Películas</h1>
+      <p class="meta">Las películas que viste con nosotros y cómo las calificaste.</p>
+    </div>
+
+    @if (peliculas().length) {
+      <div class="stats">
+        <div class="stat">
+          <span class="valor">{{ peliculas().length }}</span>
+          <span class="etiqueta">{{ peliculas().length === 1 ? 'película' : 'películas' }}</span>
+        </div>
+        <div class="stat">
+          <span class="valor">{{ totalFunciones() }}</span>
+          <span class="etiqueta">{{ totalFunciones() === 1 ? 'función' : 'funciones' }}</span>
+        </div>
+        <div class="stat">
+          <span class="valor">{{ promedioPropio() != null ? (promedioPropio() | number: '1.1-1') : '—' }}</span>
+          <span class="etiqueta">tu promedio ★</span>
+        </div>
+      </div>
+    }
+  </header>
+
+  @if (cargando()) {
+    <p class="hint">Cargando…</p>
+  } @else if (errorMessage()) {
+    <div class="empty-state">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="btn-secundario" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (!peliculas().length) {
+    <div class="empty-state">
+      <p class="grande">🎬</p>
+      <p>Todavía no viste películas con nosotros.</p>
+      <p class="hint">
+        Cuando vayas a una función (o termine la función que compraste) la vas a ver acá y la vas a poder
+        calificar.
+      </p>
+      <a class="btn-primary" routerLink="/cartelera">Ver cartelera</a>
+    </div>
+  } @else {
+    <div class="filtros">
+      <button type="button" class="tab" [class.active]="filtro() === 'todas'" (click)="filtro.set('todas')">
+        Todas ({{ peliculas().length }})
+      </button>
+      <button
+        type="button"
+        class="tab"
+        [class.active]="filtro() === 'sin_calificar'"
+        (click)="filtro.set('sin_calificar')"
+      >
+        Sin calificar ({{ sinCalificar().length }})
+      </button>
+    </div>
+
+    @if (!visibles().length) {
+      <div class="empty-state"><p>¡Calificaste todas las películas que viste! ⭐</p></div>
+    } @else {
+      <div class="galeria">
+        @for (pelicula of visibles(); track pelicula.peliculaId) {
+          <article class="tarjeta">
+            <a class="poster" [routerLink]="['/pelicula', pelicula.peliculaId]" [title]="'Ver ficha de ' + pelicula.nombre">
+              @if (pelicula.imagenUrl) {
+                <img [src]="pelicula.imagenUrl" [alt]="pelicula.nombre" loading="lazy" />
+              } @else {
+                <span>🎬</span>
+              }
+              @if (pelicula.veces > 1) {
+                <span class="veces">×{{ pelicula.veces }}</span>
+              }
+            </a>
+
+            <div class="cuerpo">
+              <h3>{{ pelicula.nombre }}</h3>
+              @if (pelicula.funciones[0]; as ultima) {
+                <p class="funcion">
+                  📅 {{ formatearFecha(ultima.fecha) }} · {{ ultima.horaInicio }} h
+                  <br />
+                  <span class="hint">{{ ultima.sala }} · {{ ultima.formato }}</span>
+                </p>
+              }
+              @if (pelicula.veces > 1) {
+                <details class="otras">
+                  <summary>La viste {{ pelicula.veces }} veces</summary>
+                  <ul>
+                    @for (funcion of pelicula.funciones; track $index) {
+                      <li>{{ formatearFecha(funcion.fecha) }} · {{ funcion.horaInicio }} h · {{ funcion.sala }}</li>
+                    }
+                  </ul>
+                </details>
+              }
+
+              <div class="calificacion">
+                @if (pelicula.calificacion != null) {
+                  <app-estrellas [valor]="pelicula.calificacion" [soloLectura]="true" />
+                  @if (pelicula.comentario) {
+                    <p class="comentario">“{{ pelicula.comentario }}”</p>
+                  }
+                  <button type="button" class="btn-secundario" (click)="abrirCalificacion(pelicula)">
+                    ✏️ Editar reseña
+                  </button>
+                } @else {
+                  <span class="sin-calificar">Sin calificar</span>
+                  <button type="button" class="btn-primary" (click)="abrirCalificacion(pelicula)">⭐ Calificar</button>
+                }
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  }
+</div>
+
+@if (calificando(); as pelicula) {
+  <div class="modal-fondo" (click)="cerrarCalificacion()">
+    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-cabecera">
+        <h2>{{ pelicula.nombre }}</h2>
+        <button type="button" class="cerrar" aria-label="Cerrar" (click)="cerrarCalificacion()">✕</button>
+      </div>
+      <app-resena-form
+        [peliculaId]="pelicula.peliculaId"
+        [resena]="pelicula.calificacion != null ? { calificacion: pelicula.calificacion, comentario: pelicula.comentario } : null"
+        [mostrarCancelar]="true"
+        (guardada)="alGuardar()"
+        (cancelar)="cerrarCalificacion()"
+      />
+    </div>
+  </div>
+}

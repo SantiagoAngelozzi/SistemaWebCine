@@ -87,6 +87,11 @@ export class CuponesPuntosComponent implements OnInit {
     activo: [true]
   });
 
+  /** Mensaje del validador de rango de edad (null si no hay error). */
+  get errorRangoEdad(): string | null {
+    return this.formCupon.errors?.['rangoEdad'] ?? null;
+  }
+
   async ngOnInit(): Promise<void> {
     await this.cargarTodo();
   }
