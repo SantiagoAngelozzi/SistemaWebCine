@@ -27,8 +27,8 @@ export class AdminLayoutComponent {
     { path: 'empleados', label: 'Empleados' },
     { path: '/empleado', label: 'Validar QR' },
     { path: 'cupones-puntos', label: 'Cupones y Puntos' },
-    { path: 'reportes', label: 'Reportes' },
-    { path: 'auditoria', label: 'Auditoría', },
+    { path: 'reportes', label: 'Dashboard y Reportes' },
+    { path: 'auditoria', label: 'Auditoría' },
   ];
 
   async cerrarSesion(): Promise<void> {

@@ -1,0 +1,189 @@
+<div class="page">
+  <!-- ---------- Filtros + exportación (una sola fila, arriba de todo) ---------- -->
+  <div class="barra-filtros">
+    <div class="presets" role="group" aria-label="Período">
+      <button type="button" class="chip" [class.active]="preset() === '7'" (click)="elegirPreset('7')">7 días</button>
+      <button type="button" class="chip" [class.active]="preset() === '30'" (click)="elegirPreset('30')">30 días</button>
+      <button type="button" class="chip" [class.active]="preset() === 'mes'" (click)="elegirPreset('mes')">Este mes</button>
+      <button type="button" class="chip" [class.active]="preset() === 'mes-anterior'" (click)="elegirPreset('mes-anterior')">
+        Mes anterior
+      </button>
+    </div>
+
+    <div class="fechas">
+      <label>
+        Desde
+        <input type="date" [ngModel]="desde()" (ngModelChange)="cambiarFecha('desde', $event)" [max]="hasta()" />
+      </label>
+      <label>
+        Hasta
+        <input type="date" [ngModel]="hasta()" (ngModelChange)="cambiarFecha('hasta', $event)" [min]="desde()" />
+      </label>
+    </div>
+
+    <div class="exportar">
+      <button type="button" class="btn-secundario" [disabled]="!reporte() || !!exportando()" (click)="exportarPdf()">
+        📄 PDF
+      </button>
+      <button type="button" class="btn-primary" [disabled]="!reporte() || !!exportando()" (click)="exportarXlsx()">
+        📊 Excel
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="empty-state">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="btn-secundario" (click)="cargar()">Reintentar</button>
+    </div>
+  }
+
+  @if (reporte(); as r) {
+    <div class="contenido" [class.recargando]="cargando()">
+      <!-- ---------- Indicadores ---------- -->
+      <div class="kpis">
+        <div class="kpi destacado">
+          <span class="etiqueta">Facturación</span>
+          <span class="valor">{{ formatearMoneda(r.resumen.facturacion) }}</span>
+          <span class="ayuda">Cobrado sin crédito: {{ formatearMoneda(r.resumen.cobrado) }}</span>
+        </div>
+        <div class="kpi">
+          <span class="etiqueta">Entradas vendidas</span>
+          <span class="valor">{{ formatearEntero(r.resumen.entradas) }}</span>
+          <span class="ayuda">en {{ formatearEntero(r.resumen.compras) }} compras</span>
+        </div>
+        <div class="kpi">
+          <span class="etiqueta">Ticket promedio</span>
+          <span class="valor">{{ formatearMoneda(r.resumen.ticketPromedio) }}</span>
+          <span class="ayuda">Descuentos: {{ formatearMoneda(r.resumen.descuentos) }}</span>
+        </div>
+        <div class="kpi">
+          <span class="etiqueta">Candy Bar</span>
+          <span class="valor">{{ formatearMoneda(r.resumen.candy) }}</span>
+          <span class="ayuda">
+            {{ r.resumen.canceladas }} {{ r.resumen.canceladas === 1 ? 'compra cancelada' : 'compras canceladas' }}
+          </span>
+        </div>
+        <div class="kpi estrella">
+          <span class="etiqueta">⭐ Producto estrella</span>
+          @if (productoEstrella(); as p) {
+            <span class="valor nombre">{{ p.nombre }}</span>
+            <span class="ayuda">{{ formatearEntero(p.cantidad) }} unidades</span>
+          } @else {
+            <span class="valor nombre">—</span>
+            <span class="ayuda">Sin ventas de Candy Bar</span>
+          }
+        </div>
+      </div>
+
+      <!-- ---------- Gráficos diarios ---------- -->
+      <div class="grid-2">
+        <section class="panel">
+          <h2>Facturación diaria</h2>
+          <p class="sub">{{ formatearFecha(r.desde) }} al {{ formatearFecha(r.hasta) }}</p>
+          <app-grafico-columnas
+            [datos]="puntosFacturacion()"
+            formato="moneda"
+            [color]="colorFacturacion"
+            descripcion="Facturación por día en pesos"
+          />
+        </section>
+
+        <section class="panel">
+          <h2>Entradas vendidas por día</h2>
+          <p class="sub">{{ formatearFecha(r.desde) }} al {{ formatearFecha(r.hasta) }}</p>
+          <app-grafico-columnas
+            [datos]="puntosEntradas()"
+            formato="entero"
+            [color]="colorEntradas"
+            descripcion="Entradas vendidas por día"
+          />
+        </section>
+      </div>
+
+      <!-- ---------- Rankings ---------- -->
+      <div class="grid-2">
+        <section class="panel">
+          <div class="panel-cabecera">
+            <div>
+              <h2>Películas más vistas</h2>
+              <p class="sub">{{ rangoPeliculas() }} · por entradas vendidas</p>
+            </div>
+            <div class="toggle" role="group" aria-label="Período de películas">
+              <button type="button" [class.active]="periodoPeliculas() === 'semana'" (click)="periodoPeliculas.set('semana')">
+                Semana
+              </button>
+              <button type="button" [class.active]="periodoPeliculas() === 'mes'" (click)="periodoPeliculas.set('mes')">
+                Mes
+              </button>
+            </div>
+          </div>
+          <app-ranking-barras [items]="peliculas()" unidad="entradas" [color]="colorFacturacion" />
+        </section>
+
+        <section class="panel">
+          <h2>Candy Bar: más vendidos</h2>
+          <p class="sub">Unidades en el período (incluye las que van dentro de combos)</p>
+          <app-ranking-barras [items]="r.productos" unidad="u." [color]="colorEntradas" />
+          @if (r.combos.length) {
+            <h3>Combos</h3>
+            <app-ranking-barras [items]="r.combos" unidad="u." [color]="colorEntradas" />
+          }
+        </section>
+      </div>
+
+      <!-- ---------- Detalle (vista de tabla de los gráficos) ---------- -->
+      <section class="panel">
+        <h2>Detalle por día</h2>
+        <div class="tabla-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th class="num">Compras</th>
+                <th class="num">Entradas</th>
+                <th class="num">Candy Bar</th>
+                <th class="num">Descuentos</th>
+                <th class="num">Facturación</th>
+                <th class="num">Crédito</th>
+                <th class="num">Cobrado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (d of diasDetalle(); track d.dia) {
+                <tr [class.sin-ventas]="!d.compras">
+                  <td>{{ diaSemana(d.dia).slice(0, 3) }} {{ formatearFecha(d.dia) }}</td>
+                  <td class="num">{{ formatearEntero(d.compras) }}</td>
+                  <td class="num">{{ formatearEntero(d.entradas) }}</td>
+                  <td class="num">{{ formatearMoneda(d.candy) }}</td>
+                  <td class="num">{{ formatearMoneda(d.descuentos) }}</td>
+                  <td class="num fuerte">{{ formatearMoneda(d.facturacion) }}</td>
+                  <td class="num">{{ formatearMoneda(d.credito) }}</td>
+                  <td class="num">{{ formatearMoneda(d.cobrado) }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <td class="num">{{ formatearEntero(r.resumen.compras) }}</td>
+                <td class="num">{{ formatearEntero(r.resumen.entradas) }}</td>
+                <td class="num">{{ formatearMoneda(r.resumen.candy) }}</td>
+                <td class="num">{{ formatearMoneda(r.resumen.descuentos) }}</td>
+                <td class="num">{{ formatearMoneda(r.resumen.facturacion) }}</td>
+                <td class="num">{{ formatearMoneda(r.resumen.credito) }}</td>
+                <td class="num">{{ formatearMoneda(r.resumen.cobrado) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p class="nota">
+          Se cuentan las compras no canceladas por fecha de compra. La facturación incluye lo pagado con crédito en
+          cuenta; "Cobrado" es la facturación menos ese crédito.
+        </p>
+      </section>
+    </div>
+  } @else if (!errorMessage()) {
+    <p class="hint">Cargando…</p>
+  }
+</div>

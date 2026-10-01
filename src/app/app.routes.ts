@@ -1,7 +1,5 @@
 import { Routes } from '@angular/router';
 
-import { AdminPlaceholderComponent } from './shared/admin-placeholder/admin-placeholder.component';
-
 import { adminGuard } from './core/guards/admin.guard';
 import { empleadoGuard, sesionGuard, sinEmpleadoGuard } from './core/guards/rol.guard';
 
@@ -57,19 +55,13 @@ export const routes: Routes = [
       },
       {
         path: 'reportes',
-        component: AdminPlaceholderComponent,
-        data: {
-          title: 'Reportes',
-          description: 'Exportación de facturación a PDF y Excel, con gráficos semanales y mensuales.'
-        }
+        loadComponent: () =>
+          import('./features/admin/reportes/reportes.component').then((m) => m.ReportesComponent)
       },
       {
         path: 'auditoria',
-        component: AdminPlaceholderComponent,
-        data: {
-          title: 'Auditoría',
-          description: 'Registro cronológico e inmutable de acciones del panel: quién, qué y cuándo.'
-        }
+        loadComponent: () =>
+          import('./features/admin/auditoria/auditoria.component').then((m) => m.AuditoriaComponent)
       }
     ]
   },

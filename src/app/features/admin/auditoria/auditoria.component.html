@@ -1,0 +1,150 @@
+<div class="page">
+  <div class="cabecera">
+    <div>
+      <h2>Registro de auditoría</h2>
+      <p class="hint">
+        Historial inmutable de las operaciones del panel y de los empleados: nadie puede editarlo ni borrarlo.
+      </p>
+    </div>
+    <span class="en-vivo" title="Los registros nuevos aparecen solos">● En vivo</span>
+  </div>
+
+  <!-- ---------- Filtros ---------- -->
+  <div class="filtros">
+    <label>
+      Acción
+      <select [ngModel]="filtros().tipo" (ngModelChange)="cambiarFiltro('tipo', $event)">
+        @for (tipo of tipos; track tipo.valor) {
+          <option [value]="tipo.valor">{{ tipo.nombre }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Sobre
+      <select [ngModel]="filtros().entidad ?? ''" (ngModelChange)="cambiarFiltro('entidad', $event)">
+        <option value="">Todo</option>
+        @for (entidad of entidades; track entidad.valor) {
+          <option [value]="entidad.valor">{{ entidad.nombre }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Desde
+      <input type="date" [ngModel]="filtros().desde" (ngModelChange)="cambiarFiltro('desde', $event)" [max]="hoy" />
+    </label>
+    <label>
+      Hasta
+      <input type="date" [ngModel]="filtros().hasta" (ngModelChange)="cambiarFiltro('hasta', $event)" [max]="hoy" />
+    </label>
+    @if (hayFiltros()) {
+      <button type="button" class="btn-secundario" (click)="limpiarFiltros()">Limpiar filtros</button>
+    }
+  </div>
+
+  @if (pendientes() > 0) {
+    <button type="button" class="aviso-nuevos" (click)="verNuevos()">
+      Hay {{ pendientes() }} {{ pendientes() === 1 ? 'registro nuevo' : 'registros nuevos' }} · Actualizar
+    </button>
+  }
+
+  @if (errorMessage()) {
+    <div class="empty-state">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="btn-secundario" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (cargando() && !filas().length) {
+    <p class="hint">Cargando…</p>
+  } @else if (!filas().length) {
+    <div class="empty-state">
+      <p>{{ hayFiltros() ? 'No hay registros con esos filtros.' : 'Todavía no hay registros.' }}</p>
+    </div>
+  } @else {
+    <ol class="lista" [class.recargando]="cargando()">
+      @for (fila of filas(); track fila.registro.id) {
+        <li class="registro" [class.nuevo]="nuevos().has(fila.registro.id)">
+          <div class="cuando">
+            <span class="fecha">{{ fila.registro.creadoEl | date: 'dd/MM/yyyy' }}</span>
+            <span class="hora">{{ fila.registro.creadoEl | date: 'HH:mm:ss' }}</span>
+          </div>
+
+          <span class="icono" aria-hidden="true">{{ fila.descripcion.icono }}</span>
+
+          <div class="que">
+            <div class="titulo">
+              <strong>{{ fila.descripcion.titulo }}</strong>
+              @if (fila.descripcion.esCambioDePrecio) {
+                <span class="badge precio">Cambio de precio</span>
+              }
+            </div>
+            @if (fila.descripcion.objeto) {
+              <span class="objeto">{{ fila.descripcion.objeto }}</span>
+            }
+            @if (fila.descripcion.extra) {
+              <span class="extra">{{ fila.descripcion.extra }}</span>
+            }
+
+            @if (tieneDetalle(fila)) {
+              <button type="button" class="ver-detalle" (click)="alternarDetalle(fila.registro.id)">
+                {{ expandidos().has(fila.registro.id) ? '▾ Ocultar detalle' : '▸ Ver detalle' }}
+              </button>
+              @if (expandidos().has(fila.registro.id)) {
+                <table class="detalle">
+                  @if (fila.descripcion.cambios.length) {
+                    <thead>
+                      <tr><th>Campo</th><th>Antes</th><th></th><th>Después</th></tr>
+                    </thead>
+                    <tbody>
+                      @for (cambio of fila.descripcion.cambios; track cambio.campo) {
+                        <tr>
+                          <td>{{ cambio.campo }}</td>
+                          <td class="antes">{{ cambio.antes }}</td>
+                          <td aria-hidden="true">→</td>
+                          <td class="despues">{{ cambio.despues }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  } @else {
+                    <tbody>
+                      @for (campo of fila.campos; track campo.campo) {
+                        <tr>
+                          <td>{{ campo.campo }}</td>
+                          <td class="despues">{{ campo.despues }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  }
+                </table>
+              }
+            }
+          </div>
+
+          <div class="quien">
+            @if (fila.registro.responsable; as responsable) {
+              <span class="nombre">{{ responsable.nombre }}</span>
+              <span class="badge rol" [attr.data-rol]="responsable.rol">{{ responsable.rol }}</span>
+              <span class="email">{{ responsable.email }}</span>
+            } @else {
+              <span class="nombre">Sistema</span>
+              <span class="email">Operación sin usuario (consola o proceso)</span>
+            }
+          </div>
+        </li>
+      }
+    </ol>
+
+    <div class="paginacion">
+      <button type="button" class="btn-secundario" [disabled]="pagina() === 0" (click)="irAPagina(pagina() - 1)">
+        ← Más nuevos
+      </button>
+      <span>{{ rango() }}</span>
+      <button
+        type="button"
+        class="btn-secundario"
+        [disabled]="pagina() + 1 >= totalPaginas()"
+        (click)="irAPagina(pagina() + 1)"
+      >
+        Más viejos →
+      </button>
+    </div>
+  }
+</div>
