@@ -74,6 +74,7 @@
               <input
                 type="date"
                 formControlName="fecha"
+                [min]="hoy"
                 [class.input-invalido]="formFuncion.controls.fecha.invalid && formFuncion.controls.fecha.touched"
               />
               <app-form-error [control]="formFuncion.controls.fecha" />
@@ -127,8 +128,20 @@
           </div>
         </form>
 
-        @if (!funciones().length) {
-          <div class="empty-state"><p>Todavía no hay funciones programadas.</p></div>
+        @if (pasadas().length) {
+          <div class="filtro-pasadas">
+            <label class="check">
+              <input type="checkbox" [checked]="mostrarPasadas()" (change)="mostrarPasadas.set(!mostrarPasadas())" />
+              Mostrar funciones pasadas ({{ pasadas().length }})
+            </label>
+            <span class="hint">Las funciones pasadas no se venden y se conservan como historial.</span>
+          </div>
+        }
+
+        @if (!funcionesVisibles().length) {
+          <div class="empty-state">
+            <p>{{ funciones().length ? 'No hay funciones próximas.' : 'Todavía no hay funciones programadas.' }}</p>
+          </div>
         } @else {
           <table class="tabla-funciones">
             <thead>
@@ -140,12 +153,13 @@
                 <th>Formato</th>
                 <th>Idioma</th>
                 <th>Precio vigente</th>
+                <th>Vendidas</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              @for (funcion of funciones(); track funcion.id) {
-                <tr>
+              @for (funcion of funcionesVisibles(); track funcion.id) {
+                <tr [class.pasada]="esPasada(funcion)">
                   <td>{{ funcion.peliculaNombre }}</td>
                   <td>{{ funcion.salaNombre }}</td>
                   <td>{{ funcion.fecha }}</td>
@@ -153,8 +167,20 @@
                   <td>{{ funcion.formato }}</td>
                   <td>{{ funcion.idioma }}</td>
                   <td>${{ funcion.precioVigente }}</td>
+                  <td>{{ funcion.entradasVendidas }}</td>
                   <td>
-                    <button type="button" class="danger" (click)="eliminarFuncion(funcion)">🗑️</button>
+                    @if (esPasada(funcion)) {
+                      <span class="badge-pasada">Pasada</span>
+                    }
+                    <button
+                      type="button"
+                      class="danger"
+                      [disabled]="funcion.tieneCompras"
+                      [title]="funcion.tieneCompras ? 'Tiene compras: no se puede eliminar (forma parte del historial)' : 'Eliminar función'"
+                      (click)="eliminarFuncion(funcion)"
+                    >
+                      🗑️
+                    </button>
                   </td>
                 </tr>
               }
@@ -164,4 +190,4 @@
       </section>
     }
   }
-</div>
+</div>

@@ -12,7 +12,7 @@ export class FuncionesService {
     const { data, error } = await this.supabase.client
       .from('funciones')
       .select(
-        '*, peliculas(nombre, precio_normal, precio_preventa, dias_preventa, fecha_estreno), salas(nombre)'
+        '*, peliculas(nombre, precio_normal, precio_preventa, dias_preventa, fecha_estreno), salas(nombre), compra_entradas(activa)'
       )
       .order('fecha', { ascending: true })
       .order('hora_inicio', { ascending: true });
@@ -23,7 +23,9 @@ export class FuncionesService {
       ...fila,
       peliculaNombre: fila.peliculas?.nombre ?? '(película eliminada)',
       salaNombre: fila.salas?.nombre ?? '(sala eliminada)',
-      precioVigente: fila.peliculas ? precioVigente(fila.peliculas) : 0
+      precioVigente: fila.peliculas ? precioVigente(fila.peliculas) : 0,
+      entradasVendidas: (fila.compra_entradas ?? []).filter((e: any) => e.activa).length,
+      tieneCompras: (fila.compra_entradas ?? []).length > 0
     }));
   }
 

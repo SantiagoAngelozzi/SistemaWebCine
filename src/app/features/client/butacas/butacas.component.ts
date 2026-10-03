@@ -22,7 +22,7 @@ import { ComprobantePdfService } from '../../../core/services/comprobante-pdf.se
 import { formatearCodigoCorto } from '../../../core/services/validacion.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { estadoVenta } from '../../../core/utils/pelicula-fechas';
+import { estadoVenta, funcionYaComenzo } from '../../../core/utils/pelicula-fechas';
 import { BeneficiosCompraComponent, CambioCanje } from './beneficios-compra/beneficios-compra.component';
 import {
   CambioCantidadCandy,
@@ -296,6 +296,10 @@ export class ButacasComponent implements OnInit, OnDestroy {
         }) === 'proximamente'
       ) {
         this.errorMessage.set('La venta de esta película todavía no está habilitada.');
+        return;
+      }
+      if (funcionYaComenzo(funcion.fecha, funcion.hora_inicio)) {
+        this.errorMessage.set('Esta función ya comenzó, así que no se pueden comprar entradas. Elegí otra función.');
         return;
       }
       this.funcion.set(funcion);

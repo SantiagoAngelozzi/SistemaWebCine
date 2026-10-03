@@ -11,7 +11,8 @@ import { PeliculasService } from '../../../core/services/peliculas.service';
 import { ResenasService, mensajeErrorResena } from '../../../core/services/resenas.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { estadoVenta } from '../../../core/utils/pelicula-fechas';
+import { estadoVenta, funcionYaComenzo } from '../../../core/utils/pelicula-fechas';
+import { hoyIso } from '../../../core/utils/formato';
 import { EstrellasComponent } from '../../../shared/estrellas/estrellas.component';
 import { TiempoRelativoPipe } from '../../../shared/pipes/tiempo-relativo.pipe';
 import { ResenaFormComponent } from '../../../shared/resena-form/resena-form.component';
@@ -72,6 +73,7 @@ export class PeliculaComponent implements OnInit {
           .from('funciones')
           .select('*, peliculas(nombre), salas(nombre)')
           .eq('pelicula_id', id)
+          .gte('fecha', hoyIso())
           .order('fecha')
           .order('hora_inicio')
       ]);
@@ -79,12 +81,15 @@ export class PeliculaComponent implements OnInit {
       if (errorFunciones) throw errorFunciones;
 
       this.pelicula.set(pelicula);
+      // Sólo se ofrecen las funciones que todavía no empezaron.
       this.funciones.set(
-        (funciones ?? []).map((fila: any) => ({
-          ...fila,
-          peliculaNombre: fila.peliculas?.nombre ?? '',
-          salaNombre: fila.salas?.nombre ?? ''
-        }))
+        (funciones ?? [])
+          .filter((fila: any) => !funcionYaComenzo(fila.fecha, fila.hora_inicio))
+          .map((fila: any) => ({
+            ...fila,
+            peliculaNombre: fila.peliculas?.nombre ?? '',
+            salaNombre: fila.salas?.nombre ?? ''
+          }))
       );
     } catch (err) {
       console.error(err);

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { FuncionConDetalle } from '../../../core/models/funcion.model';
@@ -7,6 +7,8 @@ import { FormatoProyeccion, IdiomaPelicula, PeliculaConRelaciones } from '../../
 import { SalaConCantidadButacas } from '../../../core/models/sala.model';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { FuncionesService } from '../../../core/services/funciones.service';
+import { hoyIso } from '../../../core/utils/formato';
+import { funcionYaComenzo } from '../../../core/utils/pelicula-fechas';
 import { PeliculasService } from '../../../core/services/peliculas.service';
 import { SalasService } from '../../../core/services/salas.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -29,6 +31,9 @@ export class SalasFuncionesComponent implements OnInit {
   private confirmService = inject(ConfirmService);
   private toastService = inject(ToastService);
 
+  /** Mínimo del selector de fecha: no se programan funciones en el pasado. */
+  readonly hoy = hoyIso();
+
   tabActiva = signal<Tab>('salas');
 
   cargando = signal(true);
@@ -38,6 +43,21 @@ export class SalasFuncionesComponent implements OnInit {
 
   salas = signal<SalaConCantidadButacas[]>([]);
   funciones = signal<FuncionConDetalle[]>([]);
+  /** Las funciones que ya comenzaron se ocultan por defecto (quedan en el historial). */
+  mostrarPasadas = signal(false);
+
+  proximas = computed(() => this.funciones().filter((f) => !funcionYaComenzo(f.fecha, f.hora_inicio)));
+
+  /** Ya comenzadas, la más reciente primero. */
+  pasadas = computed(() =>
+    this.funciones()
+      .filter((f) => funcionYaComenzo(f.fecha, f.hora_inicio))
+      .reverse()
+  );
+
+  funcionesVisibles = computed(() =>
+    this.mostrarPasadas() ? [...this.proximas(), ...this.pasadas()] : this.proximas()
+  );
   peliculas = signal<PeliculaConRelaciones[]>([]);
 
   formatosDisponibles: FormatoProyeccion[] = ['2D', '3D', '4D', '5D'];
@@ -124,6 +144,11 @@ export class SalasFuncionesComponent implements OnInit {
       this.toastService.error('Revisá los campos marcados en rojo.');
       return;
     }
+    const { fecha, horaInicio } = this.formFuncion.getRawValue();
+    if (funcionYaComenzo(fecha, horaInicio)) {
+      this.toastService.error('No se pueden programar funciones en una fecha u hora que ya pasó.');
+      return;
+    }
     this.guardandoFuncion.set(true);
 
     try {
@@ -145,7 +170,12 @@ export class SalasFuncionesComponent implements OnInit {
     }
   }
 
+  esPasada(funcion: FuncionConDetalle): boolean {
+    return funcionYaComenzo(funcion.fecha, funcion.hora_inicio);
+  }
+
   async eliminarFuncion(funcion: FuncionConDetalle): Promise<void> {
+    if (funcion.tieneCompras) return;
     const confirmado = await this.confirmService.preguntar(
       `¿Eliminar la función de "${funcion.peliculaNombre}"?`,
       { titulo: 'Eliminar función', textoConfirmar: 'Eliminar' }
@@ -156,9 +186,9 @@ export class SalasFuncionesComponent implements OnInit {
       await this.funcionesService.eliminar(funcion.id);
       this.toastService.exito('Función eliminada');
       await this.cargarTodo();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      this.toastService.error('No se pudo eliminar la función.');
+      this.toastService.error(err?.message ?? 'No se pudo eliminar la función.');
     }
   }
 }
