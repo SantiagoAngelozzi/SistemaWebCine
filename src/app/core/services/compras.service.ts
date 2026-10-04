@@ -64,7 +64,7 @@ export class ComprasService {
       .from('compra_entradas')
       .select('butaca_id')
       .eq('funcion_id', funcionId)
-      .eq('activa', true); // las entradas de compras canceladas liberan la butaca
+      .eq('activa', true);
 
     if (error) throw error;
     return new Set((data ?? []).map((fila: any) => fila.butaca_id));
@@ -82,18 +82,13 @@ export class ComprasService {
     codigoCupon: string | null = null,
     canjes: CanjeSeleccionado[] = []
   ): Promise<CompraConfirmada> {
-    // Precio, disponibilidad, edad, Candy Bar y total se validan en la base.
-    // No se aceptan montos ni usuario desde el navegador: del Candy Bar sólo
-    // viajan tipo, id y cantidad.
     const { data, error } = await this.supabase.client.rpc('crear_compra_entradas', {
       p_funcion_id: funcionId,
       p_butaca_ids: butacas.map((butaca) => butaca.id),
       p_items: candy
         .filter((item) => item.cantidad > 0)
         .map((item) => ({ tipo: item.tipo, id: item.id, cantidad: item.cantidad })),
-      // Sólo se indica SI se quiere usar el crédito; cuánto se usa lo decide la base.
       p_usar_credito: usarCredito,
-      // El descuento y el costo en puntos también los calcula la base.
       p_codigo_cupon: codigoCupon?.trim() || null,
       p_canjes: canjes.filter((c) => c.cantidad > 0).map((c) => ({ id: c.id, cantidad: c.cantidad }))
     });
@@ -116,10 +111,6 @@ export class ComprasService {
     };
   }
 
-  /**
-   * INSERT en compra_entradas = butaca vendida.
-   * UPDATE con activa = false = compra cancelada: la butaca vuelve a estar libre.
-   */
   suscribirseAOcupacion(
     funcionId: string,
     onNuevaOcupacion: (butacaId: string) => void,

@@ -26,14 +26,11 @@ export interface CandyMiCompra {
   cantidad: number;
   precioUnitario: number;
   esCombo: boolean;
-  /** Para combos: "1x Pochoclo grande, 1x Gaseosa". */
   contenido: string;
   incluyeEntrada: boolean;
-  /** Obtenido con un canje de puntos. */
   canje: boolean;
 }
 
-/** Una compra del usuario, lista para mostrar en "Mis compras". */
 export interface MiCompra {
   id: string;
   codigoQr: string;
@@ -58,13 +55,10 @@ export interface MiCompra {
   horaInicio: string;
   formato: string;
   idioma: string;
-  /** Inicio de la función en hora local del navegador. */
   inicio: Date;
   entradas: EntradaMiCompra[];
   candy: CandyMiCompra[];
-  /** Si se puede cancelar ahora (la base vuelve a validarlo). */
   cancelable: boolean;
-  /** Por qué no se puede cancelar, si no se puede. */
   motivoNoCancelable: string | null;
 }
 

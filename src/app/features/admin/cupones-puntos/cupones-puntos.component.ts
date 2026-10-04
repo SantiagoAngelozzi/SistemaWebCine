@@ -16,7 +16,6 @@ import { FormErrorComponent } from '../../../shared/form-error/form-error.compon
 
 type Tab = 'cupones' | 'puntos';
 
-/** Un cupón segmentado necesita al menos una edad; y la mínima no supera a la máxima. */
 function validarRangoEdad(grupo: AbstractControl): ValidationErrors | null {
   const tipo = grupo.get('tipo')?.value;
   const min = grupo.get('edadMinima')?.value;
@@ -87,7 +86,6 @@ export class CuponesPuntosComponent implements OnInit {
     activo: [true]
   });
 
-  /** Mensaje del validador de rango de edad (null si no hay error). */
   get errorRangoEdad(): string | null {
     return this.formCupon.errors?.['rangoEdad'] ?? null;
   }
@@ -120,8 +118,6 @@ export class CuponesPuntosComponent implements OnInit {
     }
   }
 
-  // ---------- Bienvenida ----------
-
   async guardarBienvenida(): Promise<void> {
     if (this.formBienvenida.invalid) {
       this.formBienvenida.markAllAsTouched();
@@ -140,8 +136,6 @@ export class CuponesPuntosComponent implements OnInit {
       this.guardandoBienvenida.set(false);
     }
   }
-
-  // ---------- Cupones ----------
 
   abrirNuevoCupon(): void {
     this.editandoCuponId.set(null);
@@ -201,7 +195,7 @@ export class CuponesPuntosComponent implements OnInit {
         this.toastService.exito('Cupón actualizado');
       } else {
         await this.fidelizacion.crearCupon(valores);
-        this.toastService.exito('Cupón creado 🎟️');
+        this.toastService.exito('Cupón creado');
       }
       this.mostrandoFormCupon.set(false);
       await this.cargarTodo();
@@ -243,8 +237,6 @@ export class CuponesPuntosComponent implements OnInit {
     return cupon.fecha_hasta ? `${desde} al ${formatearFecha(cupon.fecha_hasta)}` : `Desde ${desde}`;
   }
 
-  // ---------- Recompensas ----------
-
   abrirNuevaRecompensa(): void {
     this.editandoRecompensaId.set(null);
     this.formRecompensa.reset({ nombre: '', costoPuntos: 500, tipo: 'entrada', candyProductoId: '', activo: true });
@@ -282,7 +274,7 @@ export class CuponesPuntosComponent implements OnInit {
         this.toastService.exito('Recompensa actualizada');
       } else {
         await this.fidelizacion.crearRecompensa(valores);
-        this.toastService.exito('Recompensa creada ⭐');
+        this.toastService.exito('Recompensa creada');
       }
       this.mostrandoFormRecompensa.set(false);
       await this.cargarTodo();

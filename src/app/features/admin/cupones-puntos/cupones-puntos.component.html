@@ -11,10 +11,9 @@
   @if (cargando()) {
     <p class="hint">Cargando…</p>
   } @else if (tabActiva() === 'cupones') {
-    <!-- ---------- Bienvenida ---------- -->
     <form class="form-card bienvenida" [formGroup]="formBienvenida" (ngSubmit)="guardarBienvenida()">
       <div>
-        <h3>🎉 Cupón de bienvenida</h3>
+        <h3>Cupón de bienvenida</h3>
         <p class="hint">
           Se aplica solo en la primera compra de cada usuario registrado. Si además ingresa un cupón,
           se usa el de mayor descuento.
@@ -36,7 +35,6 @@
       </div>
     </form>
 
-    <!-- ---------- Cupones ---------- -->
     <div class="header-row">
       <h2>Cupones</h2>
       <button type="button" class="btn-primary" (click)="abrirNuevoCupon()">+ Nuevo cupón</button>
@@ -140,8 +138,8 @@
                   <span class="badge" [class.activo]="cupon.activo">{{ cupon.activo ? 'Activo' : 'Inactivo' }}</span>
                 </td>
                 <td class="acciones-fila">
-                  <button type="button" (click)="abrirEdicionCupon(cupon)">✏️</button>
-                  <button type="button" class="danger" (click)="eliminarCupon(cupon)">🗑️</button>
+                  <button type="button" (click)="abrirEdicionCupon(cupon)">Editar</button>
+                  <button type="button" class="danger" (click)="eliminarCupon(cupon)">Eliminar</button>
                 </td>
               </tr>
             }
@@ -150,7 +148,6 @@
       </div>
     }
   } @else {
-    <!-- ---------- Recompensas ---------- -->
     <div class="info">
       Los usuarios registrados suman <strong>1 punto por cada $1</strong> que abonan (el crédito en cuenta no
       suma). Acá definís qué pueden canjear y cuántos puntos cuesta.
@@ -221,7 +218,7 @@
       <div class="grid">
         @for (recompensa of recompensas(); track recompensa.id) {
           <article class="recompensa" [class.inactivo]="!recompensa.activo">
-            <span class="icono">{{ recompensa.otorga_entrada ? '🎟️' : '🍿' }}</span>
+            <span class="icono">{{ recompensa.otorga_entrada ? 'Entrada' : 'Candy Bar' }}</span>
             <h3>{{ recompensa.nombre }}</h3>
             <p class="costo">{{ recompensa.costo_puntos }} pts</p>
             <p class="hint">
@@ -231,8 +228,8 @@
               <span class="badge">Inactiva</span>
             }
             <div class="card-actions">
-              <button type="button" (click)="abrirEdicionRecompensa(recompensa)">✏️ Editar</button>
-              <button type="button" class="danger" (click)="eliminarRecompensa(recompensa)">🗑️ Eliminar</button>
+              <button type="button" (click)="abrirEdicionRecompensa(recompensa)">Editar</button>
+              <button type="button" class="danger" (click)="eliminarRecompensa(recompensa)">Eliminar</button>
             </div>
           </article>
         }

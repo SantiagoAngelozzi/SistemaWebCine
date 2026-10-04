@@ -10,12 +10,6 @@ import { ResenaFormComponent } from '../../../shared/resena-form/resena-form.com
 
 type Filtro = 'todas' | 'sin_calificar';
 
-/**
- * "Mis Películas": galería de las películas que el usuario vio
- * (entrada validada en sala o función ya terminada), con afiche,
- * fecha de la función y la calificación que le dio. Desde acá
- * también puede calificarlas o editar su reseña.
- */
 @Component({
   selector: 'app-mis-peliculas',
   standalone: true,
@@ -32,14 +26,12 @@ export class MisPeliculasComponent implements OnInit {
   errorMessage = signal<string | null>(null);
   peliculas = signal<MiPelicula[]>([]);
   filtro = signal<Filtro>('todas');
-  /** Película que se está calificando (abre el modal). */
   calificando = signal<MiPelicula | null>(null);
 
   sinCalificar = computed(() => this.peliculas().filter((p) => p.calificacion == null));
 
   visibles = computed(() => (this.filtro() === 'todas' ? this.peliculas() : this.sinCalificar()));
 
-  /** Promedio de las estrellas que dio el usuario (null si no calificó ninguna). */
   promedioPropio = computed(() => {
     const notas = this.peliculas()
       .map((p) => p.calificacion)

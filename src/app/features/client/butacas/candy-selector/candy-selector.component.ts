@@ -16,12 +16,6 @@ export function claveCarrito(tipo: TipoItemCandy, id: string): string {
   return `${tipo}:${id}`;
 }
 
-/**
- * Catálogo del Candy Bar dentro de la pantalla de compra: combos
- * destacados arriba y productos agrupados por categoría. No guarda
- * estado propio del carrito: lo recibe del componente de compra y le
- * avisa cada cambio de cantidad.
- */
 @Component({
   selector: 'app-candy-selector',
   standalone: true,
@@ -32,9 +26,7 @@ export function claveCarrito(tipo: TipoItemCandy, id: string): string {
 export class CandySelectorComponent {
   @Input({ required: true }) catalogo!: CatalogoCandy;
   @Input({ required: true }) carrito!: Map<string, number>;
-  /** Precio vigente de una entrada, para mostrar el ahorro de los combos con entrada. */
   @Input({ required: true }) precioEntrada = 0;
-  /** Cuántas butacas eligió: tope de combos que incluyen entrada. */
   @Input({ required: true }) cantidadButacas = 0;
   @Input({ required: true }) combosConEntradaEnCarrito = 0;
 

@@ -33,11 +33,6 @@ const ETIQUETA_ESTADO: Record<MiCompra['estado'], string> = {
   cancelada: 'Cancelada'
 };
 
-/**
- * Cuenta del usuario registrado: datos, crédito en cuenta, "Mis compras"
- * (con cancelación hasta 2 h antes y re-descarga del comprobante) y el
- * historial de movimientos de crédito.
- */
 @Component({
   selector: 'app-perfil',
   standalone: true,
@@ -65,13 +60,11 @@ export class PerfilComponent implements OnInit {
   movimientos = signal<MovimientoCredito[]>([]);
   movimientosPuntos = signal<MovimientoPuntos[]>([]);
   recompensas = signal<Recompensa[]>([]);
-  /** Descuento de bienvenida disponible (si todavía no compró). */
   beneficio = signal<DescuentoAplicable | null>(null);
 
   cancelandoId = signal<string | null>(null);
   descargandoId = signal<string | null>(null);
 
-  /** Funciones que todavía no pasaron ni se usaron, la más cercana primero. */
   proximas = computed(() =>
     this.compras()
       .filter((c) => c.estado === 'confirmada')

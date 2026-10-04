@@ -50,14 +50,12 @@ export function fechaAperturaVenta(pelicula: DatosFechas): string {
   return formatearDate(fecha);
 }
 
-/** Fecha y hora de inicio de una función ("2026-10-03" + "18:30:00") en hora local. */
 export function inicioFuncion(fecha: string, horaInicio: string): Date {
   const [anio, mes, dia] = fecha.split('-').map(Number);
   const [hora, minuto] = horaInicio.split(':').map(Number);
   return new Date(anio, mes - 1, dia, hora, minuto);
 }
 
-/** true si la función ya empezó: no se le pueden vender entradas (la base también lo controla). */
 export function funcionYaComenzo(fecha: string, horaInicio: string): boolean {
   return inicioFuncion(fecha, horaInicio).getTime() <= Date.now();
 }

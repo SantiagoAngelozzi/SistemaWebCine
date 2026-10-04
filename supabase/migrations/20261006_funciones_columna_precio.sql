@@ -1,21 +1,3 @@
--- ============================================================
--- Funciones sin precio propio: el precio vive sólo en la película
--- ------------------------------------------------------------
--- Se decidió que el precio esté en un solo lugar (peliculas.precio_normal
--- y precio_preventa) porque tener además funciones.precio hacía que un
--- precio pisara al otro. La columna ya se había quitado de la base, pero
--- crear_funcion_automatica seguía intentando guardarla y fallaba con:
---   column "precio" of relation "funciones" does not exist
---
--- Esta migración:
---   1. Quita la columna si todavía existe (deja todas las bases iguales).
---   2. Vuelve a crear crear_funcion_automatica sin esa columna.
--- El precio de cada entrada lo calcula la compra con el precio vigente
--- de la película (preventa o normal) más el recargo VIP.
---
--- Se ejecuta después de 20261005_eliminar_funcion_con_ventas.sql. Es idempotente.
--- ============================================================
-
 alter table public.funciones drop column if exists precio;
 
 create or replace function public.crear_funcion_automatica(
@@ -54,7 +36,6 @@ begin
     raise exception 'No se admiten funciones que finalicen al día siguiente.';
   end if;
 
-  -- Serializa las asignaciones de un mismo día entre administradores.
   perform pg_advisory_xact_lock(hashtextextended(p_fecha::text, 0));
 
   select s.id

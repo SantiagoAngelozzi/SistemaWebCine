@@ -9,11 +9,6 @@ import {
 import { ToastService } from '../../core/services/toast.service';
 import { EstrellasComponent } from '../estrellas/estrellas.component';
 
-/**
- * Formulario para calificar una película (1 a 5 estrellas + comentario breve).
- * Se usa en la ficha de la película y en "Mis Películas".
- * Si recibe una reseña existente, la edita (hay una sola por usuario y película).
- */
 @Component({
   selector: 'app-resena-form',
   standalone: true,
@@ -95,7 +90,6 @@ export class ResenaFormComponent implements OnInit {
   private toastService = inject(ToastService);
 
   @Input({ required: true }) peliculaId = '';
-  /** Reseña actual del usuario, si ya calificó la película. */
   @Input() resena: { calificacion: number; comentario: string | null } | null = null;
   @Input() mostrarCancelar = false;
   @Output() guardada = new EventEmitter<void>();
@@ -131,7 +125,7 @@ export class ResenaFormComponent implements OnInit {
     this.guardando.set(true);
     try {
       await this.resenasService.guardarResena(this.peliculaId, calificacion, comentario.trim() || null);
-      this.toastService.exito(this.resena ? 'Reseña actualizada' : '¡Gracias por tu reseña! ⭐');
+      this.toastService.exito(this.resena ? 'Reseña actualizada' : '¡Gracias por tu reseña!');
       this.guardada.emit();
     } catch (err) {
       console.error(err);

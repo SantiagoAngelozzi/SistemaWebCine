@@ -110,7 +110,7 @@
                   @if (producto.imagen_url) {
                     <img [src]="producto.imagen_url" [alt]="producto.nombre" />
                   } @else {
-                    <span>🍿</span>
+                    <span class="sin-imagen-texto">Sin imagen</span>
                   }
                   @if (!producto.activo) {
                     <span class="badge inactivo">Oculto</span>
@@ -122,8 +122,8 @@
                   <p class="precio">${{ producto.precio }}</p>
                 </div>
                 <div class="card-actions">
-                  <button type="button" (click)="abrirEdicionProducto(producto)">✏️ Editar</button>
-                  <button type="button" class="danger" (click)="eliminarProducto(producto)">🗑️ Eliminar</button>
+                  <button type="button" (click)="abrirEdicionProducto(producto)">Editar</button>
+                  <button type="button" class="danger" (click)="eliminarProducto(producto)">Eliminar</button>
                 </div>
               </div>
             }
@@ -253,8 +253,8 @@
                   </ul>
                 </div>
                 <div class="card-actions">
-                  <button type="button" (click)="abrirEdicionCombo(combo)">✏️ Editar</button>
-                  <button type="button" class="danger" (click)="eliminarCombo(combo)">🗑️ Eliminar</button>
+                  <button type="button" (click)="abrirEdicionCombo(combo)">Editar</button>
+                  <button type="button" class="danger" (click)="eliminarCombo(combo)">Eliminar</button>
                 </div>
               </div>
             }
@@ -263,4 +263,4 @@
       </section>
     }
   }
-</div>
+</div>

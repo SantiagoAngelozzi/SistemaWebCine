@@ -42,7 +42,6 @@ export class CandyBarComponent implements OnInit {
   mostrandoFormCombo = signal(false);
   editandoComboId = signal<string | null>(null);
   guardandoCombo = signal(false);
-  // productoId -> cantidad (0/ausente = no incluido en el combo que se esta armando)
   itemsCombo = signal<Map<string, number>>(new Map());
 
   formProducto = this.fb.nonNullable.group({
@@ -53,7 +52,6 @@ export class CandyBarComponent implements OnInit {
     activo: [true]
   });
 
-  /** Lo que costarían por separado los productos del combo que se está armando. */
   precioPorSeparado = computed(() => {
     const precios = new Map(this.productos().map((p) => [p.id, p.precio]));
     let suma = 0;
@@ -97,8 +95,6 @@ export class CandyBarComponent implements OnInit {
     }
   }
 
-  // ---------- Categorías ----------
-
   async crearCategoria(nombre: string): Promise<void> {
     const nombreLimpio = nombre.trim();
     if (!nombreLimpio) return;
@@ -132,8 +128,6 @@ export class CandyBarComponent implements OnInit {
       this.toastService.error(mensajeErrorCandy(err, 'No se pudo eliminar la categoría.'));
     }
   }
-
-  // ---------- Productos ----------
 
   abrirNuevoProducto(): void {
     this.editandoProductoId.set(null);
@@ -173,7 +167,7 @@ export class CandyBarComponent implements OnInit {
         this.toastService.exito('Producto actualizado');
       } else {
         await this.candyService.crearProducto(valores);
-        this.toastService.exito('Producto creado 🍿');
+        this.toastService.exito('Producto creado');
       }
 
       this.mostrandoFormProducto.set(false);
@@ -209,8 +203,6 @@ export class CandyBarComponent implements OnInit {
       this.toastService.error(mensajeErrorCandy(err, 'No se pudo eliminar el producto.'));
     }
   }
-
-  // ---------- Combos ----------
 
   abrirNuevoCombo(): void {
     this.editandoComboId.set(null);
@@ -251,8 +243,6 @@ export class CandyBarComponent implements OnInit {
   }
 
   cambiarCantidad(productoId: string, cantidad: number): void {
-    // Si escriben algo inválido (0, negativo, decimal) se normaliza a un
-    // entero >= 1 para que el input y el estado no queden desincronizados.
     const normalizada = Math.max(1, Math.floor(Number(cantidad) || 1));
     this.itemsCombo.update((mapa) => {
       const copia = new Map(mapa);
@@ -282,7 +272,7 @@ export class CandyBarComponent implements OnInit {
       const id = this.editandoComboId();
 
       await this.candyService.guardarCombo(id, valores, items);
-      this.toastService.exito(id ? 'Combo actualizado' : 'Combo creado 🎬🍿');
+      this.toastService.exito(id ? 'Combo actualizado' : 'Combo creado');
 
       this.mostrandoFormCombo.set(false);
       await this.cargarTodo();
@@ -310,4 +300,4 @@ export class CandyBarComponent implements OnInit {
       this.toastService.error(mensajeErrorCandy(err, 'No se pudo eliminar el combo.'));
     }
   }
-}
+}

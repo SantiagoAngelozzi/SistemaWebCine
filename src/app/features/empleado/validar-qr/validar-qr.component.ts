@@ -15,10 +15,6 @@ import { QrScannerComponent } from '../../../shared/qr-scanner/qr-scanner.compon
 
 const MAX_HISTORIAL = 10;
 
-/**
- * Módulo del empleado: valida el QR de una compra para el acceso a sala o
- * para la entrega en el Candy Bar. El mismo QR sirve una vez para cada uso.
- */
 @Component({
   selector: 'app-validar-qr',
   standalone: true,
@@ -42,13 +38,11 @@ export class ValidarQrComponent {
 
   codigoManual = '';
 
-  /** Código del resultado en pantalla: si la cámara lo vuelve a leer, se ignora. */
   private codigoEnPantalla: string | null = null;
 
   readonly formatearCodigoCorto = formatearCodigoCorto;
   readonly formatearFecha = formatearFecha;
 
-  /** Los administradores también pueden validar; se les muestra el acceso al panel. */
   esAdmin = signal(false);
 
   constructor() {
@@ -132,7 +126,6 @@ export class ValidarQrComponent {
     try {
       navigator.vibrate?.(ok ? 120 : [120, 80, 120]);
     } catch {
-      // No todos los dispositivos permiten vibrar.
     }
   }
 

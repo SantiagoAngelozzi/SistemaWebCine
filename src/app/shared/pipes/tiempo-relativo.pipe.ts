@@ -4,14 +4,6 @@ const MINUTO = 60 * 1000;
 const HORA = 60 * MINUTO;
 const DIA = 24 * HORA;
 
-/**
- * Pipe propio: convierte una fecha en texto relativo.
- *   {{ resena.creadaEl | tiempoRelativo }}  ->  "hace 3 días"
- *
- * Es un pipe puro (el default): Angular sólo lo vuelve a ejecutar cuando
- * cambia la fecha de entrada, no en cada ciclo de detección de cambios.
- * Pasado un mes muestra la fecha completa (dd/mm/aaaa).
- */
 @Pipe({ name: 'tiempoRelativo', standalone: true })
 export class TiempoRelativoPipe implements PipeTransform {
   transform(valor: string | Date | null | undefined, ahora: Date = new Date()): string {

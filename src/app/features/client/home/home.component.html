@@ -29,7 +29,7 @@
               @if (pelicula.imagen_url) {
                 <img [src]="pelicula.imagen_url" [alt]="pelicula.nombre" />
               } @else {
-                <span>🎬</span>
+                <span class="sin-imagen-texto">Sin imagen</span>
               }
               <span class="badge">{{ pelicula.clasificacion }}</span>
             </div>

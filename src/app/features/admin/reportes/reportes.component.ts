@@ -24,11 +24,6 @@ type PeriodoPeliculas = 'semana' | 'mes';
 
 const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-/**
- * Dashboard del admin: facturación diaria, entradas por día, películas
- * más vistas (semana / mes), producto estrella del Candy Bar y
- * exportación del reporte consolidado a PDF y Excel.
- */
 @Component({
   selector: 'app-admin-reportes',
   standalone: true,
@@ -76,7 +71,6 @@ export class ReportesComponent implements OnInit {
 
   productoEstrella = computed(() => this.reporte()?.productos[0] ?? null);
 
-  /** Días con ventas, del más reciente al más viejo (tabla de detalle). */
   diasDetalle = computed(() => [...(this.reporte()?.porDia ?? [])].reverse());
 
   async ngOnInit(): Promise<void> {

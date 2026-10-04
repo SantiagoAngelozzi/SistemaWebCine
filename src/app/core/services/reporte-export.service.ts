@@ -6,7 +6,6 @@ import { formatearFecha } from '../utils/pelicula-fechas';
 import { diaMes, formatearEntero, formatearFechaHora, formatearMoneda, parsearIso } from '../utils/formato';
 import { Celda, HojaXlsx, crearXlsx } from '../utils/xlsx';
 
-// Paleta del reporte (RGB).
 const TINTA: [number, number, number] = [27, 26, 46];
 const GRIS: [number, number, number] = [110, 110, 120];
 const LINEA: [number, number, number] = [220, 218, 210];
@@ -19,14 +18,8 @@ interface ColumnaTabla {
   alinear?: 'left' | 'right';
 }
 
-/**
- * Exporta el reporte consolidado de facturación a PDF (jsPDF) y a Excel
- * (generador propio en core/utils/xlsx.ts). Ambos usan el mismo objeto
- * ReporteFacturacion que muestra el dashboard.
- */
 @Injectable({ providedIn: 'root' })
 export class ReporteExportService {
-  // ===================== PDF =====================
 
   exportarPdf(reporte: ReporteFacturacion): void {
     const pdf = new jsPDF({ format: 'a4', unit: 'mm' });
@@ -34,7 +27,6 @@ export class ReporteExportService {
     const anchoUtil = 210 - margen * 2;
     let y = 0;
 
-    // ---- Encabezado ----
     pdf.setFillColor(...TINTA);
     pdf.rect(0, 0, 210, 30, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -51,7 +43,6 @@ export class ReporteExportService {
     pdf.text(`Generado: ${formatearFechaHora(reporte.generado)}`, 195, 23, { align: 'right' });
     y = 40;
 
-    // ---- Resumen (tarjetas) ----
     const r = reporte.resumen;
     const tarjetas: [string, string][] = [
       ['Facturación', formatearMoneda(r.facturacion)],
@@ -81,10 +72,8 @@ export class ReporteExportService {
     });
     y += 46;
 
-    // ---- Gráfico de facturación diaria ----
     y = this.graficoFacturacionPdf(pdf, reporte, margen, y, anchoUtil);
 
-    // ---- Detalle por día ----
     y = this.tituloSeccionPdf(pdf, 'Detalle por día', margen, y);
     const columnasDia: ColumnaTabla[] = [
       { titulo: 'Fecha', ancho: 22 },
@@ -118,13 +107,11 @@ export class ReporteExportService {
     ];
     y = this.tablaPdf(pdf, columnasDia, filasDia, margen, y, totales);
 
-    // ---- Rankings ----
     y = this.rankingPdf(pdf, 'Películas más vistas - últimos 7 días', 'Entradas', reporte.peliculasSemana, margen, y);
     y = this.rankingPdf(pdf, 'Películas más vistas - últimos 30 días', 'Entradas', reporte.peliculasMes, margen, y);
     y = this.rankingPdf(pdf, 'Productos del Candy Bar más vendidos', 'Unidades', reporte.productos, margen, y);
     this.rankingPdf(pdf, 'Combos más vendidos', 'Unidades', reporte.combos, margen, y);
 
-    // ---- Notas y numeración ----
     const paginas = pdf.getNumberOfPages();
     for (let i = 1; i <= paginas; i++) {
       pdf.setPage(i);
@@ -155,7 +142,6 @@ export class ReporteExportService {
     return y;
   }
 
-  /** Columnas de facturación por día dibujadas con rectángulos. */
   private graficoFacturacionPdf(
     pdf: jsPDF,
     reporte: ReporteFacturacion,
@@ -196,7 +182,6 @@ export class ReporteExportService {
       }
     });
 
-    // Sólo se rotula el día de mayor facturación.
     const mejor = dias.reduce((a, b) => (b.facturacion > a.facturacion ? b : a));
     const iMejor = dias.indexOf(mejor);
     pdf.setTextColor(...TINTA);
@@ -306,8 +291,6 @@ export class ReporteExportService {
       y
     );
   }
-
-  // ===================== Excel =====================
 
   exportarXlsx(reporte: ReporteFacturacion): void {
     const r = reporte.resumen;

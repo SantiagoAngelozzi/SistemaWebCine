@@ -3,9 +3,7 @@ import { Component, Input, computed, signal } from '@angular/core';
 import { formatearEntero, formatearMoneda, formatearMonedaCorta } from '../../core/utils/formato';
 
 export interface PuntoColumna {
-  /** Texto corto del eje X (ej. "01/10"). */
   etiqueta: string;
-  /** Texto largo para el tooltip (ej. "Miércoles 01/10/2026"). */
   titulo: string;
   valor: number;
 }
@@ -18,16 +16,10 @@ interface Columna {
   punto: PuntoColumna;
 }
 
-// Medidas del lienzo SVG (viewBox); el SVG se escala al ancho disponible.
 const ANCHO = 560;
 const ALTO = 230;
 const MARGEN = { izquierda: 74, derecha: 12, arriba: 24, abajo: 26 };
 
-/**
- * Gráfico de columnas de una sola serie, dibujado con SVG.
- * Se usa para la facturación diaria y las entradas por día.
- * Pasando el mouse por cualquier parte de la columna muestra el tooltip.
- */
 @Component({
   selector: 'app-grafico-columnas',
   standalone: true,
@@ -39,13 +31,11 @@ const MARGEN = { izquierda: 74, derecha: 12, arriba: 24, abajo: 26 };
         [attr.aria-label]="descripcion"
         (mouseleave)="activo.set(null)"
       >
-        <!-- Grilla y eje Y -->
         @for (tick of ticks(); track tick.valor) {
           <line class="grilla" [attr.x1]="margen.izquierda" [attr.x2]="ancho - margen.derecha" [attr.y1]="tick.y" [attr.y2]="tick.y" />
           <text class="eje" [attr.x]="margen.izquierda - 8" [attr.y]="tick.y + 4" text-anchor="end">{{ tick.texto }}</text>
         }
 
-        <!-- Columnas -->
         @for (columna of columnas(); track $index; let i = $index) {
           <path [attr.d]="columna.path" [attr.fill]="color" [class.atenuada]="activo() !== null && activo() !== i" />
           <rect
@@ -63,7 +53,6 @@ const MARGEN = { izquierda: 74, derecha: 12, arriba: 24, abajo: 26 };
           }
         }
 
-        <!-- Rótulo sólo en el máximo -->
         @if (maximo(); as m) {
           <text class="rotulo" [attr.x]="m.x" [attr.y]="m.y" [attr.text-anchor]="m.anclaje">{{ m.texto }}</text>
         }
@@ -127,10 +116,8 @@ export class GraficoColumnasComponent {
   @Input({ required: true }) set datos(valor: PuntoColumna[]) {
     this.puntos.set(valor ?? []);
   }
-  /** Color de las columnas (los textos siempre van en color tinta). */
   @Input() color = '#A6339B';
   @Input() formato: 'moneda' | 'entero' = 'entero';
-  /** Texto para lectores de pantalla. */
   @Input() descripcion = '';
 
   readonly ancho = ANCHO;
@@ -144,7 +131,6 @@ export class GraficoColumnasComponent {
 
   vacio = computed(() => this.puntos().every((p) => p.valor <= 0));
 
-  /** Máximo "redondo" del eje Y (ej. 4.300 -> 5.000). */
   private escala = computed(() => {
     const maximo = Math.max(0, ...this.puntos().map((p) => p.valor));
     if (maximo <= 0) return { tope: 1, paso: 1 };
@@ -167,7 +153,6 @@ export class GraficoColumnasComponent {
 
   ranura = computed(() => (ANCHO - MARGEN.izquierda - MARGEN.derecha) / Math.max(1, this.puntos().length));
 
-  /** Cada cuántas columnas se escribe la fecha, para que no se pisen. */
   cadaCuanto = computed(() => Math.max(1, Math.ceil(this.puntos().length / 12)));
 
   columnas = computed<Columna[]>(() => {
@@ -210,7 +195,6 @@ export class GraficoColumnasComponent {
     return this.base - (valor / this.escala().tope) * this.altoGrafico;
   }
 
-  /** Columna con las esquinas de arriba redondeadas (4px) y la base recta. */
   private pathColumna(x: number, ancho: number, y: number): string {
     const alto = this.base - y;
     if (alto <= 0) return '';

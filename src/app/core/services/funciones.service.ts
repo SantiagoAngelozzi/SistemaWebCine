@@ -30,8 +30,6 @@ export class FuncionesService {
   }
 
   async crear(valores: FuncionFormValue): Promise<void> {
-    // La asignación se resuelve en PostgreSQL dentro de una transacción. Así
-    // dos administradores no pueden elegir la misma sala al mismo tiempo.
     const { error } = await this.supabase.client.rpc('crear_funcion_automatica', {
       p_pelicula_id: valores.peliculaId,
       p_fecha: valores.fecha,

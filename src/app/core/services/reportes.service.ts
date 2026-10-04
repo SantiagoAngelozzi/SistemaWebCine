@@ -3,11 +3,6 @@ import { Injectable, inject } from '@angular/core';
 import { FilaReporteDia, ItemRanking, ReporteFacturacion } from '../models/reporte.model';
 import { SupabaseService } from './supabase.service';
 
-/**
- * Datos del dashboard y del reporte exportable. Todo se calcula en la base
- * (RPC reporte_facturacion, sólo para administradores), así la pantalla,
- * el PDF y el Excel muestran exactamente los mismos números.
- */
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
   private supabase = inject(SupabaseService);
@@ -72,7 +67,6 @@ function ranking(filas: unknown, campoCantidad: 'entradas' | 'unidades'): ItemRa
   }));
 }
 
-/** Mensaje legible para los errores del reporte (los RAISE vienen con code P0001). */
 export function mensajeErrorReporte(err: any, porDefecto: string): string {
   return err?.code === 'P0001' && err?.message ? err.message : porDefecto;
 }

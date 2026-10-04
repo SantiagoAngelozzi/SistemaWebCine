@@ -1,7 +1,7 @@
 <section class="beneficios">
   @if (!logueado) {
     <div class="invitacion">
-      <strong>🎁 ¿Tenés cuenta?</strong>
+      <strong>¿Tenés cuenta?</strong>
       <span>
         Los usuarios registrados tienen descuento de bienvenida en su primera compra, usan cupones y
         suman 1 punto por cada $1 para canjear por entradas y pochoclos.
@@ -10,11 +10,11 @@
     </div>
   } @else {
     <div class="bloque">
-      <h2>🎟️ Descuentos</h2>
+      <h2>Descuentos</h2>
 
       @if (esBienvenida) {
         <p class="bienvenida">
-          🎉 Tenés <strong>{{ descuento!.porcentaje }}% de descuento</strong> por ser tu primera compra.
+          Tenés <strong>{{ descuento!.porcentaje }}% de descuento</strong> por ser tu primera compra.
         </p>
       }
 
@@ -54,7 +54,7 @@
     </div>
 
     <div class="bloque">
-      <h2>⭐ Canjear puntos</h2>
+      <h2>Canjear puntos</h2>
       <p class="saldo">
         Tenés <strong>{{ puntosDisponibles }} pts</strong>
         @if (puntosComprometidos > 0) {
@@ -68,7 +68,7 @@
         <ul class="recompensas">
           @for (recompensa of recompensas; track recompensa.id) {
             <li [class.elegida]="cantidad(recompensa) > 0">
-              <span class="icono">{{ recompensa.otorga_entrada ? '🎟️' : '🍿' }}</span>
+              <span class="icono">{{ recompensa.otorga_entrada ? 'Entrada' : 'Candy Bar' }}</span>
               <span class="nombre">
                 {{ recompensa.nombre }}
                 <small>{{ recompensa.costo_puntos }} pts</small>

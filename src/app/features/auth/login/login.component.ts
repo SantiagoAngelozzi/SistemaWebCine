@@ -58,7 +58,7 @@ export class LoginComponent {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    try { 
+    try {
       const { email, password } = this.loginForm.getRawValue();
       const { data, error } = await this.auth.signIn(email, password);
 
@@ -111,7 +111,6 @@ export class LoginComponent {
       return;
     }
 
-    // Admin -> /admin, empleado -> /empleado, cliente -> /inicio
     const rol = await this.auth.obtenerRolActual();
     this.router.navigateByUrl(this.auth.rutaInicioSegunRol(rol));
   }

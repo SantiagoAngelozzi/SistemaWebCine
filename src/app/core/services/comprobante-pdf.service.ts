@@ -6,9 +6,7 @@ export interface EntradaComprobante {
   ubicacion: string;
   tipo: 'estandar' | 'accesible' | 'vip';
   precio: number;
-  /** La entrada está cubierta por un combo "entrada + candy". */
   incluidaEnCombo?: boolean;
-  /** La entrada se obtuvo canjeando puntos. */
   canjeadaConPuntos?: boolean;
 }
 
@@ -16,13 +14,11 @@ export interface ProductoComprobante {
   nombre: string;
   cantidad: number;
   precio: number;
-  /** Producto obtenido con un canje de puntos. */
   canje?: boolean;
 }
 
 export interface DatosComprobante {
   codigoQr: string;
-  /** Código corto (ya formateado, ej. K7F3-9QXM) para carga manual. */
   codigoCorto?: string;
   pelicula: string;
   sala: string;
@@ -33,11 +29,9 @@ export interface DatosComprobante {
   entradas: EntradaComprobante[];
   productos?: ProductoComprobante[];
   total: number;
-  /** Descuento aplicado (cupón o bienvenida), si hubo. */
   descuento?: { etiqueta: string; monto: number };
   puntosGanados?: number;
   puntosCanjeados?: number;
-  /** Crédito en cuenta aplicado al pago (si hubo). */
   creditoUsado?: number;
   advertenciaEdad?: string;
 }
@@ -184,7 +178,6 @@ export class ComprobantePdfService {
     pdf.setTextColor(16, 19, 27);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
-    // Los combos pueden tener descripciones largas: se parten en varias líneas.
     const lineas: string[] = pdf.splitTextToSize(descripcion, 135);
     y = this.saltoDePaginaSiHaceFalta(pdf, y, lineas.length * 5 + 2);
     pdf.text(lineas, 22, y);
@@ -192,7 +185,6 @@ export class ComprobantePdfService {
     return y + 2 + lineas.length * 5;
   }
 
-  /** Agrega una página si lo que sigue no entra antes del pie (y = 270 mm). */
   private saltoDePaginaSiHaceFalta(pdf: jsPDF, y: number, alto: number): number {
     if (y + alto <= 270) return y;
     pdf.addPage();

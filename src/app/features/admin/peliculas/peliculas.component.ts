@@ -153,10 +153,10 @@ export class PeliculasComponent implements OnInit {
 
       if (id) {
         await this.peliculasService.actualizar(id, valores, generoIds, formatos);
-        this.toastService.exito('Película actualizada 🎬');
+        this.toastService.exito('Película actualizada');
       } else {
         await this.peliculasService.crear(valores, generoIds, formatos);
-        this.toastService.exito('Película creada 🎬');
+        this.toastService.exito('Película creada');
       }
 
       this.mostrandoForm.set(false);

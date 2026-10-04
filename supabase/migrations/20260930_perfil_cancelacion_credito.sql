@@ -1,34 +1,14 @@
--- Ejecutar UNA VEZ en Supabase SQL Editor, DESPUÉS de
--- 20260930_empleado_validacion_qr.sql.
---
--- Perfil, cancelación hasta 2 h antes y crédito en cuenta:
---   * Sólo usuarios registrados cancelan (desde "Mis compras"). Se acredita
---     el total en su cuenta; no hay devolución de dinero.
---   * Al cancelar, las butacas vuelven a estar disponibles (la entrada queda
---     como historial con activa = false).
---   * El crédito se puede usar en compras futuras, combinado con otro medio.
---   * Movimientos de crédito para el historial del perfil.
---   * Regla de edad: sólo se bloquea al registrado cuya fecha de nacimiento
---     se conoce y no alcanza la mínima.
-
--- ------------------------------------------------------------
--- 1) Esquema
--- ------------------------------------------------------------
 alter table public.compras add column if not exists cancelada_at timestamptz;
 
--- Entradas: activa = false cuando la compra se cancela. La butaca vuelve a
--- estar libre, pero la fila queda como historial.
 alter table public.compra_entradas add column if not exists activa boolean not null default true;
 alter table public.compra_entradas add column if not exists incluida_en_combo boolean not null default false;
 
--- La restricción de doble venta pasa a aplicarse sólo a entradas activas.
 alter table public.compra_entradas drop constraint if exists compra_entradas_funcion_id_butaca_id_key;
 drop index if exists public.compra_entradas_butaca_activa_key;
 create unique index compra_entradas_butaca_activa_key
   on public.compra_entradas (funcion_id, butaca_id)
   where activa;
 
--- Historial de crédito: + al cancelar, − al usarlo en una compra.
 create table if not exists public.movimientos_credito (
   id uuid primary key default gen_random_uuid(),
   usuario_id uuid not null references public.usuarios (id) on delete cascade,
@@ -43,17 +23,7 @@ alter table public.movimientos_credito enable row level security;
 drop policy if exists "movimientos_credito_select_own_or_admin" on public.movimientos_credito;
 create policy "movimientos_credito_select_own_or_admin" on public.movimientos_credito
   for select using (usuario_id = auth.uid() or public.is_admin());
--- Sin políticas de insert/update/delete: sólo lo escriben las funciones.
 
--- Las entradas canceladas se liberan en vivo en otros mapas (UPDATE por
--- Realtime). La tabla ya está en la publicación supabase_realtime.
-
--- ------------------------------------------------------------
--- 2) Protección de crédito
--- ------------------------------------------------------------
--- El trigger impide que un cliente cambie su crédito. Las funciones de
--- compra y cancelación lo modifican marcando la variable de sesión
--- app.movimiento_credito sólo durante su propia transacción.
 create or replace function public.proteger_campos_usuario()
 returns trigger
 language plpgsql
@@ -75,9 +45,6 @@ begin
 end;
 $$;
 
--- ------------------------------------------------------------
--- 3) Compra: crédito, edad y marca de entrada incluida en combo
--- ------------------------------------------------------------
 drop function if exists public.crear_compra_entradas(uuid, uuid[], jsonb);
 
 create or replace function public.crear_compra_entradas(
@@ -111,7 +78,6 @@ declare
   v_credito_disponible numeric(10, 2);
   v_credito_usado numeric(10, 2) := 0;
 begin
-  -- ---------- Butacas ----------
   if coalesce(cardinality(p_butaca_ids), 0) = 0 then
     raise exception 'Elegí al menos una butaca.';
   end if;
@@ -123,7 +89,6 @@ begin
     raise exception 'No podés repetir una butaca en la misma compra.';
   end if;
 
-  -- ---------- Función, preventa y edad ----------
   select f.id, f.sala_id, p.clasificacion, p.fecha_estreno, p.dias_preventa,
          p.precio_normal, p.precio_preventa
   into v_funcion
@@ -157,9 +122,6 @@ begin
     from public.usuarios
     where id = v_usuario_id;
 
-    -- Sólo se bloquea si se CONOCE la fecha de nacimiento y no alcanza la
-    -- edad mínima. Anónimos (y cuentas sin fecha cargada) compran igual: la
-    -- entrada lleva impresa la advertencia de ir con un adulto responsable.
     if v_fecha_nacimiento is not null
       and date_part('year', age(current_date, v_fecha_nacimiento)) < v_edad_minima then
       raise exception 'No cumplís la edad mínima para esta película.';
@@ -174,7 +136,6 @@ begin
     raise exception 'Una o más butacas no pertenecen a la sala de esta función.';
   end if;
 
-  -- ---------- Candy Bar: validación de ítems ----------
   if jsonb_typeof(v_items) <> 'array' then
     raise exception 'Formato inválido de productos del Candy Bar.';
   end if;
@@ -229,13 +190,10 @@ begin
       v_combos_con_entrada, v_cantidad_butacas;
   end if;
 
-  -- ---------- Alta de la compra ----------
   insert into public.compras (usuario_id, total, estado, codigo_qr)
   values (v_usuario_id, 0, 'confirmada', v_codigo_qr)
   returning id into v_compra_id;
 
-  -- Las primeras N butacas (no VIP primero) quedan cubiertas por los combos
-  -- con entrada: se cobra 0, o sólo el recargo VIP.
   insert into public.compra_entradas (compra_id, funcion_id, butaca_id, precio, incluida_en_combo)
   select v_compra_id, p_funcion_id, b.id,
          case
@@ -270,9 +228,6 @@ begin
     from public.compra_candy_items where compra_id = v_compra_id
   );
 
-  -- ---------- Crédito en cuenta (combinable con otros medios) ----------
-  -- Sólo usuarios registrados. Se usa como máximo el total de la compra; el
-  -- resto se abona con otro medio de pago.
   if p_usar_credito and v_usuario_id is not null then
     select credito into v_credito_disponible
     from public.usuarios where id = v_usuario_id
@@ -300,9 +255,6 @@ begin
       end
   where id = v_compra_id;
 
-  -- ---------- Detalle para el comprobante ----------
-  -- El front arma el PDF con estos datos (verificados en la base), no con
-  -- los que calculó el navegador.
   select coalesce(jsonb_agg(jsonb_build_object(
            'butaca_id', b.id,
            'ubicacion', b.fila || '-' || b.columna,
@@ -348,15 +300,6 @@ $$;
 revoke all on function public.crear_compra_entradas(uuid, uuid[], jsonb, boolean) from public;
 grant execute on function public.crear_compra_entradas(uuid, uuid[], jsonb, boolean) to anon, authenticated;
 
--- ------------------------------------------------------------
--- 4) Cancelación
--- ------------------------------------------------------------
--- Reglas:
---   * Sólo el dueño de la compra (usuario registrado).
---   * Compra confirmada y sin usar (ni ingreso a sala ni retiro de Candy Bar).
---   * Hasta 2 horas antes del inicio de la función (hora de Argentina).
---   * Se acredita el total de la compra (incluye el crédito que se haya usado
---     para pagarla) y se liberan las butacas.
 create or replace function public.cancelar_compra(p_compra_id uuid)
 returns jsonb
 language plpgsql
@@ -410,7 +353,6 @@ begin
       qr_vigente = false
   where id = v_compra.id;
 
-  -- Libera las butacas (dispara el UPDATE que escuchan los mapas en vivo).
   update public.compra_entradas set activa = false where compra_id = v_compra.id;
 
   if v_compra.total > 0 then

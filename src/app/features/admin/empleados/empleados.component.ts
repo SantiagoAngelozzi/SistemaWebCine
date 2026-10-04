@@ -8,10 +8,6 @@ import { UsuarioResumen, UsuariosService } from '../../../core/services/usuarios
 
 type Filtro = 'todos' | RolUsuario;
 
-/**
- * Alta y baja del rol empleado. El empleado primero se registra como
- * cualquier usuario y después el admin le asigna el rol desde acá.
- */
 @Component({
   selector: 'app-admin-empleados',
   standalone: true,

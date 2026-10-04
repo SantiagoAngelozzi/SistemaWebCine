@@ -17,19 +17,8 @@ type EstadoCamara = 'iniciando' | 'activa' | 'error';
 type LectorQr = (video: HTMLVideoElement) => Promise<string | null>;
 
 const INTERVALO_MS = 200;
-/** Ignora relecturas del mismo código durante este tiempo. */
 const ESPERA_MISMO_CODIGO_MS = 3000;
 
-/**
- * Lector de QR con la cámara del dispositivo.
- *
- * Usa la API nativa BarcodeDetector si el navegador la tiene (Chrome en
- * Android) y, si no (Safari/iOS, Firefox), decodifica los cuadros del video
- * con la librería jsQR. La cámara requiere HTTPS (o localhost).
- *
- * Se enciende al montarse y se apaga al destruirse: el padre lo muestra u
- * oculta con @if.
- */
 @Component({
   selector: 'app-qr-scanner',
   standalone: true,
@@ -39,7 +28,6 @@ const ESPERA_MISMO_CODIGO_MS = 3000;
 export class QrScannerComponent implements AfterViewInit, OnDestroy {
   private zone = inject(NgZone);
 
-  /** Mientras está en pausa la cámara sigue encendida pero no lee códigos. */
   @Input() pausado = false;
   @Output() codigoLeido = new EventEmitter<string>();
 
@@ -117,13 +105,9 @@ export class QrScannerComponent implements AfterViewInit, OnDestroy {
           };
         }
       } catch {
-        // Si falla la API nativa se usa jsQR.
       }
     }
 
-    // Carga diferida: sólo se descarga si el navegador no tiene lector nativo.
-    // jsqr se publica como UMD: según el bundler la función llega como
-    // default o como default.default.
     const modulo: any = await import('jsqr');
     const jsQR: typeof import('jsqr').default =
       typeof modulo.default === 'function' ? modulo.default : (modulo.default?.default ?? modulo);
@@ -132,7 +116,6 @@ export class QrScannerComponent implements AfterViewInit, OnDestroy {
 
     return async (video) => {
       if (!contexto || !this.canvas || !video.videoWidth) return null;
-      // Se reduce el cuadro para que la decodificación sea rápida en celulares.
       const escala = Math.min(1, 640 / video.videoWidth);
       const ancho = Math.round(video.videoWidth * escala);
       const alto = Math.round(video.videoHeight * escala);

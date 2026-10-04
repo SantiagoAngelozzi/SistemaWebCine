@@ -1,34 +1,9 @@
--- Ejecutar UNA VEZ en Supabase SQL Editor, DESPUÉS de
--- 20260930_candy_bar_en_compras.sql.
---
--- Módulo de empleados — validación de QR:
---   * El QR es uno solo por compra, pero tiene DOS usos que se consumen por
---     separado: acceso a sala y retiro en Candy Bar. Cada uso queda
---     inhabilitado inmediatamente después de validarse.
---   * Código corto alfanumérico (8 caracteres, ej. K7F3-9QXM) para cargar a
---     mano si falla el lector. Se imprime en el PDF junto al QR.
---   * Función validar_qr: sólo empleados o administradores, con bloqueo de
---     fila para que dos lectores no validen el mismo QR a la vez, y registro
---     en la auditoría (quién, qué y cuándo).
---   * Función cambiar_rol_usuario: el admin asigna/quita el rol empleado.
-
--- ------------------------------------------------------------
--- 1) Columnas nuevas en compras
--- ------------------------------------------------------------
 alter table public.compras add column if not exists codigo_corto text;
 alter table public.compras add column if not exists entrada_validada_at timestamptz;
 alter table public.compras add column if not exists entrada_validada_por uuid references public.usuarios (id) on delete set null;
 alter table public.compras add column if not exists candy_entregado_at timestamptz;
 alter table public.compras add column if not exists candy_entregado_por uuid references public.usuarios (id) on delete set null;
 
-comment on column public.compras.qr_vigente is
-  'Se mantiene por compatibilidad: pasa a false cuando se consumieron todos los usos del QR (sala y, si hay, Candy Bar). La validación usa entrada_validada_at / candy_entregado_at.';
-
--- ------------------------------------------------------------
--- 2) Código corto
--- ------------------------------------------------------------
--- Alfabeto sin caracteres ambiguos (sin 0/O, 1/I/L): 31^8 ≈ 850 mil millones
--- de combinaciones. Se guarda sin guion; el guion es sólo de presentación.
 create or replace function public.generar_codigo_corto()
 returns text
 language plpgsql
@@ -71,17 +46,11 @@ create trigger compras_codigo_corto
 before insert on public.compras
 for each row execute function public.asignar_codigo_corto();
 
--- Compras ya existentes.
 update public.compras set codigo_corto = public.generar_codigo_corto() where codigo_corto is null;
 
 alter table public.compras alter column codigo_corto set not null;
 create unique index if not exists compras_codigo_corto_key on public.compras (codigo_corto);
 
--- ------------------------------------------------------------
--- 3) La compra devuelve también el código corto (para el PDF)
--- ------------------------------------------------------------
--- Misma función que en 20260930_candy_bar_en_compras.sql; sólo cambia el
--- objeto que devuelve.
 create or replace function public.crear_compra_entradas(
   p_funcion_id uuid,
   p_butaca_ids uuid[],
@@ -110,7 +79,6 @@ declare
   v_entradas jsonb;
   v_candy jsonb;
 begin
-  -- ---------- Butacas ----------
   if coalesce(cardinality(p_butaca_ids), 0) = 0 then
     raise exception 'Elegí al menos una butaca.';
   end if;
@@ -122,7 +90,6 @@ begin
     raise exception 'No podés repetir una butaca en la misma compra.';
   end if;
 
-  -- ---------- Función, preventa y edad ----------
   select f.id, f.sala_id, p.clasificacion, p.fecha_estreno, p.dias_preventa,
          p.precio_normal, p.precio_preventa
   into v_funcion
@@ -170,7 +137,6 @@ begin
     raise exception 'Una o más butacas no pertenecen a la sala de esta función.';
   end if;
 
-  -- ---------- Candy Bar: validación de ítems ----------
   if jsonb_typeof(v_items) <> 'array' then
     raise exception 'Formato inválido de productos del Candy Bar.';
   end if;
@@ -225,13 +191,10 @@ begin
       v_combos_con_entrada, v_cantidad_butacas;
   end if;
 
-  -- ---------- Alta de la compra ----------
   insert into public.compras (usuario_id, total, estado, codigo_qr)
   values (v_usuario_id, 0, 'confirmada', v_codigo_qr)
   returning id into v_compra_id;
 
-  -- Las primeras N butacas (no VIP primero) quedan cubiertas por los combos
-  -- con entrada: se cobra 0, o sólo el recargo VIP.
   insert into public.compra_entradas (compra_id, funcion_id, butaca_id, precio)
   select v_compra_id, p_funcion_id, b.id,
          case
@@ -267,9 +230,6 @@ begin
 
   update public.compras set total = v_total where id = v_compra_id;
 
-  -- ---------- Detalle para el comprobante ----------
-  -- El front arma el PDF con estos datos (verificados en la base), no con
-  -- los que calculó el navegador.
   select coalesce(jsonb_agg(jsonb_build_object(
            'butaca_id', b.id,
            'ubicacion', b.fila || '-' || b.columna,
@@ -313,9 +273,6 @@ $$;
 revoke all on function public.crear_compra_entradas(uuid, uuid[], jsonb) from public;
 grant execute on function public.crear_compra_entradas(uuid, uuid[], jsonb) to anon, authenticated;
 
--- ------------------------------------------------------------
--- 4) Roles
--- ------------------------------------------------------------
 create or replace function public.es_empleado_o_admin()
 returns boolean
 language sql
@@ -329,8 +286,6 @@ as $$
   );
 $$;
 
--- El admin asigna el rol a un usuario ya registrado. No puede cambiarse su
--- propio rol (para no quedarse afuera del panel por error).
 create or replace function public.cambiar_rol_usuario(p_usuario_id uuid, p_rol rol_usuario)
 returns void
 language plpgsql
@@ -372,25 +327,6 @@ grant execute on function public.es_empleado_o_admin() to authenticated;
 revoke all on function public.cambiar_rol_usuario(uuid, rol_usuario) from public;
 grant execute on function public.cambiar_rol_usuario(uuid, rol_usuario) to authenticated;
 
--- ------------------------------------------------------------
--- 5) Validación de QR
--- ------------------------------------------------------------
--- p_codigo: el contenido del QR (UUID) o el código corto (con o sin guion,
---           mayúsculas o minúsculas).
--- p_tipo:   'sala' | 'candy'
---
--- Devuelve jsonb:
---   { ok: true,  tipo, codigo_corto, pelicula, ..., entradas[], candy[] }
---   { ok: false, motivo, mensaje, ... }
--- Los rechazos se DEVUELVEN (no se lanza excepción) para que el intento
--- quede igualmente registrado en la auditoría.
---
--- Reglas:
---   * Compra inexistente o cancelada -> rechazo.
---   * Cada uso (sala / candy) se consume una sola vez.
---   * Sala: sólo el día de la función y hasta que termina.
---   * Candy: sólo el día de la función y si la compra incluye productos.
---   Fechas en hora de Argentina (Supabase corre en UTC).
 create or replace function public.validar_qr(p_codigo text, p_tipo text)
 returns jsonb
 language plpgsql
@@ -416,9 +352,6 @@ begin
     raise exception 'Tipo de validación inválido.';
   end if;
 
-  -- Buscar por UUID (lector) o por código corto (carga manual). Se bloquea la
-  -- fila hasta el fin de la transacción: una segunda validación simultánea
-  -- espera y después ve el uso ya consumido.
   if v_codigo ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
     select * into v_compra from public.compras where codigo_qr = lower(v_codigo) for update;
   else
@@ -437,7 +370,6 @@ begin
     return v_resultado;
   end if;
 
-  -- Datos de la función (todas las entradas de una compra son de la misma).
   select f.fecha, f.hora_inicio, f.hora_fin, f.formato, f.idioma,
          p.nombre as pelicula, p.clasificacion, s.nombre as sala
   into v_funcion
@@ -457,7 +389,6 @@ begin
   join public.butacas b on b.id = ce.butaca_id
   where ce.compra_id = v_compra.id;
 
-  -- Para los combos se detalla qué productos hay que entregar.
   select coalesce(jsonb_agg(jsonb_build_object(
            'tipo', case when i.combo_id is not null then 'combo' else 'producto' end,
            'nombre', coalesce(c.nombre, cp.nombre),
@@ -496,7 +427,6 @@ begin
     'candy_entregado_at', v_compra.candy_entregado_at
   );
 
-  -- ---------- Rechazos ----------
   if v_compra.estado <> 'confirmada' then
     v_resultado := v_detalle || jsonb_build_object(
       'ok', false, 'motivo', 'cancelada', 'mensaje', 'La compra fue cancelada.');
@@ -536,7 +466,6 @@ begin
     return v_resultado;
   end if;
 
-  -- ---------- Validación: se consume el uso ----------
   if p_tipo = 'sala' then
     update public.compras
     set entrada_validada_at = now(),
@@ -563,7 +492,6 @@ begin
     'ok', true,
     'motivo', 'validado',
     'mensaje', case when p_tipo = 'sala' then 'Acceso habilitado.' else 'Entregar los productos.' end,
-    -- Al validar la sala se avisa si todavía tiene Candy Bar por retirar.
     'candy_pendiente', p_tipo = 'sala' and jsonb_array_length(v_candy) > 0 and v_compra.candy_entregado_at is null
   );
 end;

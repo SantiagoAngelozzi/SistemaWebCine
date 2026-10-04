@@ -18,7 +18,7 @@
 
     @if (logueado()) {
       <div class="sesion">
-        <a class="usuario" routerLink="perfil" title="Mi cuenta">👤 {{ nombreUsuario() }}</a>
+        <a class="usuario" routerLink="perfil" title="Mi cuenta">{{ nombreUsuario() }}</a>
         <button type="button" class="logout-btn" (click)="cerrarSesion()">Salir</button>
       </div>
     } @else {

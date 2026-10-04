@@ -1,11 +1,6 @@
 import { RegistroAuditoria } from '../services/auditoria.service';
 import { formatearCodigoCorto } from '../services/validacion.service';
 
-/**
- * Convierte un registro técnico de log_auditoria (accion + entidad + JSON)
- * en textos que entiende cualquiera: "Modificó la función …", "Cambio de precio".
- */
-
 export const NOMBRE_ENTIDAD: Record<string, string> = {
   peliculas: 'Película',
   funciones: 'Función',
@@ -28,17 +23,6 @@ const VERBO: Record<string, string> = {
   QR_RECHAZADO: 'QR rechazado',
   COMPRA_CANCELADA: 'Canceló una compra',
   CAMBIO_ROL: 'Cambió el rol de un usuario'
-};
-
-const ICONO: Record<string, string> = {
-  INSERT: '➕',
-  UPDATE: '✏️',
-  DELETE: '🗑️',
-  QR_VALIDADO_SALA: '🎟️',
-  QR_ENTREGA_CANDY: '🍿',
-  QR_RECHAZADO: '⛔',
-  COMPRA_CANCELADA: '↩️',
-  CAMBIO_ROL: '🛡️'
 };
 
 const NOMBRE_CAMPO: Record<string, string> = {
@@ -76,7 +60,6 @@ const MOTIVO_QR: Record<string, string> = {
   otra_fecha: 'la función es otro día'
 };
 
-/** Campos internos que no aportan al leer un cambio. */
 const CAMPOS_OCULTOS = new Set(['id', 'created_at', 'updated_at', 'created_by']);
 
 const CAMPOS_PRECIO = new Set(['precio', 'precio_normal', 'precio_preventa', 'porcentaje_descuento', 'costo_puntos']);
@@ -88,11 +71,8 @@ export interface CambioCampo {
 }
 
 export interface DescripcionRegistro {
-  icono: string;
   titulo: string;
-  /** Nombre del objeto afectado ("Dune — Sala 1, 2026-10-02 18:00"). */
   objeto: string | null;
-  /** Línea extra (motivo del rechazo, rol nuevo, etc.). */
   extra: string | null;
   cambios: CambioCampo[];
   esCambioDePrecio: boolean;
@@ -100,7 +80,6 @@ export interface DescripcionRegistro {
 
 export function describirRegistro(registro: RegistroAuditoria): DescripcionRegistro {
   const detalle = registro.detalle ?? {};
-  // Registros viejos (antes de la migración 20261003) guardaban la fila entera sin "registro".
   const fila: Record<string, any> = detalle['registro'] ?? detalle;
   const entidad = NOMBRE_ENTIDAD[registro.entidad ?? ''] ?? registro.entidad ?? '';
   const esCrud = ['INSERT', 'UPDATE', 'DELETE'].includes(registro.accion);
@@ -152,7 +131,6 @@ export function describirRegistro(registro: RegistroAuditoria): DescripcionRegis
     }));
 
   return {
-    icono: ICONO[registro.accion] ?? '•',
     titulo,
     objeto,
     extra,
@@ -161,7 +139,6 @@ export function describirRegistro(registro: RegistroAuditoria): DescripcionRegis
   };
 }
 
-/** Campos de la fila completa (para altas y bajas), en formato legible. */
 export function camposRegistro(registro: RegistroAuditoria): CambioCampo[] {
   const detalle = registro.detalle ?? {};
   const fila: Record<string, any> = detalle['registro'] ?? detalle;

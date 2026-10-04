@@ -1,13 +1,3 @@
-/**
- * Generador mínimo de archivos Excel (.xlsx) sin dependencias.
- *
- * Un .xlsx es un ZIP con varios XML adentro (formato Office Open XML):
- *   [Content_Types].xml, _rels/.rels, xl/workbook.xml,
- *   xl/_rels/workbook.xml.rels, xl/styles.xml y xl/worksheets/sheetN.xml.
- * Acá se arman esos XML y se empaquetan en un ZIP "sin compresión"
- * (método store), que Excel, LibreOffice y Google Sheets abren sin problema.
- */
-
 export type EstiloCelda =
   | 'titulo'
   | 'subtitulo'
@@ -29,11 +19,9 @@ export type Celda = string | number | Date | null | CeldaConEstilo;
 export interface HojaXlsx {
   nombre: string;
   filas: Celda[][];
-  /** Ancho de cada columna en caracteres. */
   anchos?: number[];
 }
 
-// Índices de estilo (orden de <cellXfs> en styles.xml).
 const ESTILOS: Record<EstiloCelda | 'normal', number> = {
   normal: 0,
   titulo: 1,
@@ -71,21 +59,20 @@ const STYLES_XML =
   '</borders>' +
   '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
   '<cellXfs count="10">' +
-  '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' + // 0 normal
-  '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' + // 1 título
-  '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>' + // 2 subtítulo
-  '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' + // 3 encabezado
-  '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' + // 4 moneda
-  '<xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' + // 5 entero
-  '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' + // 6 fecha
-  '<xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>' + // 7 total
-  '<xf numFmtId="164" fontId="1" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' + // 8
-  '<xf numFmtId="3" fontId="1" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' + // 9
+  '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+  '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+  '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+  '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
+  '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>' +
+  '<xf numFmtId="164" fontId="1" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' +
+  '<xf numFmtId="3" fontId="1" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' +
   '</cellXfs>' +
   '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
   '</styleSheet>';
 
-/** Arma el archivo .xlsx completo. */
 export function crearXlsx(hojas: HojaXlsx[]): Blob {
   const archivos: { nombre: string; contenido: string }[] = [
     { nombre: '[Content_Types].xml', contenido: contentTypes(hojas.length) },
@@ -109,8 +96,6 @@ export function crearXlsx(hojas: HojaXlsx[]): Blob {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   });
 }
-
-// ---------- XML del libro ----------
 
 function contentTypes(cantidadHojas: number): string {
   let hojas = '';
@@ -212,7 +197,6 @@ function normalizarCelda(celda: Celda): CeldaConEstilo {
   return { valor: celda };
 }
 
-/** 0 -> A, 25 -> Z, 26 -> AA ... */
 function letraColumna(indice: number): string {
   let letras = '';
   let n = indice + 1;
@@ -224,13 +208,11 @@ function letraColumna(indice: number): string {
   return letras;
 }
 
-/** Excel guarda las fechas como días desde el 30/12/1899. */
 function fechaSerialExcel(fecha: Date): number {
   const utc = Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
   return Math.round((utc - Date.UTC(1899, 11, 30)) / 86_400_000);
 }
 
-/** Excel no acepta nombres de hoja de más de 31 caracteres ni con : \ / ? * [ ]. */
 function nombreHoja(nombre: string): string {
   return nombre.replace(/[:\\/?*[\]]/g, ' ').slice(0, 31) || 'Hoja';
 }
@@ -243,8 +225,6 @@ function escaparXml(texto: string): string {
     .replace(/"/g, '&quot;')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
 }
-
-// ---------- ZIP (método "store", sin compresión) ----------
 
 const TABLA_CRC = (() => {
   const tabla = new Uint32Array(256);
@@ -268,7 +248,6 @@ function crearZip(archivos: { nombre: string; datos: Uint8Array }[]): Uint8Array
   const partesCentrales: Uint8Array[] = [];
   let desplazamiento = 0;
 
-  // Fecha/hora fija en formato MS-DOS (1/1/2026 00:00): el contenido no depende de ella.
   const horaDos = 0;
   const fechaDos = ((2026 - 1980) << 9) | (1 << 5) | 1;
 
@@ -278,10 +257,10 @@ function crearZip(archivos: { nombre: string; datos: Uint8Array }[]): Uint8Array
     const tamanio = archivo.datos.length;
 
     const local = new DataView(new ArrayBuffer(30));
-    local.setUint32(0, 0x04034b50, true); // firma "PK\3\4"
-    local.setUint16(4, 20, true); // versión necesaria
-    local.setUint16(6, 0x0800, true); // nombres en UTF-8
-    local.setUint16(8, 0, true); // método: store
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(6, 0x0800, true);
+    local.setUint16(8, 0, true);
     local.setUint16(10, horaDos, true);
     local.setUint16(12, fechaDos, true);
     local.setUint32(14, crc, true);
@@ -291,7 +270,7 @@ function crearZip(archivos: { nombre: string; datos: Uint8Array }[]): Uint8Array
     local.setUint16(28, 0, true);
 
     const central = new DataView(new ArrayBuffer(46));
-    central.setUint32(0, 0x02014b50, true); // firma "PK\1\2"
+    central.setUint32(0, 0x02014b50, true);
     central.setUint16(4, 20, true);
     central.setUint16(6, 20, true);
     central.setUint16(8, 0x0800, true);
@@ -311,7 +290,7 @@ function crearZip(archivos: { nombre: string; datos: Uint8Array }[]): Uint8Array
 
   const tamanioCentral = partesCentrales.reduce((total, parte) => total + parte.length, 0);
   const fin = new DataView(new ArrayBuffer(22));
-  fin.setUint32(0, 0x06054b50, true); // firma "PK\5\6"
+  fin.setUint32(0, 0x06054b50, true);
   fin.setUint16(8, archivos.length, true);
   fin.setUint16(10, archivos.length, true);
   fin.setUint32(12, tamanioCentral, true);

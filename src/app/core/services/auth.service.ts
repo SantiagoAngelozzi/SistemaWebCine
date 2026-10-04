@@ -20,7 +20,6 @@ export class AuthService {
 
   readonly session = signal<Session | null>(null);
 
-  /** Rol por usuario, para no consultar la base en cada navegación. */
   private rolesCache = new Map<string, RolUsuario>();
 
   constructor() {
@@ -34,10 +33,6 @@ export class AuthService {
     });
   }
 
-  /**
-   * Rol del usuario logueado, o null si no hay sesión (visitante anónimo).
-   * Si no se puede leer el perfil se asume 'cliente', el rol sin permisos.
-   */
   async obtenerRolActual(): Promise<RolUsuario | null> {
     const {
       data: { session }
@@ -61,7 +56,6 @@ export class AuthService {
     return rol;
   }
 
-  /** Ruta de inicio según el rol: cada perfil tiene su propia pantalla. */
   rutaInicioSegunRol(rol: RolUsuario | null): string {
     if (rol === 'administrador') return '/admin';
     if (rol === 'empleado') return '/empleado';

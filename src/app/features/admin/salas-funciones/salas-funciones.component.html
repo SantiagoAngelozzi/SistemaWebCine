@@ -9,7 +9,7 @@
   </div>
 
   @if (errorMessage()) {
-    <p class="error">⚠️ {{ errorMessage() }}</p>
+    <p class="error">{{ errorMessage() }}</p>
   }
 
   @if (cargando()) {
@@ -41,7 +41,7 @@
               <div class="sala-card">
                 <h3>{{ sala.nombre }}</h3>
                 <p class="meta">{{ sala.cantidadButacas }} butacas</p>
-                <button type="button" class="danger" (click)="eliminarSala(sala)">🗑️ Eliminar</button>
+                <button type="button" class="danger" (click)="eliminarSala(sala)">Eliminar</button>
               </div>
             }
           </div>
@@ -179,7 +179,7 @@
                       [title]="funcion.tieneCompras ? 'Tiene compras: no se puede eliminar (forma parte del historial)' : 'Eliminar función'"
                       (click)="eliminarFuncion(funcion)"
                     >
-                      🗑️
+                    Eliminar
                     </button>
                   </td>
                 </tr>
@@ -190,4 +190,4 @@
       </section>
     }
   }
-</div>
+</div>

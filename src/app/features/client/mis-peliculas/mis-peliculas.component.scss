@@ -31,8 +31,6 @@
   }
 }
 
-// ---------- Cabecera ----------
-
 .cabecera {
   display: flex;
   align-items: flex-end;
@@ -106,8 +104,6 @@
     box-shadow: var(--shadow-comic-md);
   }
 }
-
-// ---------- Galería ----------
 
 .galeria {
   display: grid;
@@ -253,8 +249,6 @@
     background: var(--color-lima);
   }
 }
-
-// ---------- Modal ----------
 
 .modal-fondo {
   position: fixed;

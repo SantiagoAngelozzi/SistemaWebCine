@@ -8,7 +8,7 @@
       <p class="codigo codigo-corto">{{ formatearCodigoCorto(compraExitosa()!.codigo_corto) }}</p>
       @if (compraExitosa()!.candy.length) {
         <p class="aviso-candy">
-          🍿 Con este mismo QR retirás tus productos en el Candy Bar.
+          Con este mismo QR retirás tus productos en el Candy Bar.
         </p>
       }
       @if (compraExitosa()!.descuento_monto > 0) {
@@ -24,7 +24,7 @@
             Canjeaste {{ compraExitosa()!.puntos_canjeados }} puntos.
           }
           @if (compraExitosa()!.puntos_ganados > 0) {
-            ⭐ Sumaste {{ compraExitosa()!.puntos_ganados }} puntos.
+            Sumaste {{ compraExitosa()!.puntos_ganados }} puntos.
           }
         </p>
       }
@@ -266,7 +266,7 @@
           }
 
           @if (puntosAGanar() > 0) {
-            <p class="puntos-a-ganar">⭐ Con esta compra sumás {{ puntosAGanar() }} puntos.</p>
+            <p class="puntos-a-ganar">Con esta compra sumás {{ puntosAGanar() }} puntos.</p>
           }
 
           <button

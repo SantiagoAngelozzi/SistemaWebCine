@@ -28,7 +28,6 @@ export class ClientLayoutComponent {
     { path: 'perfil', label: 'Perfil' }
   ];
 
-  /** Se actualiza sola al iniciar o cerrar sesión (signal de AuthService). */
   logueado = computed(() => !!this.auth.session());
 
   nombreUsuario = computed(() => {

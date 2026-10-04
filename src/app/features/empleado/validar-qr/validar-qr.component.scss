@@ -3,8 +3,6 @@
   min-height: 100vh;
 }
 
-// El color de fondo cambia con el modo para que el empleado no valide en el
-// modo equivocado: turquesa = sala, naranja = Candy Bar.
 .empleado-shell {
   --color-modo: var(--color-turquesa);
   min-height: 100vh;
@@ -197,8 +195,6 @@
   }
 }
 
-// ---------- Resultado ----------
-
 .resultado {
   padding: 18px;
   margin-bottom: 16px;
@@ -340,8 +336,6 @@
   cursor: pointer;
   box-shadow: var(--shadow-comic-sm);
 }
-
-// ---------- Historial ----------
 
 .historial {
   ul {

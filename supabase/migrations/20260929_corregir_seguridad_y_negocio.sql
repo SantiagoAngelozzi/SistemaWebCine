@@ -1,8 +1,3 @@
--- Ejecutar UNA VEZ en Supabase SQL Editor sobre la base ya creada.
--- Corrige reglas de negocio que no deben depender del navegador.
-
--- Perfiles: un cliente puede editar sus datos personales, pero no su rol,
--- puntos ni crédito. El administrador conserva esa capacidad.
 create or replace function public.proteger_campos_usuario()
 returns trigger
 language plpgsql
@@ -28,7 +23,6 @@ create trigger usuarios_proteger_campos
 before update on public.usuarios
 for each row execute function public.proteger_campos_usuario();
 
--- Funciones: asignación transaccional de sala, con 30 min de limpieza.
 create or replace function public.crear_funcion_automatica(
   p_pelicula_id uuid,
   p_fecha date,
@@ -65,7 +59,6 @@ begin
     raise exception 'No se admiten funciones que finalicen al día siguiente.';
   end if;
 
-  -- Serializa las asignaciones de un mismo día entre administradores.
   perform pg_advisory_xact_lock(hashtextextended(p_fecha::text, 0));
 
   select s.id
@@ -119,8 +112,6 @@ revoke all on function public.eliminar_funcion(uuid) from public;
 grant execute on function public.crear_funcion_automatica(uuid, date, time, formato_proyeccion, idioma_pelicula) to authenticated;
 grant execute on function public.eliminar_funcion(uuid) to authenticated;
 
--- Compra de entradas: una única transacción calcula precio, comprueba
--- preventa/edad, reserva las butacas y genera el código único.
 create or replace function public.crear_compra_entradas(
   p_funcion_id uuid,
   p_butaca_ids uuid[]
@@ -236,8 +227,7 @@ create policy "compra_entradas_select_via_compra" on public.compra_entradas
     )
   );
 
--- El mapa necesita conocer qué butacas están ocupadas y recibir los INSERT
--- de Realtime. Esta policy no expone compras, QR ni datos de usuarios.
+drop policy if exists "compra_entradas_select_ocupacion_publica" on public.compra_entradas;
 create policy "compra_entradas_select_ocupacion_publica" on public.compra_entradas
   for select using (true);
 
@@ -254,7 +244,6 @@ create policy "compra_candy_items_select_via_compra" on public.compra_candy_item
 revoke all on function public.crear_compra_entradas(uuid, uuid[]) from public;
 grant execute on function public.crear_compra_entradas(uuid, uuid[]) to anon, authenticated;
 
--- Home: ranking por entradas confirmadas, en vez de fecha de alta.
 create or replace function public.obtener_peliculas_mas_vendidas(p_limite integer default 3)
 returns table (pelicula_id uuid, entradas_vendidas bigint)
 language sql
@@ -276,9 +265,8 @@ $$;
 revoke all on function public.obtener_peliculas_mas_vendidas(integer) from public;
 grant execute on function public.obtener_peliculas_mas_vendidas(integer) to anon, authenticated;
 
--- Auditoría: solo lectura para administradores; inserción automática desde
--- triggers, sin permisos de edición ni borrado desde el cliente.
 drop policy if exists "log_auditoria_admin_all" on public.log_auditoria;
+drop policy if exists "log_auditoria_select_admin" on public.log_auditoria;
 create policy "log_auditoria_select_admin" on public.log_auditoria
   for select using (public.is_admin());
 
@@ -320,7 +308,6 @@ create trigger auditar_funciones
 after insert or update or delete on public.funciones
 for each row execute function public.registrar_auditoria();
 
--- Necesario para que las nuevas compras actualicen otros mapas de butacas.
 do $$
 begin
   alter publication supabase_realtime add table public.compra_entradas;

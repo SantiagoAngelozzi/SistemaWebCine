@@ -66,7 +66,6 @@ export const routes: Routes = [
     ]
   },
   {
-    // Módulo del empleado: validación de QR (acceso a sala y Candy Bar).
     path: 'empleado',
     canActivate: [empleadoGuard],
     loadComponent: () =>
@@ -76,7 +75,6 @@ export const routes: Routes = [
   },
   {
     path: '',
-    // El empleado tiene acceso exclusivo a su módulo.
     canActivate: [sinEmpleadoGuard],
     canActivateChild: [sinEmpleadoGuard],
     loadComponent: () =>

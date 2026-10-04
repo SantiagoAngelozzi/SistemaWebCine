@@ -14,7 +14,6 @@ export interface Cupon {
 }
 
 export interface CuponConUsos extends Cupon {
-  /** Usos en compras confirmadas (las canceladas no cuentan). */
   usos: number;
 }
 
@@ -48,7 +47,6 @@ export interface RecompensaFormValue {
   activo: boolean;
 }
 
-/** Respuesta de la RPC consultar_descuento (vista previa del descuento). */
 export interface DescuentoAplicable {
   origen: 'bienvenida' | 'cupon' | null;
   codigo: string | null;

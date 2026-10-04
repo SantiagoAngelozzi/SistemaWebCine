@@ -1,16 +1,6 @@
 import { Component, EventEmitter, Input, Output, forwardRef, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
-/**
- * Estrellas de 1 a 5, reutilizable en tres modos:
- *
- *  - Sólo lectura (promedios, admite decimales: 3.5 pinta media estrella):
- *      <app-estrellas [valor]="4.3" [soloLectura]="true" />
- *  - Two-way binding con @Input + @Output "valorChange":
- *      <app-estrellas [(valor)]="nota" />
- *  - Dentro de un formulario reactivo, porque implementa ControlValueAccessor:
- *      <app-estrellas formControlName="calificacion" />
- */
 @Component({
   selector: 'app-estrellas',
   standalone: true,
@@ -89,21 +79,18 @@ export class EstrellasComponent implements ControlValueAccessor {
   @Input() valor = 0;
   @Input() soloLectura = false;
   @Input() tamanio: 'chica' | 'normal' | 'grande' = 'normal';
-  /** Muestra al lado el texto de la estrella elegida ("Muy buena"). */
   @Input() mostrarEtiqueta = false;
   @Output() valorChange = new EventEmitter<number>();
 
   readonly posiciones = [1, 2, 3, 4, 5];
   readonly etiquetas = ['Mala', 'Regular', 'Buena', 'Muy buena', 'Excelente'];
 
-  /** Estrella bajo el mouse: previsualiza la calificación antes de hacer clic. */
   hover = signal(0);
   deshabilitado = false;
 
   private onChange: (valor: number) => void = () => {};
   onTouched: () => void = () => {};
 
-  /** Porcentaje pintado de la estrella n (0-100), así se ven los promedios con decimales. */
   relleno(n: number): number {
     const valor = this.hover() || this.valor || 0;
     return Math.max(0, Math.min(1, valor - (n - 1))) * 100;
@@ -121,8 +108,6 @@ export class EstrellasComponent implements ControlValueAccessor {
     this.onTouched();
     this.valorChange.emit(n);
   }
-
-  // ----- ControlValueAccessor: así funciona con formControlName / ngModel -----
 
   writeValue(valor: number | null): void {
     this.valor = Number(valor) || 0;

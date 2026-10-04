@@ -13,7 +13,6 @@ export interface RegistroAuditoria {
   responsable: { nombre: string; email: string; rol: string } | null;
 }
 
-/** Grupos de acciones para el filtro de la pantalla. */
 export type TipoAccion = 'todas' | 'altas' | 'modificaciones' | 'bajas' | 'qr' | 'cancelaciones' | 'roles';
 
 export const ACCIONES_POR_TIPO: Record<Exclude<TipoAccion, 'todas'>, string[]> = {
@@ -26,7 +25,6 @@ export const ACCIONES_POR_TIPO: Record<Exclude<TipoAccion, 'todas'>, string[]> =
 };
 
 export interface FiltrosAuditoria {
-  /** yyyy-mm-dd (inclusive), en hora local. */
   desde: string | null;
   hasta: string | null;
   entidad: string | null;
@@ -35,10 +33,6 @@ export interface FiltrosAuditoria {
 
 const SELECT = 'id, accion, entidad, entidad_id, detalle, created_at, usuarios(nombre, apellido, email, rol)';
 
-/**
- * Registro de auditoría (sólo lectura: la tabla es inmutable y sólo
- * la puede leer el administrador por RLS).
- */
 @Injectable({ providedIn: 'root' })
 export class AuditoriaService {
   private supabase = inject(SupabaseService);
@@ -71,10 +65,6 @@ export class AuditoriaService {
     return data ? mapearRegistro(data) : null;
   }
 
-  /**
-   * Avisa cada vez que se inserta un registro (Realtime). Realtime respeta
-   * RLS, así que sólo le llegan eventos al administrador.
-   */
   suscribirse(alInsertar: (id: string) => void): RealtimeChannel {
     return this.supabase.client
       .channel('auditoria-en-vivo')
@@ -109,7 +99,6 @@ function mapearRegistro(fila: any): RegistroAuditoria {
   };
 }
 
-/** Medianoche local de un día yyyy-mm-dd como ISO (con huso), más n días. */
 function inicioDelDia(iso: string, masDias = 0): string {
   const [anio, mes, dia] = iso.split('-').map(Number);
   return new Date(anio, mes - 1, dia + masDias).toISOString();

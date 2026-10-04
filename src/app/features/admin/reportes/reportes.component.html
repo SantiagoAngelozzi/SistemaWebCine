@@ -1,5 +1,4 @@
 <div class="page">
-  <!-- ---------- Filtros + exportación (una sola fila, arriba de todo) ---------- -->
   <div class="barra-filtros">
     <div class="presets" role="group" aria-label="Período">
       <button type="button" class="chip" [class.active]="preset() === '7'" (click)="elegirPreset('7')">7 días</button>
@@ -23,10 +22,10 @@
 
     <div class="exportar">
       <button type="button" class="btn-secundario" [disabled]="!reporte() || !!exportando()" (click)="exportarPdf()">
-        📄 PDF
+        PDF
       </button>
       <button type="button" class="btn-primary" [disabled]="!reporte() || !!exportando()" (click)="exportarXlsx()">
-        📊 Excel
+        Excel
       </button>
     </div>
   </div>
@@ -40,7 +39,6 @@
 
   @if (reporte(); as r) {
     <div class="contenido" [class.recargando]="cargando()">
-      <!-- ---------- Indicadores ---------- -->
       <div class="kpis">
         <div class="kpi destacado">
           <span class="etiqueta">Facturación</span>
@@ -65,7 +63,7 @@
           </span>
         </div>
         <div class="kpi estrella">
-          <span class="etiqueta">⭐ Producto estrella</span>
+          <span class="etiqueta">Producto estrella</span>
           @if (productoEstrella(); as p) {
             <span class="valor nombre">{{ p.nombre }}</span>
             <span class="ayuda">{{ formatearEntero(p.cantidad) }} unidades</span>
@@ -76,7 +74,6 @@
         </div>
       </div>
 
-      <!-- ---------- Gráficos diarios ---------- -->
       <div class="grid-2">
         <section class="panel">
           <h2>Facturación diaria</h2>
@@ -101,7 +98,6 @@
         </section>
       </div>
 
-      <!-- ---------- Rankings ---------- -->
       <div class="grid-2">
         <section class="panel">
           <div class="panel-cabecera">
@@ -132,7 +128,6 @@
         </section>
       </div>
 
-      <!-- ---------- Detalle (vista de tabla de los gráficos) ---------- -->
       <section class="panel">
         <h2>Detalle por día</h2>
         <div class="tabla-wrap">

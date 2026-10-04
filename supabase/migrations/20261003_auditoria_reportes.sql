@@ -1,20 +1,3 @@
--- ============================================================
--- Auditoría inmutable + dashboard/reporte de facturación
--- ------------------------------------------------------------
--- 1. log_auditoria pasa a ser realmente inmutable: nadie (ni el admin,
---    ni una consulta directa) puede modificar o borrar un registro.
--- 2. El trigger de auditoría guarda un detalle legible: una etiqueta
---    ("Función de Dune — Sala 1, 2026-10-02 18:00") y, en las
---    modificaciones, sólo los campos que cambiaron (antes → después).
--- 3. Se auditan también salas y categorías del Candy Bar.
--- 4. reporte_facturacion(desde, hasta): todas las métricas del
---    dashboard y del reporte exportable en una sola llamada.
---
--- Se ejecuta después de 20261002_resenas_mis_peliculas.sql. Es idempotente.
--- ============================================================
-
--- ---------- 1. Inmutabilidad ----------
-
 create or replace function public.log_auditoria_inmutable()
 returns trigger
 language plpgsql
@@ -34,15 +17,12 @@ create trigger log_auditoria_sin_truncate
 before truncate on public.log_auditoria
 for each statement execute function public.log_auditoria_inmutable();
 
--- Sólo lectura para el admin (las filas las escriben triggers y RPCs).
 drop policy if exists "log_auditoria_admin_all" on public.log_auditoria;
 drop policy if exists "log_auditoria_select_admin" on public.log_auditoria;
 create policy "log_auditoria_select_admin" on public.log_auditoria
   for select using (public.is_admin());
 
 create index if not exists log_auditoria_fecha_idx on public.log_auditoria (created_at desc);
-
--- ---------- 2. Trigger de auditoría con detalle legible ----------
 
 create or replace function public.registrar_auditoria()
 returns trigger
@@ -73,13 +53,11 @@ begin
         );
       end if;
     end loop;
-    -- Un UPDATE que no cambió nada no se registra.
     if v_cambios = '{}'::jsonb then
       return new;
     end if;
   end if;
 
-  -- Etiqueta para mostrar en la pantalla sin tener que buscar ids.
   if tg_table_name = 'funciones' then
     select p.nombre || ' — ' || s.nombre || ', ' || (v_registro ->> 'fecha') || ' ' || left(v_registro ->> 'hora_inicio', 5)
       into v_etiqueta
@@ -106,7 +84,6 @@ begin
 end;
 $$;
 
--- Salas y categorías también son operaciones del panel.
 drop trigger if exists auditar_salas on public.salas;
 create trigger auditar_salas
 after insert or update or delete on public.salas
@@ -117,8 +94,6 @@ create trigger auditar_candy_categorias
 after insert or update or delete on public.candy_categorias
 for each row execute function public.registrar_auditoria();
 
--- La pantalla de auditoría recibe los registros nuevos en vivo
--- (Realtime respeta RLS: sólo le llegan al admin).
 do $$
 begin
   if not exists (
@@ -129,15 +104,6 @@ begin
   end if;
 end;
 $$;
-
--- ---------- 3. Reporte de facturación ----------
--- Criterios (los mismos en pantalla, PDF y Excel):
---   * Se cuentan las compras NO canceladas, por fecha de compra (hora argentina).
---   * Facturación = total de la compra (ya con descuentos; incluye la parte pagada con crédito).
---   * Cobrado = facturación - crédito usado (dinero nuevo que entró ese día).
---   * Entradas vendidas = entradas activas (incluye las de combos y las canjeadas con puntos).
---   * Películas más vistas = entradas vendidas en los últimos 7 / 30 días hasta la fecha "hasta".
---   * Producto estrella = más unidades vendidas en el período, sumando las que van dentro de combos.
 
 create or replace function public.reporte_facturacion(p_desde date, p_hasta date)
 returns jsonb
@@ -221,11 +187,9 @@ begin
     ) cnc on cnc.dia = d.dia
   ),
   unidades_producto as (
-    -- Productos sueltos
     select candy_producto_id as producto_id, cantidad as unidades, cantidad * precio_unitario as recaudacion
     from candy where candy_producto_id is not null
     union all
-    -- Productos dentro de combos (la plata del combo no se reparte entre sus productos)
     select cp.candy_producto_id, c.cantidad * cp.cantidad, 0
     from candy c
     join public.combo_productos cp on cp.combo_id = c.combo_id

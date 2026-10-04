@@ -25,7 +25,6 @@ import { ResenaFormComponent } from '../../../shared/resena-form/resena-form.com
   styleUrl: './pelicula.component.scss'
 })
 export class PeliculaComponent implements OnInit {
-  // Lee el parametro :id de la ruta /pelicula/:id.
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private peliculasService = inject(PeliculasService);
@@ -44,7 +43,6 @@ export class PeliculaComponent implements OnInit {
     return !!pelicula && estadoVenta(pelicula) !== 'proximamente';
   });
 
-  // ---------- Reseñas ----------
   readonly estrellasDesc = [5, 4, 3, 2, 1];
   resumen = signal<ResumenResenas | null>(null);
   errorResenas = signal(false);
@@ -81,7 +79,6 @@ export class PeliculaComponent implements OnInit {
       if (errorFunciones) throw errorFunciones;
 
       this.pelicula.set(pelicula);
-      // Sólo se ofrecen las funciones que todavía no empezaron.
       this.funciones.set(
         (funciones ?? [])
           .filter((fila: any) => !funcionYaComenzo(fila.fecha, fila.hora_inicio))
@@ -99,7 +96,6 @@ export class PeliculaComponent implements OnInit {
     }
   }
 
-  /** Separado de cargar(): si fallan las reseñas, la ficha y las funciones se ven igual. */
   async cargarResenas(peliculaId: string): Promise<void> {
     this.errorResenas.set(false);
     try {
@@ -110,7 +106,6 @@ export class PeliculaComponent implements OnInit {
     }
   }
 
-  /** Ancho de la barra de la distribución (porcentaje de reseñas con n estrellas). */
   porcentajeEstrellas(resumen: ResumenResenas, estrellas: number): number {
     return resumen.cantidad ? (resumen.distribucion[estrellas - 1] / resumen.cantidad) * 100 : 0;
   }

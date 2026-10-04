@@ -27,11 +27,6 @@ interface FilaAuditoria {
 
 const TAMANIO_PAGINA = 25;
 
-/**
- * Registro de auditoría: historial cronológico, inmutable, de quién hizo
- * qué y cuándo (funciones, precios, QR, cancelaciones, roles…).
- * Los registros nuevos llegan en vivo por Realtime.
- */
 @Component({
   selector: 'app-admin-auditoria',
   standalone: true,
@@ -63,9 +58,7 @@ export class AuditoriaComponent implements OnInit, OnDestroy {
   cargando = signal(true);
   errorMessage = signal<string | null>(null);
   expandidos = signal<Set<string>>(new Set());
-  /** Ids recién llegados por Realtime (se resaltan unos segundos). */
   nuevos = signal<Set<string>>(new Set());
-  /** Registros nuevos que no se muestran por estar en otra página o filtrados. */
   pendientes = signal(0);
 
   totalPaginas = computed(() => Math.max(1, Math.ceil(this.total() / TAMANIO_PAGINA)));
@@ -123,7 +116,6 @@ export class AuditoriaComponent implements OnInit, OnDestroy {
     await this.cargar();
   }
 
-  /** Vuelve a la primera página para ver los registros que llegaron en vivo. */
   async verNuevos(): Promise<void> {
     this.pagina.set(0);
     await this.cargar();
@@ -141,8 +133,6 @@ export class AuditoriaComponent implements OnInit, OnDestroy {
   tieneDetalle(fila: FilaAuditoria): boolean {
     return fila.descripcion.cambios.length > 0 || fila.campos.length > 0;
   }
-
-  // ---------- Realtime ----------
 
   private async alLlegarRegistro(id: string): Promise<void> {
     try {
@@ -177,7 +167,6 @@ export class AuditoriaComponent implements OnInit, OnDestroy {
     const f = this.filtros();
     if (f.entidad && registro.entidad !== f.entidad) return false;
     if (f.tipo !== 'todas' && !ACCIONES_POR_TIPO[f.tipo].includes(registro.accion)) return false;
-    // Un registro recién creado es de hoy: sólo queda afuera si el rango termina antes.
     if (f.hasta && f.hasta < this.hoy) return false;
     return true;
   }

@@ -36,7 +36,7 @@ interface ButacaUI extends Butaca {
   estado: EstadoButaca;
 }
 
-interface FilaUI { 
+interface FilaUI {
   fila: string;
   izquierda: ButacaUI[];
   centro: ButacaUI[];
@@ -97,7 +97,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
   paso = signal<PasoCompra>('butacas');
   catalogo = signal<CatalogoCandy | null>(null);
   errorCandy = signal<string | null>(null);
-  /** clave "tipo:id" -> cantidad */
   carrito = signal<Map<string, number>>(new Map());
 
   private butacasPorId = new Map<string, ButacaUI>();
@@ -174,10 +173,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
       .reduce((acc, linea) => acc + linea.cantidad, 0)
   );
 
-  /**
-   * Cada combo con entrada cubre el precio base de una butaca (la VIP sigue
-   * pagando su recargo). Misma regla que aplica la RPC en la base.
-   */
   descuentoEntradasEnCombos = computed(() => {
     const funcion = this.funcion();
     if (!funcion) return 0;
@@ -189,12 +184,9 @@ export class ButacasComponent implements OnInit, OnDestroy {
     redondear(this.lineasCarrito().reduce((acc, l) => acc + l.subtotal, 0))
   );
 
-  // ---------- Beneficios del usuario registrado ----------
-
   logueado = computed(() => !!this.authService.session());
   puntosDisponibles = signal(0);
   recompensas = signal<Recompensa[]>([]);
-  /** recompensaId -> cantidad */
   canjes = signal<Map<string, number>>(new Map());
   descuento = signal<DescuentoAplicable | null>(null);
   cuponAplicado = signal<string | null>(null);
@@ -221,15 +213,12 @@ export class ButacasComponent implements OnInit, OnDestroy {
     Math.max(0, this.seleccionadas().size - this.combosConEntrada() - this.canjesEntrada())
   );
 
-  /** Igual que los combos: cada entrada canjeada cubre el precio base de una butaca. */
   descuentoEntradasEnCanjes = computed(() => {
     const funcion = this.funcion();
     if (!funcion) return 0;
     const disponibles = Math.max(0, this.seleccionadas().size - this.combosConEntrada());
     return redondear(Math.min(this.canjesEntrada(), disponibles) * funcion.precio);
   });
-
-  // ---------- Totales (vista previa: la base recalcula todo) ----------
 
   subtotal = computed(() =>
     redondear(
@@ -254,18 +243,15 @@ export class ButacasComponent implements OnInit, OnDestroy {
 
   total = computed(() => redondear(this.subtotal() - this.descuentoMonto()));
 
-  /** Crédito en cuenta del usuario logueado (0 para anónimos). */
   creditoDisponible = signal(0);
   usarCredito = signal(false);
 
-  /** Vista previa: la base decide cuánto crédito se usa realmente. */
   creditoAplicado = computed(() =>
     this.usarCredito() ? redondear(Math.min(this.creditoDisponible(), this.total())) : 0
   );
 
   aPagar = computed(() => redondear(this.total() - this.creditoAplicado()));
 
-  /** 1 punto por cada $1 abonado con otros medios (sólo registrados). */
   puntosAGanar = computed(() => (this.logueado() ? Math.floor(this.aPagar()) : 0));
 
   async ngOnInit(): Promise<void> {
@@ -314,16 +300,12 @@ export class ButacasComponent implements OnInit, OnDestroy {
       this.armarFilas(butacas, ocupadas);
     } catch (err) {
       console.error(err);
-      this.errorMessage.set('No se pudo cargar el mapa de butacas.'); 
+      this.errorMessage.set('No se pudo cargar el mapa de butacas.');
     } finally {
       this.cargando.set(false);
     }
   }
 
-  /**
-   * Crédito, puntos, recompensas y descuento del usuario logueado. Si algo
-   * falla se sigue pudiendo comprar sin beneficios.
-   */
   private async cargarSaldosYBeneficios(): Promise<void> {
     const {
       data: { session }
@@ -350,7 +332,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
       this.puntosDisponibles.set(perfil?.puntos ?? 0);
       this.recompensas.set(recompensas);
 
-      // Se descartan canjes de recompensas que ya no están disponibles.
       const vigentes = new Set(recompensas.map((r) => r.id));
       this.canjes.update((mapa) => new Map(Array.from(mapa).filter(([id]) => vigentes.has(id))));
 
@@ -367,8 +348,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     }
     if (this.creditoDisponible() <= 0) this.usarCredito.set(false);
   }
-
-  // ---------- Cupón y canjes ----------
 
   async aplicarCupon(codigo: string): Promise<void> {
     this.validandoCupon.set(true);
@@ -414,7 +393,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     return this.lineasCanje().map((l) => ({ id: l.recompensa.id, cantidad: l.cantidad }));
   }
 
-  /** Si el Candy Bar falla se puede seguir comprando sólo entradas. */
   private async cargarCatalogoCandy(): Promise<void> {
     this.errorCandy.set(null);
     try {
@@ -429,7 +407,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Quita del carrito lo que ya no está a la venta (p. ej. tras recargar). */
   private depurarCarrito(catalogo: CatalogoCandy): void {
     const vigentes = new Set<string>([
       ...catalogo.combos.map((c) => claveCarrito('combo', c.id)),
@@ -472,15 +449,13 @@ export class ButacasComponent implements OnInit, OnDestroy {
     filas.sort((a, b) => a.fila.localeCompare(b.fila));
     this.filas.set(filas);
 
-    // Al recargar (p. ej. tras un error de compra) se conserva la selección
-    // de las butacas que siguen libres y se descartan las que se vendieron.
     this.seleccionadas.update((set) => new Set(Array.from(set).filter((id) => !ocupadas.has(id))));
     this.ajustarCombosAButacas();
     if (!this.seleccionadas().size) this.paso.set('butacas');
   }
 
   private suscribirseRealtime(): void {
- 
+
     this.canalOcupacion = this.comprasService.suscribirseAOcupacion(
       this.funcionId,
       (butacaId) => this.alOcuparseButaca(butacaId),
@@ -501,8 +476,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
   private alOcuparseButaca(butacaId: string): void {
     this.marcarEstado(butacaId, 'ocupada');
 
-    // Nuestra propia compra también dispara este evento: en ese caso no hay
-    // nada que avisar ni ajustar.
     if (this.comprando() || this.compraExitosa()) return;
     if (!this.seleccionadas().has(butacaId)) return;
 
@@ -519,7 +492,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     if (!this.seleccionadas().size) this.paso.set('butacas');
   }
 
-  /** Alguien canceló su compra: la butaca vuelve a estar libre para todos. */
   private alLiberarseButaca(butacaId: string): void {
     const butaca = this.butacasPorId.get(butacaId);
     if (!butaca || butaca.estado !== 'ocupada') return;
@@ -559,8 +531,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ---------- Pasos y Candy Bar ----------
-
   irACandy(): void {
     if (!this.seleccionadas().size) return;
     this.errorMessage.set(null);
@@ -586,11 +556,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     this.cambiarCantidadCandy({ tipo: linea.tipo, id: linea.id, cantidad: 0 });
   }
 
-  /**
-   * No puede haber más entradas cubiertas (combos con entrada + canjes de
-   * entrada) que butacas elegidas. Si el cliente suelta una butaca (o se la
-   * ganan), se quitan primero los canjes de entrada y después los combos.
-   */
   private ajustarCombosAButacas(): void {
     let sobrante = this.combosConEntrada() + this.canjesEntrada() - this.seleccionadas().size;
     if (sobrante <= 0) return;
@@ -639,8 +604,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     }));
   }
 
-  // ---------- Compra ----------
-
   async confirmarCompra(): Promise<void> {
     const funcion = this.funcion();
     if (!funcion || !this.seleccionadas().size) return;
@@ -665,9 +628,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // Sólo se bloquea si se conoce la fecha de nacimiento y no alcanza la
-        // edad mínima (misma regla que la base). Sin fecha, se vende con la
-        // advertencia impresa en el comprobante, igual que a un anónimo.
         const edadMinima = funcion.peliculaClasificacion === '+18' ? 18 : funcion.peliculaClasificacion === '+13' ? 13 : 0;
         if (
           edadMinima &&
@@ -704,8 +664,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
       await this.descargarComprobante();
     } catch (err: any) {
       console.error(err);
-      // Se recarga primero (butacas ocupadas y catálogo actualizados) y
-      // después se muestra el error, porque cargar() limpia el mensaje.
       await this.cargar();
       this.errorMessage.set(err?.message ?? 'No se pudo confirmar la compra.');
     } finally {
@@ -713,7 +671,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** "Combo Clásico (1 entrada + 2x Pochoclo grande, 1x Gaseosa)" */
   private descripcionCombo(comboId: string, nombre: string): string {
     const combo = this.catalogo()?.combos.find((c) => c.id === comboId);
     if (!combo) return nombre;
@@ -730,9 +687,6 @@ export class ButacasComponent implements OnInit, OnDestroy {
     const compra = this.compraExitosa();
     if (!funcion || !compra) return;
 
-    // Se usa el detalle que devolvió la base (precios reales), no lo que
-    // calculó el navegador ni la selección actual del mapa (que se vacía
-    // cuando llega por Realtime nuestra propia compra).
     const entradas = compra.entradas.map((entrada) => ({
       ubicacion: entrada.ubicacion,
       tipo: entrada.tipo,

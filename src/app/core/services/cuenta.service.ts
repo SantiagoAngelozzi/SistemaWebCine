@@ -11,15 +11,10 @@ import {
 } from '../models/cuenta.model';
 import { SupabaseService } from './supabase.service';
 
-/** Horas antes de la función hasta las que se puede cancelar. */
 export const HORAS_LIMITE_CANCELACION = 2;
 
 const MS_POR_HORA = 60 * 60 * 1000;
 
-/**
- * Datos de la cuenta del usuario logueado: perfil, crédito, compras y
- * cancelación. Las políticas RLS hacen que cada usuario vea sólo lo suyo.
- */
 @Injectable({ providedIn: 'root' })
 export class CuentaService {
   private supabase = inject(SupabaseService);
@@ -45,7 +40,6 @@ export class CuentaService {
     return { ...data, credito: Number(data.credito ?? 0), puntos: Number(data.puntos ?? 0) };
   }
 
-  /** Crédito disponible del usuario logueado (0 si es anónimo). */
   async obtenerCredito(): Promise<number> {
     const id = await this.usuarioId();
     if (!id) return 0;
@@ -101,10 +95,6 @@ export class CuentaService {
     }));
   }
 
-  /**
-   * RPC cancelar_compra: valida dueño, estado, uso y el límite de 2 horas,
-   * libera las butacas y acredita el total en la cuenta.
-   */
   async cancelarCompra(compraId: string): Promise<ResultadoCancelacion> {
     const { data, error } = await this.supabase.client.rpc('cancelar_compra', {
       p_compra_id: compraId
@@ -209,7 +199,6 @@ export class CuentaService {
     };
   }
 
-  /** "2026-10-02" + "18:00:00" -> Date local (las funciones se cargan en hora local). */
   private fechaHoraLocal(fecha: string, hora: string): Date {
     if (!fecha) return new Date(NaN);
     const [anio, mes, dia] = fecha.split('-').map(Number);

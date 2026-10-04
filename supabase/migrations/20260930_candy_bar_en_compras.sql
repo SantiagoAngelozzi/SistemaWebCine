@@ -1,20 +1,3 @@
--- Ejecutar UNA VEZ en Supabase SQL Editor, DESPUÉS de
--- 20260929_corregir_seguridad_y_negocio.sql.
---
--- Candy Bar y combos:
---   * Admin: guardado atómico de combos (combo + productos en una sola
---     transacción) y validaciones de precios/cantidades en la base.
---   * Cliente: la compra de entradas ahora acepta productos y combos del
---     Candy Bar. Todos los precios se toman de la base, nunca del navegador,
---     y todo queda bajo el MISMO código QR de la compra.
---   * Auditoría de cambios de precios del Candy Bar y combos.
-
--- ------------------------------------------------------------
--- 1) Restricciones de integridad
--- ------------------------------------------------------------
--- NOT VALID: se aplican a filas nuevas/modificadas sin fallar si ya
--- existiera algún dato viejo inconsistente.
-
 alter table public.candy_productos drop constraint if exists candy_productos_precio_chk;
 alter table public.candy_productos
   add constraint candy_productos_precio_chk check (precio >= 0) not valid;
@@ -31,21 +14,11 @@ alter table public.compra_candy_items drop constraint if exists compra_candy_ite
 alter table public.compra_candy_items
   add constraint compra_candy_items_cantidad_chk check (cantidad > 0) not valid;
 
--- Cada ítem vendido es un producto suelto O un combo, nunca ambos ni ninguno.
 alter table public.compra_candy_items drop constraint if exists compra_candy_items_producto_o_combo_chk;
 alter table public.compra_candy_items
   add constraint compra_candy_items_producto_o_combo_chk
   check ((candy_producto_id is null) <> (combo_id is null)) not valid;
 
-
--- ------------------------------------------------------------
--- 2) Admin: alta/edición de combo en una sola transacción
--- ------------------------------------------------------------
--- Antes el front hacía update del combo + delete de items + insert de items
--- en 3 llamadas separadas: si fallaba la última, el combo quedaba sin
--- productos. Ahora todo ocurre dentro de esta función.
---
--- p_items: [{ "candy_producto_id": "<uuid>", "cantidad": 2 }, ...]
 create or replace function public.guardar_combo(
   p_combo_id uuid,
   p_nombre text,
@@ -139,22 +112,6 @@ $$;
 revoke all on function public.guardar_combo(uuid, text, numeric, boolean, boolean, jsonb) from public;
 grant execute on function public.guardar_combo(uuid, text, numeric, boolean, boolean, jsonb) to authenticated;
 
-
--- ------------------------------------------------------------
--- 3) Cliente: compra de entradas + Candy Bar bajo un mismo QR
--- ------------------------------------------------------------
--- Reemplaza a crear_compra_entradas(uuid, uuid[]). Se mantiene el nombre
--- y se agrega un tercer parámetro opcional con los ítems del Candy Bar:
---
--- p_items: [{ "tipo": "producto" | "combo", "id": "<uuid>", "cantidad": 2 }, ...]
---
--- Reglas de combos que incluyen entrada ("Entrada + Pochoclo + Bebida"):
---   * Cada combo con entrada cubre UNA de las butacas elegidas, así que no
---     puede haber más combos con entrada que butacas.
---   * El combo cubre el precio base de la entrada (el de la función, con
---     preventa si corresponde). Si la butaca cubierta es VIP, se sigue
---     cobrando sólo el recargo VIP, que ya se informa antes de pagar.
---   * Se cubren primero las butacas no VIP.
 drop function if exists public.crear_compra_entradas(uuid, uuid[]);
 
 create or replace function public.crear_compra_entradas(
@@ -185,7 +142,6 @@ declare
   v_entradas jsonb;
   v_candy jsonb;
 begin
-  -- ---------- Butacas ----------
   if coalesce(cardinality(p_butaca_ids), 0) = 0 then
     raise exception 'Elegí al menos una butaca.';
   end if;
@@ -197,7 +153,6 @@ begin
     raise exception 'No podés repetir una butaca en la misma compra.';
   end if;
 
-  -- ---------- Función, preventa y edad ----------
   select f.id, f.sala_id, p.clasificacion, p.fecha_estreno, p.dias_preventa,
          p.precio_normal, p.precio_preventa
   into v_funcion
@@ -245,7 +200,6 @@ begin
     raise exception 'Una o más butacas no pertenecen a la sala de esta función.';
   end if;
 
-  -- ---------- Candy Bar: validación de ítems ----------
   if jsonb_typeof(v_items) <> 'array' then
     raise exception 'Formato inválido de productos del Candy Bar.';
   end if;
@@ -300,13 +254,10 @@ begin
       v_combos_con_entrada, v_cantidad_butacas;
   end if;
 
-  -- ---------- Alta de la compra ----------
   insert into public.compras (usuario_id, total, estado, codigo_qr)
   values (v_usuario_id, 0, 'confirmada', v_codigo_qr)
   returning id into v_compra_id;
 
-  -- Las primeras N butacas (no VIP primero) quedan cubiertas por los combos
-  -- con entrada: se cobra 0, o sólo el recargo VIP.
   insert into public.compra_entradas (compra_id, funcion_id, butaca_id, precio)
   select v_compra_id, p_funcion_id, b.id,
          case
@@ -342,9 +293,6 @@ begin
 
   update public.compras set total = v_total where id = v_compra_id;
 
-  -- ---------- Detalle para el comprobante ----------
-  -- El front arma el PDF con estos datos (verificados en la base), no con
-  -- los que calculó el navegador.
   select coalesce(jsonb_agg(jsonb_build_object(
            'butaca_id', b.id,
            'ubicacion', b.fila || '-' || b.columna,
@@ -387,10 +335,6 @@ $$;
 revoke all on function public.crear_compra_entradas(uuid, uuid[], jsonb) from public;
 grant execute on function public.crear_compra_entradas(uuid, uuid[], jsonb) to anon, authenticated;
 
-
--- ------------------------------------------------------------
--- 4) Auditoría de cambios de precios del Candy Bar
--- ------------------------------------------------------------
 drop trigger if exists auditar_candy_productos on public.candy_productos;
 create trigger auditar_candy_productos
 after insert or update or delete on public.candy_productos

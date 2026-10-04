@@ -11,20 +11,10 @@ import {
 } from '../models/fidelizacion.model';
 import { SupabaseService } from './supabase.service';
 
-/**
- * Cupones y programa de puntos.
- *
- * - Admin: cupón de bienvenida, ABM de cupones y tabla de recompensas.
- *   (Las políticas RLS sólo le dejan leer y escribir cupones al admin.)
- * - Cliente: vista previa del descuento, recompensas disponibles e
- *   historial de puntos. El descuento y el canje reales los aplica la base
- *   dentro de la compra.
- */
 @Injectable({ providedIn: 'root' })
 export class FidelizacionService {
   private supabase = inject(SupabaseService);
 
-  // ---------- Bienvenida (admin) ----------
 
   async obtenerBienvenida(): Promise<Cupon | null> {
     const { data, error } = await this.supabase.client
@@ -45,7 +35,6 @@ export class FidelizacionService {
     if (error) throw error;
   }
 
-  // ---------- Cupones (admin) ----------
 
   async listarCupones(): Promise<CuponConUsos[]> {
     const { data, error } = await this.supabase.client
@@ -109,7 +98,6 @@ export class FidelizacionService {
     };
   }
 
-  // ---------- Recompensas ----------
 
   async listarRecompensas(soloActivas = false): Promise<Recompensa[]> {
     let query = this.supabase.client
@@ -123,7 +111,6 @@ export class FidelizacionService {
     if (error) throw error;
 
     return (data ?? [])
-      // Para el cliente, una recompensa de producto sólo sirve si el producto está a la venta.
       .filter((fila: any) => !soloActivas || fila.otorga_entrada || fila.candy_productos?.activo)
       .map((fila: any) => ({
         id: fila.id,
@@ -167,9 +154,7 @@ export class FidelizacionService {
     };
   }
 
-  // ---------- Cliente ----------
 
-  /** Vista previa: bienvenida (si corresponde) o el cupón ingresado. */
   async consultarDescuento(codigo: string | null = null): Promise<DescuentoAplicable> {
     const { data, error } = await this.supabase.client.rpc('consultar_descuento', {
       p_codigo: codigo?.trim() || null
@@ -202,7 +187,6 @@ export class FidelizacionService {
   }
 }
 
-/** Traduce errores comunes de Postgres a mensajes para el admin. */
 export function mensajeErrorFidelizacion(err: any, porDefecto: string): string {
   switch (err?.code) {
     case '23505':

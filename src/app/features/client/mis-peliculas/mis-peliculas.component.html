@@ -32,7 +32,6 @@
     </div>
   } @else if (!peliculas().length) {
     <div class="empty-state">
-      <p class="grande">🎬</p>
       <p>Todavía no viste películas con nosotros.</p>
       <p class="hint">
         Cuando vayas a una función (o termine la función que compraste) la vas a ver acá y la vas a poder
@@ -56,7 +55,7 @@
     </div>
 
     @if (!visibles().length) {
-      <div class="empty-state"><p>¡Calificaste todas las películas que viste! ⭐</p></div>
+      <div class="empty-state"><p>¡Calificaste todas las películas que viste!</p></div>
     } @else {
       <div class="galeria">
         @for (pelicula of visibles(); track pelicula.peliculaId) {
@@ -65,7 +64,7 @@
               @if (pelicula.imagenUrl) {
                 <img [src]="pelicula.imagenUrl" [alt]="pelicula.nombre" loading="lazy" />
               } @else {
-                <span>🎬</span>
+                <span class="sin-imagen-texto">Sin imagen</span>
               }
               @if (pelicula.veces > 1) {
                 <span class="veces">×{{ pelicula.veces }}</span>
@@ -76,7 +75,7 @@
               <h3>{{ pelicula.nombre }}</h3>
               @if (pelicula.funciones[0]; as ultima) {
                 <p class="funcion">
-                  📅 {{ formatearFecha(ultima.fecha) }} · {{ ultima.horaInicio }} h
+                  {{ formatearFecha(ultima.fecha) }} · {{ ultima.horaInicio }} h
                   <br />
                   <span class="hint">{{ ultima.sala }} · {{ ultima.formato }}</span>
                 </p>
@@ -99,11 +98,11 @@
                     <p class="comentario">“{{ pelicula.comentario }}”</p>
                   }
                   <button type="button" class="btn-secundario" (click)="abrirCalificacion(pelicula)">
-                    ✏️ Editar reseña
+                    Editar reseña
                   </button>
                 } @else {
                   <span class="sin-calificar">Sin calificar</span>
-                  <button type="button" class="btn-primary" (click)="abrirCalificacion(pelicula)">⭐ Calificar</button>
+                  <button type="button" class="btn-primary" (click)="abrirCalificacion(pelicula)">Calificar</button>
                 }
               </div>
             </div>

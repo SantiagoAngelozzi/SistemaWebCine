@@ -1,27 +1,10 @@
--- ============================================================
--- Reseñas (1 a 5 estrellas + comentario breve) y "Mis Películas"
--- ------------------------------------------------------------
--- Regla de negocio: sólo puede calificar una película quien la VIO.
--- Se considera "vista" cuando el usuario tiene una compra activa
--- (no cancelada) para una función de esa película y además:
---   * el empleado le validó la entrada en la sala, o
---   * la función ya terminó (hora de Argentina).
---
--- Se ejecuta después de 20261001_cupones_puntos.sql. Es idempotente.
--- ============================================================
-
--- ---------- 1. Columnas y restricciones ----------
-
 alter table public.resenas add column if not exists updated_at timestamptz;
 
--- "Comentario breve": hasta 500 caracteres (vacío = sin comentario).
 alter table public.resenas drop constraint if exists resenas_comentario_breve;
 alter table public.resenas
   add constraint resenas_comentario_breve check (comentario is null or char_length(comentario) <= 500);
 
 create index if not exists resenas_pelicula_idx on public.resenas (pelicula_id, created_at desc);
-
--- ---------- 2. ¿El usuario vio la película? ----------
 
 create or replace function public.usuario_vio_pelicula(p_pelicula_id uuid, p_usuario_id uuid)
 returns boolean
@@ -49,8 +32,6 @@ $$;
 revoke all on function public.usuario_vio_pelicula(uuid, uuid) from public, anon;
 grant execute on function public.usuario_vio_pelicula(uuid, uuid) to authenticated;
 
--- ---------- 3. RLS: la regla también se aplica si alguien escribe directo en la tabla ----------
-
 drop policy if exists "resenas_insert_own" on public.resenas;
 create policy "resenas_insert_own" on public.resenas
   for insert
@@ -61,8 +42,6 @@ create policy "resenas_update_own" on public.resenas
   for update
   using (usuario_id = auth.uid())
   with check (usuario_id = auth.uid() and public.usuario_vio_pelicula(pelicula_id, auth.uid()));
-
--- ---------- 4. Guardar (crear o editar) la reseña propia ----------
 
 create or replace function public.guardar_resena(
   p_pelicula_id uuid,
@@ -113,10 +92,6 @@ $$;
 
 revoke all on function public.guardar_resena(uuid, integer, text) from public, anon;
 grant execute on function public.guardar_resena(uuid, integer, text) to authenticated;
-
--- ---------- 5. Ficha pública: promedio, distribución y reseñas ----------
--- La tabla usuarios sólo la ve su dueño, así que el nombre del autor se
--- expone acá, reducido a "Nombre A." (nada de email ni otros datos).
 
 create or replace function public.resenas_de_pelicula(p_pelicula_id uuid)
 returns jsonb
@@ -174,8 +149,6 @@ $$;
 
 revoke all on function public.resenas_de_pelicula(uuid) from public;
 grant execute on function public.resenas_de_pelicula(uuid) to anon, authenticated;
-
--- ---------- 6. "Mis Películas": galería de lo que vio el usuario ----------
 
 create or replace function public.mis_peliculas()
 returns jsonb

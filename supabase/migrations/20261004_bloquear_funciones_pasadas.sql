@@ -1,19 +1,3 @@
--- ============================================================
--- No se venden entradas para funciones que ya comenzaron y
--- no se programan funciones en el pasado.
--- ------------------------------------------------------------
--- Las reglas se aplican con triggers, así cubren cualquier camino
--- (la RPC de compra, la de programar funciones o un insert directo).
---
--- Sólo rigen para pedidos que llegan desde la app (API de Supabase,
--- con JWT de "anon" o "authenticated"). Desde el SQL Editor se pueden
--- seguir cargando datos históricos de prueba.
---
--- Se ejecuta después de 20261003_auditoria_reportes.sql. Es idempotente.
--- ============================================================
-
--- true si la operación viene de la API (PostgREST pone los claims del JWT
--- en la configuración de la transacción; en el SQL Editor no existen).
 create or replace function public.solicitud_desde_la_app()
 returns boolean
 language sql
@@ -25,7 +9,6 @@ as $$
   ) is not null;
 $$;
 
--- Hora actual en Argentina (las funciones guardan fecha y hora local).
 create or replace function public.ahora_argentina()
 returns timestamp
 language sql
@@ -33,8 +16,6 @@ stable
 as $$
   select now() at time zone 'America/Argentina/Buenos_Aires';
 $$;
-
--- ---------- 1. Venta: la función no puede haber comenzado ----------
 
 create or replace function public.validar_funcion_vigente_para_venta()
 returns trigger
@@ -66,8 +47,6 @@ create trigger compra_entradas_funcion_vigente
 before insert on public.compra_entradas
 for each row execute function public.validar_funcion_vigente_para_venta();
 
--- ---------- 2. Programación: no se crean funciones en el pasado ----------
-
 create or replace function public.validar_funcion_futura()
 returns trigger
 language plpgsql
@@ -79,7 +58,6 @@ begin
     return new;
   end if;
 
-  -- En una edición sólo importa si cambió la fecha u hora.
   if tg_op = 'UPDATE'
      and new.fecha = old.fecha
      and new.hora_inicio = old.hora_inicio then

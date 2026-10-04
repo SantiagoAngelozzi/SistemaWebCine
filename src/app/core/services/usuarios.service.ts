@@ -16,7 +16,6 @@ export interface UsuarioResumen {
 export class UsuariosService {
   private supabase = inject(SupabaseService);
 
-  /** Sólo funciona para administradores (RLS de usuarios). */
   async listar(): Promise<UsuarioResumen[]> {
     const { data, error } = await this.supabase.client
       .from('usuarios')
@@ -27,7 +26,6 @@ export class UsuariosService {
     return (data ?? []) as UsuarioResumen[];
   }
 
-  /** RPC cambiar_rol_usuario: valida que sea admin y deja registro en auditoría. */
   async cambiarRol(usuarioId: string, rol: RolUsuario): Promise<void> {
     const { error } = await this.supabase.client.rpc('cambiar_rol_usuario', {
       p_usuario_id: usuarioId,

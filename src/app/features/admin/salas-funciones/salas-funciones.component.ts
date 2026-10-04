@@ -31,7 +31,6 @@ export class SalasFuncionesComponent implements OnInit {
   private confirmService = inject(ConfirmService);
   private toastService = inject(ToastService);
 
-  /** Mínimo del selector de fecha: no se programan funciones en el pasado. */
   readonly hoy = hoyIso();
 
   tabActiva = signal<Tab>('salas');
@@ -43,12 +42,10 @@ export class SalasFuncionesComponent implements OnInit {
 
   salas = signal<SalaConCantidadButacas[]>([]);
   funciones = signal<FuncionConDetalle[]>([]);
-  /** Las funciones que ya comenzaron se ocultan por defecto (quedan en el historial). */
   mostrarPasadas = signal(false);
 
   proximas = computed(() => this.funciones().filter((f) => !funcionYaComenzo(f.fecha, f.hora_inicio)));
 
-  /** Ya comenzadas, la más reciente primero. */
   pasadas = computed(() =>
     this.funciones()
       .filter((f) => funcionYaComenzo(f.fecha, f.hora_inicio))

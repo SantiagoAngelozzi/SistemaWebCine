@@ -17,9 +17,7 @@ export interface FuncionConDetalle extends Funcion {
   peliculaNombre: string;
   salaNombre: string;
   precioVigente: number;
-  /** Entradas activas vendidas para esta función. */
   entradasVendidas: number;
-  /** Tiene compras (activas o canceladas): no se puede eliminar. */
   tieneCompras: boolean;
 }
 
@@ -29,4 +27,4 @@ export interface FuncionFormValue {
   horaInicio: string;
   formato: FormatoProyeccion;
   idioma: IdiomaPelicula;
-}
+}

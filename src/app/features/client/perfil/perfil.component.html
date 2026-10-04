@@ -31,7 +31,7 @@
 
     @if (beneficio()?.origen === 'bienvenida') {
       <div class="banner-bienvenida">
-        🎉 Tenés <strong>{{ beneficio()!.porcentaje }}% de descuento</strong> en tu primera compra. Se aplica solo
+        Tenés <strong>{{ beneficio()!.porcentaje }}% de descuento</strong> en tu primera compra. Se aplica solo
         al pagar.
         <a routerLink="/cartelera">Ver cartelera</a>
       </div>
@@ -106,7 +106,7 @@
           <div class="recompensas">
             @for (recompensa of recompensas(); track recompensa.id) {
               <div class="recompensa" [class.alcanza]="(perfil()?.puntos ?? 0) >= recompensa.costo_puntos">
-                <span class="icono">{{ recompensa.otorga_entrada ? '🎟️' : '🍿' }}</span>
+                <span class="icono">{{ recompensa.otorga_entrada ? 'Entrada' : 'Candy Bar' }}</span>
                 <strong>{{ recompensa.nombre }}</strong>
                 <span>{{ recompensa.costo_puntos }} pts</span>
               </div>
@@ -197,7 +197,7 @@
       @if (compra.imagenUrl) {
         <img [src]="compra.imagenUrl" [alt]="compra.pelicula" />
       } @else {
-        <span>🎬</span>
+        <span class="sin-imagen-texto">Sin imagen</span>
       }
     </div>
 

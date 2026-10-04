@@ -50,14 +50,12 @@ export interface ComboFormValue {
   activo: boolean;
 }
 
-/** Productos agrupados por categoría para la pantalla de compra. */
 export interface CategoriaConProductos {
   id: string;
   nombre: string;
   productos: CandyProductoConCategoria[];
 }
 
-/** Lo que el cliente puede comprar: sólo combos y productos activos. */
 export interface CatalogoCandy {
   combos: ComboConItems[];
   categorias: CategoriaConProductos[];

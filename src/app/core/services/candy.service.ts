@@ -17,7 +17,6 @@ const SIN_CATEGORIA_ID = 'sin-categoria';
 export class CandyService {
   private supabase = inject(SupabaseService);
 
-  // ---------- Categorías ----------
 
   async listarCategorias(): Promise<CandyCategoria[]> {
     const { data, error } = await this.supabase.client
@@ -39,7 +38,6 @@ export class CandyService {
     if (error) throw error;
   }
 
-  // ---------- Productos ----------
 
   async listarProductos(soloActivos = false): Promise<CandyProductoConCategoria[]> {
     let query = this.supabase.client
@@ -89,7 +87,6 @@ export class CandyService {
     };
   }
 
-  // ---------- Combos ----------
 
   async listarCombos(soloActivos = false): Promise<ComboConItems[]> {
     let query = this.supabase.client
@@ -117,10 +114,6 @@ export class CandyService {
     }));
   }
 
-  /**
-   * Alta o edición de un combo. Se hace en una sola transacción en la base
-   * (RPC guardar_combo) para que nunca quede un combo sin sus productos.
-   */
   async guardarCombo(
     id: string | null,
     valores: ComboFormValue,
@@ -142,9 +135,7 @@ export class CandyService {
     if (error) throw error;
   }
 
-  // ---------- Venta al cliente ----------
 
-  /** Combos y productos activos, con los productos agrupados por categoría. */
   async obtenerCatalogoVenta(): Promise<CatalogoCandy> {
     const [combos, productos] = await Promise.all([
       this.listarCombos(true),
@@ -161,7 +152,6 @@ export class CandyService {
     }
 
     const categorias = Array.from(porCategoria.values()).sort((a, b) => {
-      // "Sin categoría" siempre al final.
       if (a.id === SIN_CATEGORIA_ID) return 1;
       if (b.id === SIN_CATEGORIA_ID) return -1;
       return a.nombre.localeCompare(b.nombre);
@@ -174,11 +164,6 @@ export class CandyService {
   }
 }
 
-/**
- * Traduce los errores más comunes de Postgres/Supabase a mensajes para el
- * usuario. Los mensajes de nuestras RPC (raise exception) ya vienen en
- * castellano y se muestran tal cual.
- */
 export function mensajeErrorCandy(err: any, porDefecto: string): string {
   switch (err?.code) {
     case '23505':

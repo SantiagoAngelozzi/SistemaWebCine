@@ -11,7 +11,7 @@
         @if (pelicula()!.imagen_url) {
           <img [src]="pelicula()!.imagen_url" [alt]="pelicula()!.nombre" />
         } @else {
-          <span>🎬</span>
+          <span class="sin-imagen-texto">Sin imagen</span>
         }
       </div>
 
@@ -97,7 +97,6 @@
           </div>
         </div>
 
-        <!-- Calificar: sólo quien ya vio la película -->
         @if (r.puedeResenar) {
           @if (miResena() && !editandoResena()) {
             <div class="aviso aviso-ok">
@@ -118,7 +117,7 @@
             <a routerLink="/auth/login">Iniciá sesión</a> para calificar esta película después de verla.
           </p>
         } @else {
-          <p class="aviso">Vas a poder calificarla cuando la veas en el cine. 🍿</p>
+          <p class="aviso">Vas a poder calificarla cuando la veas en el cine.</p>
         }
 
         @if (r.resenas.length) {
@@ -136,7 +135,7 @@
                   <app-estrellas [valor]="resena.calificacion" [soloLectura]="true" tamanio="chica" />
                   @if (resena.esMia || esAdmin()) {
                     <button type="button" class="eliminar" title="Eliminar reseña" (click)="eliminarResena(resena)">
-                      🗑️
+                      Eliminar
                     </button>
                   }
                 </div>

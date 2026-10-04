@@ -12,12 +12,6 @@ export interface CambioCanje {
   cantidad: number;
 }
 
-/**
- * Beneficios del usuario registrado dentro de la compra: cupón de descuento
- * (y aviso de la bienvenida) y canje de puntos. Es un componente de
- * presentación: el estado vive en la pantalla de compra, que valida los
- * límites y se los pasa ya calculados.
- */
 @Component({
   selector: 'app-beneficios-compra',
   standalone: true,
@@ -28,17 +22,14 @@ export interface CambioCanje {
 export class BeneficiosCompraComponent {
   @Input({ required: true }) logueado = false;
   @Input() descuento: DescuentoAplicable | null = null;
-  /** Código de cupón ya validado y aplicado (null si no hay). */
   @Input() cuponAplicado: string | null = null;
   @Input() errorCupon: string | null = null;
   @Input() validandoCupon = false;
 
   @Input() puntosDisponibles = 0;
-  /** Puntos que ya se van a usar con los canjes elegidos. */
   @Input() puntosComprometidos = 0;
   @Input() recompensas: Recompensa[] = [];
   @Input() canjes: Map<string, number> = new Map();
-  /** Butacas que todavía no cubre un combo o un canje de entrada. */
   @Input() butacasLibresParaCanje = 0;
 
   @Output() aplicarCupon = new EventEmitter<string>();

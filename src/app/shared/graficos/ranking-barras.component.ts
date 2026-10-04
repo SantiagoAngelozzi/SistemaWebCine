@@ -3,10 +3,6 @@ import { Component, Input } from '@angular/core';
 import { ItemRanking } from '../../core/models/reporte.model';
 import { formatearEntero, formatearMoneda } from '../../core/utils/formato';
 
-/**
- * Ranking con barras horizontales (películas más vistas, productos más vendidos).
- * La barra es proporcional al primero; los números van en color tinta, al final.
- */
 @Component({
   selector: 'app-ranking-barras',
   standalone: true,
@@ -58,7 +54,6 @@ import { formatearEntero, formatearMoneda } from '../../core/utils/formato';
 export class RankingBarrasComponent {
   @Input({ required: true }) items: ItemRanking[] = [];
   @Input() color = '#A6339B';
-  /** "entradas", "unidades"... */
   @Input() unidad = 'unidades';
   @Input() mostrarRecaudacion = true;
   @Input() textoVacio = 'Sin ventas en el período.';

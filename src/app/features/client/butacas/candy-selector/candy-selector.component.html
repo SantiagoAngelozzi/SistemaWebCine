@@ -6,7 +6,7 @@
   @if (catalogo.combos.length) {
     <div class="combos-destacados">
       <div class="titulo-bloque">
-        <h2>⭐ Combos especiales</h2>
+        <h2>Combos especiales</h2>
         <span class="sub">Precio promocional fijo</span>
       </div>
 
@@ -14,7 +14,7 @@
         @for (combo of catalogo.combos; track combo.id) {
           <article class="combo-card" [class.en-carrito]="cantidad('combo', combo.id) > 0">
             @if (combo.incluye_entrada) {
-              <span class="badge entrada">🎟️ Incluye entrada</span>
+              <span class="badge entrada">Incluye entrada</span>
             }
             <h3>{{ combo.nombre }}</h3>
             <ul class="contenido">
@@ -68,7 +68,7 @@
   @if (catalogo.categorias.length) {
     <div class="productos">
       <div class="titulo-bloque">
-        <h2>🍿 Candy Bar</h2>
+        <h2>Candy Bar</h2>
       </div>
 
       @if (catalogo.categorias.length > 1) {
@@ -103,7 +103,7 @@
                 @if (producto.imagen_url) {
                   <img [src]="producto.imagen_url" [alt]="producto.nombre" loading="lazy" />
                 } @else {
-                  <span>🍿</span>
+                  <span class="sin-imagen-texto">Sin imagen</span>
                 }
               </div>
               <div class="info">

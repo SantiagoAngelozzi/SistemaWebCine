@@ -12,4 +12,4 @@ import { ConfirmService } from '../../core/services/confirm.service';
 })
 export class ConfirmModalComponent {
   confirmService = inject(ConfirmService);
-} 
+}

@@ -1,14 +1,3 @@
--- ============================================================
--- Eliminar funciones: mensaje claro cuando tiene entradas vendidas
--- ------------------------------------------------------------
--- Una función con compras no se puede borrar: compra_entradas apunta
--- a ella (clave foránea) y borrarla rompería el historial de compras,
--- los reportes y "Mis Películas". Antes la base devolvía un error
--- técnico de clave foránea; ahora explica el motivo.
---
--- Se ejecuta después de 20261004_bloquear_funciones_pasadas.sql. Es idempotente.
--- ============================================================
-
 create or replace function public.eliminar_funcion(p_funcion_id uuid)
 returns void
 language plpgsql

@@ -82,7 +82,7 @@ export class ProximamenteComponent implements OnInit {
       } else {
         await this.alertasService.activar(pelicula.id);
         this.alertas.update((set) => new Set(set).add(pelicula.id));
-        this.toastService.exito(`Te avisamos cuando abra la venta de "${pelicula.nombre}" 🔔`);
+        this.toastService.exito(`Te avisamos cuando abra la venta de "${pelicula.nombre}"`);
       }
     } catch (err) {
       console.error(err);
