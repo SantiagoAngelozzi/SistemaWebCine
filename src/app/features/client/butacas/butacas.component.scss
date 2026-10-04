@@ -121,9 +121,21 @@
   flex-shrink: 0;
 }
 
+// Cada bloque es una grilla con un lugar por número de columna (4 + 20 + 4).
+// Así las filas con menos butacas (J y K, accesibles) quedan en su posición
+// real, centradas, en vez de amontonarse a la izquierda.
 .bloque {
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
   gap: 4px;
+
+  &.lateral {
+    grid-template-columns: repeat(4, 24px);
+  }
+
+  &.centro {
+    grid-template-columns: repeat(20, 24px);
+  }
 }
 
 .butaca {

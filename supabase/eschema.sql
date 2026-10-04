@@ -185,7 +185,7 @@ create table public.funciones (
   hora_fin time not null,
   formato formato_proyeccion not null,
   idioma idioma_pelicula not null,
-  precio numeric(10, 2) not null,
+  -- Sin precio propio: el precio vigente sale de la película (normal o preventa).
   created_by uuid references public.usuarios (id),
   created_at timestamptz not null default now()
 );
@@ -444,4 +444,4 @@ create table public.log_auditoria (
 alter table public.log_auditoria enable row level security;
 
 create policy "log_auditoria_admin_all" on public.log_auditoria
-  for all using (public.is_admin()) with check (public.is_admin());
+  for all using (public.is_admin()) with check (public.is_admin());

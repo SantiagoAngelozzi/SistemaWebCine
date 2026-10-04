@@ -84,11 +84,12 @@
         @for (fila of filas(); track fila.fila) {
           <div class="fila">
             <span class="label">{{ fila.fila }}</span>
-            <div class="bloque">
+            <div class="bloque lateral">
               @for (b of fila.izquierda; track b.id) {
                 <button
                   type="button"
                   class="butaca"
+                  [style.grid-column]="'' + (b.columna)"
                   [ngClass]="[b.tipo, b.estado]"
                   [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
                   (click)="toggleButaca(b)"
@@ -97,11 +98,12 @@
                 </button>
               }
             </div>
-            <div class="bloque">
+            <div class="bloque centro">
               @for (b of fila.centro; track b.id) {
                 <button
                   type="button"
                   class="butaca"
+                  [style.grid-column]="'' + (b.columna - 5)"
                   [ngClass]="[b.tipo, b.estado]"
                   [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
                   (click)="toggleButaca(b)"
@@ -110,11 +112,12 @@
                 </button>
               }
             </div>
-            <div class="bloque">
+            <div class="bloque lateral">
               @for (b of fila.derecha; track b.id) {
                 <button
                   type="button"
                   class="butaca"
+                  [style.grid-column]="'' + (b.columna - 26)"
                   [ngClass]="[b.tipo, b.estado]"
                   [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
                   (click)="toggleButaca(b)"
