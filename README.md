@@ -21,43 +21,156 @@
 
 ## Índice de imágenes
 
+### Ícono de la aplicación y paleta de colores
+
 <table>
 <tr>
 <td align="center" width="50%">
-
-###  Ícono de la aplicación
-
-<img width="581" height="615" alt="Captura de pantalla 2026-09-23 165229" src="https://github.com/user-attachments/assets/ebdef4e8-c5ff-479d-aae6-54758890b6f6" />
-
+<img src="capturas/faviconYpaletaDeColores/favicon.png" alt="Ícono de la aplicación" width="40%"><br>
+<b>Ícono de la aplicación</b>
 </td>
-
 <td align="center" width="50%">
-
-###  Ícono de la aplicación y paleta de colores
-
-<img width="1774" height="887" alt="ChatGPT Image 23 sept 2026, 16_50_24" src="https://github.com/user-attachments/assets/4b7f40ec-5d60-43bf-9784-d916045261de" />
-
+<img src="capturas/faviconYpaletaDeColores/paletaColores.png" alt="Paleta de colores" width="100%"><br>
+<b>Paleta de colores</b>
 </td>
 </tr>
 </table>
 
 ---
 
-###  Pantallas Login ingresar/registrarse
+### Acceso
 
-<img width="1904" height="941" alt="Captura de pantalla 2026-09-16 163736" src="https://github.com/user-attachments/assets/6abac757-e877-4526-ab90-ecf224ef743d" />
-<img width="1887" height="932" alt="Captura de pantalla 2026-09-23 170111" src="https://github.com/user-attachments/assets/8313efa9-47d1-45a2-b749-1c827e578faf" />
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/login/login.png" alt="Iniciar sesión" width="100%"><br>
+<b>Iniciar sesión</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/login/registro.png" alt="Registro" width="100%"><br>
+<b>Registro</b>
+</td>
+</tr>
+</table>
 
 ---
 
-###  Home client
+### Cliente
 
-<img width="1901" height="943" alt="image" src="https://github.com/user-attachments/assets/7753e288-25cb-4dd4-815a-9862cc30985c" />
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/cliente/homeclient.png" alt="Home" width="100%"><br>
+<b>Home</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/cliente/cartelera.png" alt="Cartelera" width="100%"><br>
+<b>Cartelera</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/cliente/proximamente.png" alt="Próximamente" width="100%"><br>
+<b>Próximamente</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/cliente/fichadepelicula.png" alt="Ficha de película" width="100%"><br>
+<b>Ficha de película</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/cliente/mapabutacas.png" alt="Mapa de butacas" width="100%"><br>
+<b>Mapa de butacas</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/cliente/candybarclient.png" alt="Candy Bar" width="100%"><br>
+<b>Candy Bar</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/cliente/compraconfirmada.png" alt="Compra confirmada" width="100%"><br>
+<b>Compra confirmada</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/cliente/pdfqr.png" alt="Comprobante PDF con QR" width="100%"><br>
+<b>Comprobante PDF con QR</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/cliente/mispeliculas.png" alt="Mis películas" width="100%"><br>
+<b>Mis películas</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/cliente/perfil.png" alt="Perfil" width="100%"><br>
+<b>Perfil</b>
+</td>
+</tr>
+</table>
 
 ---
 
-###  Panel admin
+### Administrador
 
-<img width="1897" height="939" alt="image" src="https://github.com/user-attachments/assets/db074905-cbb6-4ea3-9916-95b0a96a6ae4" />
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/administrador/peliculasadmin.png" alt="Películas" width="100%"><br>
+<b>Películas</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/administrador/formnuevapelicula.png" alt="Nueva película" width="100%"><br>
+<b>Nueva película</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/administrador/salasadmin.png" alt="Salas" width="100%"><br>
+<b>Salas</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/administrador/funcionesadmin.png" alt="Funciones" width="100%"><br>
+<b>Funciones</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/administrador/candybarproductos.png" alt="Candy Bar: productos" width="100%"><br>
+<b>Candy Bar: productos</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/administrador/candybarcombos.png" alt="Candy Bar: combos" width="100%"><br>
+<b>Candy Bar: combos</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/administrador/empleados.png" alt="Empleados" width="100%"><br>
+<b>Empleados</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/administrador/cupones.png" alt="Cupones" width="100%"><br>
+<b>Cupones</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/administrador/puntos.png" alt="Canje de puntos" width="100%"><br>
+<b>Canje de puntos</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/administrador/dashboard.png" alt="Dashboard y reportes" width="100%"><br>
+<b>Dashboard y reportes</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%" colspan="2">
+<img src="capturas/administrador/auditoria.png" alt="Auditoría" width="50%"><br>
+<b>Auditoría</b>
+</td>
+</tr>
+</table>
 
 ---
