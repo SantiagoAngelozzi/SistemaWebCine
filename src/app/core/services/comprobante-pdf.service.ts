@@ -55,7 +55,7 @@ export class ComprobantePdfService {
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(22);
-    pdf.text('CINE', margen, 20);
+    pdf.text('CineQuilmes', margen, 20);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
     pdf.text('Comprobante digital de compra', margen, 27);

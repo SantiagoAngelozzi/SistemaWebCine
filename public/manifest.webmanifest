@@ -1,7 +1,7 @@
 {
-  "name": "Cine - Gestión y Entradas",
-  "short_name": "Cine",
-  "description": "Compra de entradas y gestión integral de cine.",
+  "name": "CineQuilmes - Gestión y Entradas",
+  "short_name": "CineQuilmes",
+  "description": "Compra de entradas y gestión integral de CineQuilmes.",
   "lang": "es-AR",
   "start_url": "/",
   "scope": "/",

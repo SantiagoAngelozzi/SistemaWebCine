@@ -32,7 +32,7 @@ export class ReporteExportService {
     pdf.setTextColor(255, 255, 255);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(20);
-    pdf.text('CINE', margen, 15);
+    pdf.text('CineQuilmes', margen, 15);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
     pdf.text('Reporte consolidado de facturación', margen, 23);

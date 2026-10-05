@@ -1,6 +1,12 @@
-# CineApp — Sistema Web de Gestión de Cine
+# CineQuilmes — Sistema Web de Gestión de Cine
 
 > Aplicación Web Progresiva (PWA) para la gestión integral, venta de entradas, candy bar y administración de una cadena de cine.
+
+---
+
+## Documento de requerimientos
+
+[Ver requerimientos del TP (PDF)](documentoRequerimientos/RequerimientosTP.pdf)
 
 ---
 
