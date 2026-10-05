@@ -112,6 +112,23 @@
 
 ---
 
+### Empleado
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="capturas/empleado/SALAQR.png" alt="Validar QR: sala" width="100%"><br>
+<b>Validar QR: ingreso a sala</b>
+</td>
+<td align="center" width="50%">
+<img src="capturas/empleado/CANDYBARQR.png" alt="Validar QR: Candy Bar" width="100%"><br>
+<b>Validar QR: retiro en Candy Bar</b>
+</td>
+</tr>
+</table>
+
+---
+
 ### Administrador
 
 <table>
