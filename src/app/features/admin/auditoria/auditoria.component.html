@@ -29,11 +29,24 @@
     </label>
     <label>
       Desde
-      <input type="date" [ngModel]="filtros().desde" (ngModelChange)="cambiarFiltro('desde', $event)" [max]="hoy" />
+      <app-fecha-input
+        [compacto]="true"
+        [mostrarError]="true"
+        [atajos]="[{ etiqueta: 'Hoy', dias: 0 }, { etiqueta: '-7 días', dias: -7 }]"
+        [ngModel]="filtros().desde"
+        (ngModelChange)="cambiarFecha('desde', $event)"
+        [max]="hoy"
+      />
     </label>
     <label>
       Hasta
-      <input type="date" [ngModel]="filtros().hasta" (ngModelChange)="cambiarFiltro('hasta', $event)" [max]="hoy" />
+      <app-fecha-input
+        [compacto]="true"
+        [mostrarError]="true"
+        [ngModel]="filtros().hasta"
+        (ngModelChange)="cambiarFecha('hasta', $event)"
+        [max]="hoy"
+      />
     </label>
     @if (hayFiltros()) {
       <button type="button" class="btn-secundario" (click)="limpiarFiltros()">Limpiar filtros</button>

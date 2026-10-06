@@ -56,10 +56,10 @@
         </div>
         <div class="field">
           <label>Fecha de estreno</label>
-          <input
-            type="date"
+          <app-fecha-input
             formControlName="fechaEstreno"
-            [class.input-invalido]="form.controls.fechaEstreno.invalid && form.controls.fechaEstreno.touched"
+            [atajos]="atajosEstreno"
+            [invalido]="form.controls.fechaEstreno.invalid && form.controls.fechaEstreno.touched"
           />
           <app-form-error [control]="form.controls.fechaEstreno" />
         </div>

@@ -18,6 +18,7 @@ import {
 import { formatearFecha } from '../../../core/utils/pelicula-fechas';
 import { GraficoColumnasComponent, PuntoColumna } from '../../../shared/graficos/grafico-columnas.component';
 import { RankingBarrasComponent } from '../../../shared/graficos/ranking-barras.component';
+import { FechaInputComponent, esFechaIso } from '../../../shared/fecha-input/fecha-input.component';
 
 type Preset = '7' | '30' | 'mes' | 'mes-anterior' | 'personalizado';
 type PeriodoPeliculas = 'semana' | 'mes';
@@ -27,7 +28,7 @@ const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Vier
 @Component({
   selector: 'app-admin-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule, GraficoColumnasComponent, RankingBarrasComponent],
+  imports: [CommonModule, FormsModule, GraficoColumnasComponent, RankingBarrasComponent, FechaInputComponent],
   templateUrl: './reportes.component.html',
   styleUrl: './reportes.component.scss'
 })
@@ -115,7 +116,7 @@ export class ReportesComponent implements OnInit {
   }
 
   async cambiarFecha(campo: 'desde' | 'hasta', valor: string): Promise<void> {
-    if (!valor) return;
+    if (!esFechaIso(valor) || valor === this[campo]()) return;
     this.preset.set('personalizado');
     this[campo].set(valor);
     await this.cargar();

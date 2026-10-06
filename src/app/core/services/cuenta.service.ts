@@ -112,10 +112,14 @@ export class CuentaService {
 
   private mapearCompra(fila: any): MiCompra {
     const entradasFilas: any[] = fila.compra_entradas ?? [];
+    const soloCandy = entradasFilas.length === 0;
     const funcion = entradasFilas[0]?.funciones ?? {};
-    const fecha: string = funcion.fecha ?? '';
-    const horaInicio: string = funcion.hora_inicio ?? '00:00:00';
-    const horaFin: string = funcion.hora_fin ?? horaInicio;
+    const creada = new Date(fila.created_at);
+    const fecha: string = soloCandy ? this.fechaIsoLocal(creada) : funcion.fecha ?? '';
+    const horaInicio: string = soloCandy
+      ? `${String(creada.getHours()).padStart(2, '0')}:${String(creada.getMinutes()).padStart(2, '0')}:00`
+      : funcion.hora_inicio ?? '00:00:00';
+    const horaFin: string = soloCandy ? '23:59:59' : funcion.hora_fin ?? horaInicio;
     const inicio = this.fechaHoraLocal(fecha, horaInicio);
     const fin = this.fechaHoraLocal(fecha, horaFin);
 
@@ -153,14 +157,14 @@ export class CuentaService {
 
     let estado: EstadoMiCompra;
     if (fila.estado === 'cancelada') estado = 'cancelada';
-    else if (entradaValidada) estado = 'utilizada';
+    else if (entradaValidada || (soloCandy && candyEntregado)) estado = 'utilizada';
     else if (fin.getTime() < ahora) estado = 'finalizada';
     else estado = 'confirmada';
 
     let motivoNoCancelable: string | null = null;
     if (fila.estado === 'cancelada') motivoNoCancelable = 'Compra cancelada.';
     else if (entradaValidada || candyEntregado) motivoNoCancelable = 'La compra ya se usó.';
-    else if (inicio.getTime() - ahora < HORAS_LIMITE_CANCELACION * MS_POR_HORA) {
+    else if (!soloCandy && inicio.getTime() - ahora < HORAS_LIMITE_CANCELACION * MS_POR_HORA) {
       motivoNoCancelable =
         inicio.getTime() < ahora
           ? 'La función ya empezó.'
@@ -183,7 +187,8 @@ export class CuentaService {
       canceladaEl: fila.cancelada_at,
       entradaValidada,
       candyEntregado,
-      pelicula: funcion.peliculas?.nombre ?? '(película)',
+      soloCandy,
+      pelicula: soloCandy ? 'Pedido de Candy Bar' : funcion.peliculas?.nombre ?? '(película)',
       clasificacion: funcion.peliculas?.clasificacion ?? 'ATP',
       imagenUrl: funcion.peliculas?.imagen_url ?? null,
       sala: funcion.salas?.nombre ?? '',
@@ -197,6 +202,12 @@ export class CuentaService {
       cancelable: motivoNoCancelable === null,
       motivoNoCancelable
     };
+  }
+
+  private fechaIsoLocal(fecha: Date): string {
+    const mm = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dd = String(fecha.getDate()).padStart(2, '0');
+    return `${fecha.getFullYear()}-${mm}-${dd}`;
   }
 
   private fechaHoraLocal(fecha: string, hora: string): Date {

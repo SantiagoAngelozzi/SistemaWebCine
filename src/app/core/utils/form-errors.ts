@@ -7,7 +7,8 @@ const MENSAJES: Record<string, (control: AbstractControl) => string> = {
   maxlength: (c) => `Máximo ${c.errors?.['maxlength']?.requiredLength} caracteres.`,
   min: (c) => `El valor mínimo es ${c.errors?.['min']?.min}.`,
   max: (c) => `El valor máximo es ${c.errors?.['max']?.max}.`,
-  pattern: () => 'El formato no es válido.'
+  pattern: () => 'El formato no es válido.',
+  fechaInvalida: (c) => c.errors?.['fechaInvalida'] ?? 'La fecha no es válida.'
 };
 
 export function obtenerMensajeError(control: AbstractControl | null | undefined): string | null {

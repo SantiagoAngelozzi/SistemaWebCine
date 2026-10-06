@@ -29,8 +29,8 @@ export class FuncionesService {
     }));
   }
 
-  async crear(valores: FuncionFormValue): Promise<void> {
-    const { error } = await this.supabase.client.rpc('crear_funcion_automatica', {
+  async crear(valores: FuncionFormValue): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('crear_funcion_automatica', {
       p_pelicula_id: valores.peliculaId,
       p_fecha: valores.fecha,
       p_hora_inicio: valores.horaInicio,
@@ -39,6 +39,7 @@ export class FuncionesService {
     });
 
     if (error) throw new Error(error.message);
+    return data as string;
   }
 
   async eliminar(id: string): Promise<void> {

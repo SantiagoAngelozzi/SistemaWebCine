@@ -116,6 +116,17 @@
                     </dd>
                   </div>
                 </dl>
+              } @else if (r.solo_candy) {
+                <dl class="detalle">
+                  <div>
+                    <dt>Código</dt>
+                    <dd class="mono">{{ formatearCodigoCorto(r.codigo_corto) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Pedido</dt>
+                    <dd>Sólo Candy Bar · comprado el {{ r.fecha_compra ? formatearFecha(r.fecha_compra) : '' }}</dd>
+                  </div>
+                </dl>
               }
 
               @if (r.tipo === 'sala' && r.entradas?.length) {

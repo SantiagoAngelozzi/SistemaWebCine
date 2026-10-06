@@ -91,6 +91,33 @@ export class AuthService {
     return edad >= edadMinima;
   }
 
+  edadMinimaPorClasificacion(clasificacion: string | null | undefined): number {
+    if (clasificacion === '+18') return 18;
+    if (clasificacion === '+13') return 13;
+    return 0;
+  }
+
+  cumpleClasificacion(clasificacion: string | null | undefined, fechaNacimiento: string | null | undefined): boolean {
+    const edadMinima = this.edadMinimaPorClasificacion(clasificacion);
+    if (!edadMinima || !fechaNacimiento) return true;
+    return this.tieneEdadMinima(fechaNacimiento, edadMinima);
+  }
+
+  async obtenerFechaNacimiento(): Promise<string | null> {
+    const {
+      data: { session }
+    } = await this.supabase.client.auth.getSession();
+    if (!session) return null;
+
+    const { data } = await this.supabase.client
+      .from('usuarios')
+      .select('fecha_nacimiento')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    return data?.fecha_nacimiento ?? null;
+  }
+
   esMayorDeEdad(fechaNacimiento: string | null | undefined): boolean {
     return this.tieneEdadMinima(fechaNacimiento, 18);
   }

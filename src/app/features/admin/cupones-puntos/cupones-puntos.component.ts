@@ -12,6 +12,7 @@ import {
 } from '../../../core/services/fidelizacion.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatearFecha } from '../../../core/utils/pelicula-fechas';
+import { FechaInputComponent } from '../../../shared/fecha-input/fecha-input.component';
 import { FormErrorComponent } from '../../../shared/form-error/form-error.component';
 
 type Tab = 'cupones' | 'puntos';
@@ -29,7 +30,7 @@ function validarRangoEdad(grupo: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-admin-cupones-puntos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormErrorComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormErrorComponent, FechaInputComponent],
   templateUrl: './cupones-puntos.component.html',
   styleUrl: './cupones-puntos.component.scss'
 })
@@ -57,6 +58,12 @@ export class CuponesPuntosComponent implements OnInit {
   mostrandoFormRecompensa = signal(false);
   editandoRecompensaId = signal<string | null>(null);
   guardandoRecompensa = signal(false);
+
+  readonly atajosDesde = [{ etiqueta: 'Hoy', dias: 0 }];
+  readonly atajosHasta = [
+    { etiqueta: '+7 días', dias: 7 },
+    { etiqueta: '+30 días', dias: 30 }
+  ];
 
   formBienvenida = this.fb.nonNullable.group({
     porcentaje: [20, [Validators.required, Validators.min(1), Validators.max(100)]],

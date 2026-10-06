@@ -48,6 +48,11 @@ export class PeliculaComponent implements OnInit {
   errorResenas = signal(false);
   editandoResena = signal(false);
   esAdmin = signal(false);
+  fechaNacimiento = signal<string | null>(null);
+  bloqueadaPorEdad = computed(() => {
+    const pelicula = this.pelicula();
+    return !!pelicula && !this.auth.cumpleClasificacion(pelicula.clasificacion, this.fechaNacimiento());
+  });
   logueado = computed(() => !!this.auth.session());
   miResena = computed(() => this.resumen()?.resenas.find((r) => r.esMia) ?? null);
 
@@ -58,6 +63,7 @@ export class PeliculaComponent implements OnInit {
       return;
     }
     this.auth.obtenerRolActual().then((rol) => this.esAdmin.set(rol === 'administrador'));
+    this.auth.obtenerFechaNacimiento().then((fecha) => this.fechaNacimiento.set(fecha));
     await Promise.all([this.cargar(id), this.cargarResenas(id)]);
   }
 
@@ -138,6 +144,7 @@ export class PeliculaComponent implements OnInit {
   }
 
   irAButacas(funcionId: string): void {
+    if (this.bloqueadaPorEdad()) return;
     this.router.navigateByUrl(`/funcion/${funcionId}/butacas`);
   }
 }

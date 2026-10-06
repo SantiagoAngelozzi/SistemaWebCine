@@ -68,26 +68,99 @@
             <app-form-error [control]="formFuncion.controls.peliculaId" />
           </div>
 
-          <div class="row2">
-            <div class="field">
-              <label>Fecha</label>
-              <input
-                type="date"
-                formControlName="fecha"
+          <div class="field">
+            <label>Días</label>
+            <div class="dias-semana">
+              <span class="mini">Todos los</span>
+              @for (dia of diasSemana; track dia.numero) {
+                <button
+                  type="button"
+                  class="chip"
+                  [class.active]="diaSemanaCompleto(dia.numero)"
+                  (click)="toggleDiaSemana(dia.numero)"
+                >
+                  {{ dia.nombre }}
+                </button>
+              }
+            </div>
+            <div class="calendario-rapido">
+              @for (dia of proximosDias(); track dia.iso) {
+                <button
+                  type="button"
+                  class="dia"
+                  [class.active]="diasSeleccionados().has(dia.iso)"
+                  [attr.aria-pressed]="diasSeleccionados().has(dia.iso)"
+                  (click)="toggleDia(dia.iso)"
+                >
+                  <span class="nombre">{{ dia.etiqueta }}</span>
+                  <span class="numero">{{ dia.diaMes }}</span>
+                </button>
+              }
+            </div>
+            <div class="mas-dias">
+              @if (diasVisibles() < 42) {
+                <button type="button" class="link" (click)="diasVisibles.set(diasVisibles() + 14)">Ver 2 semanas más</button>
+              }
+              <span class="mini">Otra fecha:</span>
+              <app-fecha-input
+                [compacto]="true"
                 [min]="hoy"
-                [class.input-invalido]="formFuncion.controls.fecha.invalid && formFuncion.controls.fecha.touched"
+                [mostrarError]="true"
+                [ngModel]="fechaExtra()"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="agregarFechaExtra($event)"
               />
-              <app-form-error [control]="formFuncion.controls.fecha" />
             </div>
-            <div class="field">
-              <label>Hora de inicio</label>
+            @if (diasExtra().length) {
+              <div class="seleccion-extra">
+                @for (iso of diasExtra(); track iso) {
+                  <button type="button" class="chip active" title="Quitar" (click)="toggleDia(iso)">
+                    {{ formatearFecha(iso) }} ✕
+                  </button>
+                }
+              </div>
+            }
+            @if (intentoProgramar() && !diasSeleccionados().size) {
+              <p class="form-error">Elegí al menos un día.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="hora-manual">Horarios de inicio</label>
+            <div class="horarios">
+              @for (hora of horariosSugeridos; track hora) {
+                <button
+                  type="button"
+                  class="chip"
+                  [class.active]="horasSeleccionadas().has(hora)"
+                  [attr.aria-pressed]="horasSeleccionadas().has(hora)"
+                  (click)="toggleHora(hora)"
+                >
+                  {{ hora }}
+                </button>
+              }
+              @for (hora of horasExtra(); track hora) {
+                <button type="button" class="chip active" title="Quitar" (click)="toggleHora(hora)">{{ hora }} ✕</button>
+              }
               <input
-                type="time"
-                formControlName="horaInicio"
-                [class.input-invalido]="formFuncion.controls.horaInicio.invalid && formFuncion.controls.horaInicio.touched"
+                id="hora-manual"
+                class="hora-manual"
+                type="text"
+                inputmode="numeric"
+                maxlength="5"
+                placeholder="HH:MM"
+                autocomplete="off"
+                [value]="horaManual()"
+                (input)="escribirHora($any($event.target))"
+                (keydown.enter)="$event.preventDefault(); agregarHoraManual()"
               />
-              <app-form-error [control]="formFuncion.controls.horaInicio" />
+              <button type="button" class="chip" [disabled]="!horaManual()" (click)="agregarHoraManual()">+ Agregar</button>
             </div>
+            @if (errorHora()) {
+              <p class="form-error">{{ errorHora() }}</p>
+            } @else if (intentoProgramar() && !horasSeleccionadas().size) {
+              <p class="form-error">Elegí al menos un horario.</p>
+            }
           </div>
 
           <div class="row2">
@@ -117,16 +190,49 @@
           </div>
 
           <p class="hint">
-            La sala se asigna sola: el sistema busca una sala sin funciones superpuestas
+            La sala se asigna sola en cada función: el sistema busca una sala sin funciones superpuestas
             (respetando 30 min de limpieza antes y después) y programa ahí.
           </p>
 
+          @if (combinaciones().length) {
+            <p class="resumen-programacion">
+              Se van a programar <strong>{{ combinaciones().length }}</strong>
+              {{ combinaciones().length === 1 ? 'función' : 'funciones' }}:
+              {{ diasSeleccionados().size }} {{ diasSeleccionados().size === 1 ? 'día' : 'días' }} ×
+              {{ horasSeleccionadas().size }} {{ horasSeleccionadas().size === 1 ? 'horario' : 'horarios' }}.
+            </p>
+          }
+
           <div class="actions">
+            @if (diasSeleccionados().size || horasSeleccionadas().size) {
+              <button type="button" class="btn-link" [disabled]="guardandoFuncion()" (click)="limpiarProgramacion()">
+                Limpiar días y horarios
+              </button>
+            }
             <button type="submit" class="btn-primary" [disabled]="guardandoFuncion()">
-              {{ guardandoFuncion() ? 'Programando…' : 'Programar función' }}
+              @if (progreso(); as p) {
+                Programando {{ p.hechas }}/{{ p.total }}…
+              } @else {
+                {{ combinaciones().length > 1 ? 'Programar ' + combinaciones().length + ' funciones' : 'Programar función' }}
+              }
             </button>
           </div>
         </form>
+
+        @if (resultados().length) {
+          <div class="resultados-programacion">
+            <h4>Resultado de la programación</h4>
+            <ul>
+              @for (r of resultados(); track r.fecha + r.hora) {
+                <li [class.ok]="r.ok" [class.fallo]="!r.ok">
+                  <span class="cuando">{{ formatearFecha(r.fecha) }} {{ r.hora }}</span>
+                  <span>{{ r.ok ? 'Programada en ' + r.detalle : r.detalle }}</span>
+                </li>
+              }
+            </ul>
+            <button type="button" class="btn-link" (click)="resultados.set([])">Cerrar</button>
+          </div>
+        }
 
         @if (pasadas().length) {
           <div class="filtro-pasadas">

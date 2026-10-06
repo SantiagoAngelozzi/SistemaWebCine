@@ -75,9 +75,9 @@
         </div>
       } @else {
         <section>
-          <h2>Próximas funciones</h2>
+          <h2>Próximas funciones y pedidos</h2>
           @if (!proximas().length) {
-            <p class="hint">No tenés funciones por delante.</p>
+            <p class="hint">No tenés funciones ni pedidos pendientes.</p>
           }
           <div class="lista">
             @for (compra of proximas(); track compra.id) {
@@ -197,21 +197,30 @@
       @if (compra.imagenUrl) {
         <img [src]="compra.imagenUrl" [alt]="compra.pelicula" />
       } @else {
-        <span class="sin-imagen-texto">Sin imagen</span>
+        <span class="sin-imagen-texto">{{ compra.soloCandy ? 'Candy Bar' : 'Sin imagen' }}</span>
       }
     </div>
 
     <div class="cuerpo">
       <div class="titulo-fila">
         <h3>{{ compra.pelicula }}</h3>
-        <span class="badge clasificacion">{{ compra.clasificacion }}</span>
+        @if (!compra.soloCandy) {
+          <span class="badge clasificacion">{{ compra.clasificacion }}</span>
+        }
         <span class="badge estado" [ngClass]="compra.estado">{{ etiquetaEstado(compra) }}</span>
       </div>
 
-      <p class="meta">
-        {{ compra.sala }} · {{ formatearFecha(compra.fecha) }} {{ horaCorta(compra.horaInicio) }} ·
-        {{ compra.formato }} · {{ compra.idioma }}
-      </p>
+      @if (compra.soloCandy) {
+        <p class="meta">
+          Comprado el {{ formatearFecha(compra.fecha) }} {{ horaCorta(compra.horaInicio) }} · Se retira en el Candy
+          Bar el mismo día
+        </p>
+      } @else {
+        <p class="meta">
+          {{ compra.sala }} · {{ formatearFecha(compra.fecha) }} {{ horaCorta(compra.horaInicio) }} ·
+          {{ compra.formato }} · {{ compra.idioma }}
+        </p>
+      }
 
       <p class="butacas">
         @for (entrada of compra.entradas; track entrada.ubicacion) {
@@ -279,7 +288,9 @@
           >
             {{ cancelandoId() === compra.id ? 'Cancelando…' : 'Cancelar compra' }}
           </button>
-          <span class="hint">Hasta {{ horasLimite }} h antes de la función.</span>
+          <span class="hint">
+            {{ compra.soloCandy ? 'Mientras no lo hayas retirado.' : 'Hasta ' + horasLimite + ' h antes de la función.' }}
+          </span>
         } @else if (compra.estado === 'confirmada') {
           <span class="hint">{{ compra.motivoNoCancelable }}</span>
         }

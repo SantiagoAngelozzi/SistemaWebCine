@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { adminGuard } from './core/guards/admin.guard';
 import { empleadoGuard, sesionGuard, sinEmpleadoGuard } from './core/guards/rol.guard';
+import { edadFuncionGuard } from './core/guards/edad.guard';
 
 export const routes: Routes = [
   {
@@ -95,6 +96,7 @@ export const routes: Routes = [
       },
       {
         path: 'funcion/:funcionId/butacas',
+        canActivate: [edadFuncionGuard],
         loadComponent: () =>
           import('./features/client/butacas/butacas.component').then((m) => m.ButacasComponent)
       },
@@ -104,6 +106,11 @@ export const routes: Routes = [
           import('./features/client/cartelera/cartelera.component').then(
             (m) => m.CarteleraComponent
           )
+      },
+      {
+        path: 'candy-bar',
+        loadComponent: () =>
+          import('./features/client/candy-bar/candy-bar.component').then((m) => m.CandyBarComponent)
       },
       {
         path: 'proximamente',

@@ -41,6 +41,8 @@ export interface ResultadoValidacion {
   entradas?: { ubicacion: string; tipo: TipoButaca }[];
   candy?: CandyAEntregar[];
   candy_pendiente?: boolean;
+  solo_candy?: boolean;
+  fecha_compra?: string;
 }
 
 export interface RegistroValidacion {

@@ -24,6 +24,7 @@ export class ClientLayoutComponent {
     { path: 'inicio', label: 'Inicio' },
     { path: 'cartelera', label: 'Cartelera' },
     { path: 'proximamente', label: 'Próximamente' },
+    { path: 'candy-bar', label: 'Candy Bar' },
     { path: 'mis-peliculas', label: 'Mis Películas' },
     { path: 'perfil', label: 'Perfil' }
   ];

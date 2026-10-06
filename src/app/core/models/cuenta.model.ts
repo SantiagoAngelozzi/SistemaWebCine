@@ -47,6 +47,7 @@ export interface MiCompra {
   canceladaEl: string | null;
   entradaValidada: boolean;
   candyEntregado: boolean;
+  soloCandy: boolean;
   pelicula: string;
   clasificacion: ClasificacionEdad;
   imagenUrl: string | null;

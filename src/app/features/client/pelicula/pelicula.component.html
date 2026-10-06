@@ -54,6 +54,13 @@
         <div class="empty-state">
           <p>La venta se habilita cuando comience la preventa.</p>
         </div>
+      } @else if (bloqueadaPorEdad()) {
+        <div class="empty-state">
+          <p>
+            Esta película es {{ pelicula()!.clasificacion }}. No cumplís la edad mínima, así que no podés
+            elegir funciones ni comprar entradas.
+          </p>
+        </div>
       } @else if (!funciones().length) {
         <div class="empty-state">
           <p>Todavía no hay funciones programadas para esta película.</p>

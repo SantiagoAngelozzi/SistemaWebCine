@@ -84,11 +84,13 @@
         <div class="row3">
           <div class="field">
             <label>Válido desde</label>
-            <input type="date" formControlName="fechaDesde" />
+            <app-fecha-input formControlName="fechaDesde" [atajos]="atajosDesde" />
+            <app-form-error [control]="formCupon.controls.fechaDesde" />
           </div>
           <div class="field">
             <label>Hasta (opcional)</label>
-            <input type="date" formControlName="fechaHasta" />
+            <app-fecha-input formControlName="fechaHasta" [atajos]="atajosHasta" />
+            <app-form-error [control]="formCupon.controls.fechaHasta" />
           </div>
           <div class="field">
             <label>Usos máximos (opcional)</label>

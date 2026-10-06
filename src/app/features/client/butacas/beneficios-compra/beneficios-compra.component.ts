@@ -31,6 +31,7 @@ export class BeneficiosCompraComponent {
   @Input() recompensas: Recompensa[] = [];
   @Input() canjes: Map<string, number> = new Map();
   @Input() butacasLibresParaCanje = 0;
+  @Input() mostrarNotaEntrada = true;
 
   @Output() aplicarCupon = new EventEmitter<string>();
   @Output() quitarCupon = new EventEmitter<void>();

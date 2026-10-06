@@ -20,12 +20,14 @@ export interface ProductoComprobante {
 export interface DatosComprobante {
   codigoQr: string;
   codigoCorto?: string;
-  pelicula: string;
-  sala: string;
-  fecha: string;
-  hora: string;
-  formato: string;
-  idioma: string;
+  soloCandy?: boolean;
+  fechaCompra?: string;
+  pelicula?: string;
+  sala?: string;
+  fecha?: string;
+  hora?: string;
+  formato?: string;
+  idioma?: string;
   entradas: EntradaComprobante[];
   productos?: ProductoComprobante[];
   total: number;
@@ -64,12 +66,20 @@ export class ComprobantePdfService {
     pdf.setTextColor(16, 19, 27);
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(16);
-    pdf.text(datos.pelicula, margen, y + 22, { maxWidth: 120 });
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    pdf.text(`Sala: ${datos.sala}`, margen, y + 32);
-    pdf.text(`Funcion: ${datos.fecha} - ${datos.hora}`, margen, y + 39);
-    pdf.text(`${datos.formato} - ${datos.idioma}`, margen, y + 46);
+    if (datos.soloCandy) {
+      pdf.text('Pedido de Candy Bar', margen, y + 22, { maxWidth: 120 });
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text(`Fecha de compra: ${datos.fechaCompra ?? ''}`, margen, y + 32);
+      pdf.text('Retiralo en el Candy Bar el mismo dia de la compra.', margen, y + 39);
+    } else {
+      pdf.text(datos.pelicula ?? '', margen, y + 22, { maxWidth: 120 });
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text(`Sala: ${datos.sala ?? ''}`, margen, y + 32);
+      pdf.text(`Funcion: ${datos.fecha ?? ''} - ${datos.hora ?? ''}`, margen, y + 39);
+      pdf.text(`${datos.formato ?? ''} - ${datos.idioma ?? ''}`, margen, y + 46);
+    }
     if (datos.codigoCorto) {
       pdf.setFont('courier', 'bold');
       pdf.setFontSize(15);
@@ -77,7 +87,10 @@ export class ComprobantePdfService {
       pdf.setFont('helvetica', 'normal');
     }
     pdf.setFontSize(8);
-    pdf.text('Presenta este QR para ingresar a la sala y retirar productos de Candy Bar.', 169.5, datos.codigoCorto ? 97 : 89, {
+    const leyendaQr = datos.soloCandy
+      ? 'Presenta este QR para retirar tus productos en el Candy Bar.'
+      : 'Presenta este QR para ingresar a la sala y retirar productos de Candy Bar.';
+    pdf.text(leyendaQr, 169.5, datos.codigoCorto ? 97 : 89, {
       maxWidth: 45,
       align: 'center'
     });
@@ -95,7 +108,9 @@ export class ComprobantePdfService {
       y += 10;
     }
 
-    y = this.dibujarSeccion(pdf, 'ENTRADAS', y);
+    if (datos.entradas.length) {
+      y = this.dibujarSeccion(pdf, 'ENTRADAS', y);
+    }
     for (const entrada of datos.entradas) {
       const etiquetaTipo = entrada.tipo === 'vip' ? 'VIP' : entrada.tipo === 'accesible' ? 'Accesible' : 'Estandar';
       const cubierta = entrada.incluidaEnCombo
@@ -108,7 +123,7 @@ export class ComprobantePdfService {
     }
 
     if (datos.productos?.length) {
-      y += 4;
+      if (datos.entradas.length) y += 4;
       y = this.saltoDePaginaSiHaceFalta(pdf, y, 20);
       y = this.dibujarSeccion(pdf, 'CANDY BAR', y);
       for (const producto of datos.productos) {
@@ -159,7 +174,12 @@ export class ComprobantePdfService {
     pdf.setFontSize(8);
     pdf.setTextColor(92, 99, 112);
     pdf.text(`Codigo unico: ${datos.codigoQr}`, margen, 278);
-    pdf.text('Conserva este comprobante hasta finalizar la funcion.', 192, 278, { align: 'right' });
+    pdf.text(
+      datos.soloCandy ? 'Conserva este comprobante hasta retirar tu pedido.' : 'Conserva este comprobante hasta finalizar la funcion.',
+      192,
+      278,
+      { align: 'right' }
+    );
 
     pdf.save(`comprobante-${this.nombreSeguro(datos.codigoQr)}.pdf`);
   }

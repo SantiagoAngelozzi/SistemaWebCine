@@ -12,6 +12,7 @@ import {
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { PeliculasService } from '../../../core/services/peliculas.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { FechaInputComponent } from '../../../shared/fecha-input/fecha-input.component';
 import { FormErrorComponent } from '../../../shared/form-error/form-error.component';
 
 const FORMATOS_DISPONIBLES: FormatoProyeccion[] = ['2D', '3D', '4D', '5D'];
@@ -19,7 +20,7 @@ const FORMATOS_DISPONIBLES: FormatoProyeccion[] = ['2D', '3D', '4D', '5D'];
 @Component({
   selector: 'app-admin-peliculas',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormErrorComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormErrorComponent, FechaInputComponent],
   templateUrl: './peliculas.component.html',
   styleUrl: './peliculas.component.scss'
 })
@@ -43,6 +44,13 @@ export class PeliculasComponent implements OnInit {
 
   generosSeleccionados = signal<string[]>([]);
   formatosSeleccionados = signal<FormatoProyeccion[]>([]);
+
+  readonly atajosEstreno = [
+    { etiqueta: 'Hoy', dias: 0 },
+    { etiqueta: '+7 días', dias: 7 },
+    { etiqueta: '+14 días', dias: 14 },
+    { etiqueta: '+30 días', dias: 30 }
+  ];
 
   form = this.fb.nonNullable.group({
     nombre: ['', Validators.required],

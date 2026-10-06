@@ -96,11 +96,11 @@
         <div class="row2">
           <div class="field">
             <label for="nac">Fecha de nacimiento</label>
-            <input
-              id="nac"
-              type="date"
+            <app-fecha-input
+              inputId="nac"
               formControlName="fechaNacimiento"
-              [class.input-invalido]="registroForm.controls.fechaNacimiento.invalid && registroForm.controls.fechaNacimiento.touched"
+              [max]="hoy"
+              [invalido]="registroForm.controls.fechaNacimiento.invalid && registroForm.controls.fechaNacimiento.touched"
             />
             <app-form-error [control]="registroForm.controls.fechaNacimiento" />
           </div>

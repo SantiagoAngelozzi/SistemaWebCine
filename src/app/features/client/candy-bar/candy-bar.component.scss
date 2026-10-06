@@ -1,0 +1,250 @@
+:host {
+  display: block;
+  padding: 24px 32px 60px;
+
+  @media (max-width: 600px) {
+    padding: 16px 16px 48px;
+  }
+}
+
+.hint {
+  opacity: 0.7;
+}
+
+.cabecera {
+  margin-bottom: 8px;
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    margin: 0 0 6px;
+  }
+
+  .meta {
+    margin: 0;
+    max-width: 720px;
+    font-size: 14px;
+    opacity: 0.85;
+
+    a {
+      color: var(--color-tinta);
+      font-weight: 700;
+    }
+  }
+}
+
+.error {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 10px;
+  background: #ffe3ea;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.paso-candy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+  margin-top: 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.resumen {
+  padding: 20px;
+  border: var(--border-comic-lg);
+  border-radius: 16px;
+  background: var(--color-papel-2);
+  box-shadow: var(--shadow-comic-md);
+}
+
+.resumen-final {
+  position: sticky;
+  top: 16px;
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin: 0 0 8px;
+  }
+}
+
+.seleccion-texto {
+  margin: 0 0 8px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.detalle {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed rgba(27, 26, 46, 0.25);
+  }
+
+  li.descuento,
+  li.canje {
+    font-weight: 700;
+    color: var(--color-magenta);
+  }
+
+  li.canje small {
+    font-weight: 400;
+  }
+
+  .quitar {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 11px;
+    opacity: 0.55;
+    padding: 0 2px;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.detalle.pago {
+  margin-top: -4px;
+}
+
+.total {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
+.usar-credito {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border: 2px dashed var(--color-tinta);
+  border-radius: 10px;
+  background: var(--color-papel);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.puntos-a-ganar {
+  margin: 0 0 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--color-lima);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.nota-retiro {
+  margin: 0 0 12px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.btn-primary {
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  padding: 12px;
+  border: var(--border-comic);
+  border-radius: 12px;
+  background: var(--color-coral);
+  color: var(--color-tinta);
+  cursor: pointer;
+  box-shadow: var(--shadow-comic-sm);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--color-magenta);
+    color: var(--color-papel-2);
+  }
+}
+
+.btn-secondary {
+  display: block;
+  margin: 0 auto 12px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  padding: 10px 18px;
+  border: var(--border-comic);
+  border-radius: 12px;
+  background: var(--color-papel-2);
+  cursor: pointer;
+  box-shadow: var(--shadow-comic-sm);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.exito {
+  text-align: center;
+  padding: 60px 24px;
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 30px;
+  }
+
+  .codigo {
+    font-family: monospace;
+    background: var(--color-papel);
+    border: var(--border-comic);
+    border-radius: 8px;
+    padding: 10px;
+    display: inline-block;
+    margin: 10px 0;
+  }
+
+  .codigo-corto {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 4px;
+  }
+
+  .credito-usado {
+    font-weight: 700;
+  }
+
+  .puntos-a-ganar {
+    display: inline-block;
+  }
+
+  .btn-primary {
+    max-width: 320px;
+  }
+}
+
+.aviso-candy {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 10px;
+  background: var(--color-lima);
+  font-weight: 700;
+}

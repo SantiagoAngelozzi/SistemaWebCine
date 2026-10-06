@@ -6,6 +6,8 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { hoyIso } from '../../../core/utils/formato';
+import { FechaInputComponent } from '../../../shared/fecha-input/fecha-input.component';
 import { FormErrorComponent } from '../../../shared/form-error/form-error.component';
 
 type AuthTab = 'login' | 'registro';
@@ -13,7 +15,7 @@ type AuthTab = 'login' | 'registro';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormErrorComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormErrorComponent, FechaInputComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
@@ -23,6 +25,8 @@ export class LoginComponent {
   private supabase = inject(SupabaseService);
   private toastService = inject(ToastService);
   private router = inject(Router);
+
+  readonly hoy = hoyIso();
 
   activeTab = signal<AuthTab>('login');
   loading = signal(false);

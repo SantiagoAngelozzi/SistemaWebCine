@@ -1,0 +1,163 @@
+<div class="candy-page">
+  @if (cargando() && !catalogo()) {
+    <p class="hint">Cargando el Candy Bar…</p>
+  } @else if (compraExitosa()) {
+    <div class="exito">
+      <h2>¡Pedido confirmado!</h2>
+      <p>Mostrá el QR del comprobante en el Candy Bar para retirar tu pedido. Si el lector falla, usá este código:</p>
+      <p class="codigo codigo-corto">{{ formatearCodigoCorto(compraExitosa()!.codigo_corto) }}</p>
+      <p class="aviso-candy">Retiralo hoy, el mismo día de la compra.</p>
+      @if (compraExitosa()!.descuento_monto > 0) {
+        <p class="credito-usado">
+          Ahorraste ${{ compraExitosa()!.descuento_monto }} con
+          {{ compraExitosa()!.descuento_origen === 'bienvenida' ? 'tu descuento de bienvenida' : 'el cupón ' + compraExitosa()!.descuento_codigo }}.
+        </p>
+      }
+      <p class="total">Total: ${{ compraExitosa()!.total }}</p>
+      @if (compraExitosa()!.puntos_ganados > 0 || compraExitosa()!.puntos_canjeados > 0) {
+        <p class="puntos-a-ganar">
+          @if (compraExitosa()!.puntos_canjeados > 0) {
+            Canjeaste {{ compraExitosa()!.puntos_canjeados }} puntos.
+          }
+          @if (compraExitosa()!.puntos_ganados > 0) {
+            Sumaste {{ compraExitosa()!.puntos_ganados }} puntos.
+          }
+        </p>
+      }
+      @if (compraExitosa()!.credito_usado > 0) {
+        <p class="credito-usado">
+          Pagaste ${{ compraExitosa()!.credito_usado }} con tu crédito en cuenta y
+          ${{ compraExitosa()!.a_pagar }} con otro medio.
+        </p>
+      }
+      <button type="button" class="btn-secondary" [disabled]="generandoPdf()" (click)="descargarComprobante()">
+        {{ generandoPdf() ? 'GENERANDO PDF…' : 'VOLVER A DESCARGAR EL COMPROBANTE' }}
+      </button>
+      <button type="button" class="btn-secondary" (click)="nuevoPedido()">HACER OTRO PEDIDO</button>
+      <button type="button" class="btn-primary" (click)="volverAInicio()">Volver al inicio</button>
+    </div>
+  } @else {
+    <header class="cabecera">
+      <h1>Candy Bar</h1>
+      <p class="meta">
+        Pedí tus pochoclos, bebidas y golosinas sin comprar entradas y retiralos en el mostrador con el QR.
+        ¿Vas a ver una película? <a routerLink="/cartelera">Sumalos al comprar tus entradas</a> y aprovechá los combos con entrada.
+      </p>
+    </header>
+
+    @if (errorMessage()) {
+      <p class="error">{{ errorMessage() }}</p>
+    }
+
+    @if (catalogo()) {
+      <div class="paso-candy">
+        <div class="catalogo">
+          <app-candy-selector
+            [catalogo]="catalogo()!"
+            [carrito]="carrito()"
+            [precioEntrada]="0"
+            [cantidadButacas]="0"
+            [combosConEntradaEnCarrito]="0"
+            (cambiarCantidad)="cambiarCantidad($event)"
+          />
+
+          <app-beneficios-compra
+            [logueado]="logueado()"
+            [descuento]="descuento()"
+            [cuponAplicado]="cuponAplicado()"
+            [errorCupon]="errorCupon()"
+            [validandoCupon]="validandoCupon()"
+            [puntosDisponibles]="puntosDisponibles()"
+            [puntosComprometidos]="puntosComprometidos()"
+            [recompensas]="recompensas()"
+            [canjes]="canjes()"
+            [butacasLibresParaCanje]="0"
+            [mostrarNotaEntrada]="false"
+            (aplicarCupon)="aplicarCupon($event)"
+            (quitarCupon)="quitarCupon()"
+            (cambiarCanje)="cambiarCanje($event)"
+          />
+        </div>
+
+        <aside class="resumen resumen-final">
+          <h2>Tu pedido</h2>
+
+          @if (!hayAlgoEnElPedido()) {
+            <p class="seleccion-texto">Todavía no agregaste productos.</p>
+          } @else {
+            <ul class="detalle">
+              @for (linea of lineas(); track linea.clave) {
+                <li>
+                  <span>
+                    {{ linea.cantidad }}× {{ linea.nombre }}
+                    <button type="button" class="quitar" aria-label="Quitar" (click)="quitar(linea)">✕</button>
+                  </span>
+                  <span>${{ linea.subtotal }}</span>
+                </li>
+              }
+              @for (linea of lineasCanje(); track linea.recompensa.id) {
+                <li class="canje">
+                  <span>
+                    {{ linea.cantidad }}× {{ linea.recompensa.nombre }}
+                    <small>({{ linea.cantidad * linea.recompensa.costo_puntos }} pts)</small>
+                  </span>
+                  <span>$0</span>
+                </li>
+              }
+              @if (descuentoMonto() > 0) {
+                <li>
+                  <span>Subtotal</span>
+                  <span>${{ subtotal() }}</span>
+                </li>
+                <li class="descuento">
+                  <span>Descuento {{ etiquetaDescuento() }}</span>
+                  <span>−${{ descuentoMonto() }}</span>
+                </li>
+              }
+            </ul>
+          }
+
+          <p class="total">Total: ${{ total() }}</p>
+
+          @if (creditoDisponible() > 0 && total() > 0) {
+            <label class="usar-credito">
+              <input
+                type="checkbox"
+                [checked]="usarCredito()"
+                (change)="usarCredito.set($any($event.target).checked)"
+              />
+              Usar mi crédito en cuenta (${{ creditoDisponible() }} disponible)
+            </label>
+            @if (usarCredito()) {
+              <ul class="detalle pago">
+                <li class="descuento">
+                  <span>Crédito aplicado</span>
+                  <span>−${{ creditoAplicado() }}</span>
+                </li>
+                <li>
+                  <span><strong>A pagar con otro medio</strong></span>
+                  <span><strong>${{ aPagar() }}</strong></span>
+                </li>
+              </ul>
+            }
+          }
+
+          @if (puntosAGanar() > 0) {
+            <p class="puntos-a-ganar">Con esta compra sumás {{ puntosAGanar() }} puntos.</p>
+          }
+
+          <p class="nota-retiro">El pedido se retira el mismo día de la compra.</p>
+
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="!hayAlgoEnElPedido() || comprando()"
+            (click)="confirmarCompra()"
+          >
+            {{ comprando() ? 'Confirmando…' : 'CONFIRMAR PEDIDO' }}
+          </button>
+        </aside>
+      </div>
+    }
+  }
+</div>

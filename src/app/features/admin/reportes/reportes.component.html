@@ -12,11 +12,24 @@
     <div class="fechas">
       <label>
         Desde
-        <input type="date" [ngModel]="desde()" (ngModelChange)="cambiarFecha('desde', $event)" [max]="hasta()" />
+        <app-fecha-input
+          [compacto]="true"
+          [mostrarError]="true"
+          [ngModel]="desde()"
+          (ngModelChange)="cambiarFecha('desde', $event)"
+          [max]="hasta()"
+        />
       </label>
       <label>
         Hasta
-        <input type="date" [ngModel]="hasta()" (ngModelChange)="cambiarFecha('hasta', $event)" [min]="desde()" />
+        <app-fecha-input
+          [compacto]="true"
+          [mostrarError]="true"
+          [ngModel]="hasta()"
+          (ngModelChange)="cambiarFecha('hasta', $event)"
+          [min]="desde()"
+          [max]="hoy"
+        />
       </label>
     </div>
 

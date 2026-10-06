@@ -94,8 +94,29 @@ export class ComprasService {
     });
 
     if (error || !data) throw new Error(error?.message ?? 'No se pudo crear la compra.');
+    return this.normalizarCompra(data as CompraConfirmada);
+  }
 
-    const compra = data as CompraConfirmada;
+  async confirmarCompraCandy(
+    candy: ItemCandySeleccionado[],
+    usarCredito = false,
+    codigoCupon: string | null = null,
+    canjes: CanjeSeleccionado[] = []
+  ): Promise<CompraConfirmada> {
+    const { data, error } = await this.supabase.client.rpc('crear_compra_candy', {
+      p_items: candy
+        .filter((item) => item.cantidad > 0)
+        .map((item) => ({ tipo: item.tipo, id: item.id, cantidad: item.cantidad })),
+      p_usar_credito: usarCredito,
+      p_codigo_cupon: codigoCupon?.trim() || null,
+      p_canjes: canjes.filter((c) => c.cantidad > 0).map((c) => ({ id: c.id, cantidad: c.cantidad }))
+    });
+
+    if (error || !data) throw new Error(error?.message ?? 'No se pudo crear la compra.');
+    return this.normalizarCompra(data as CompraConfirmada);
+  }
+
+  private normalizarCompra(compra: CompraConfirmada): CompraConfirmada {
     return {
       ...compra,
       subtotal: Number(compra.subtotal ?? compra.total),

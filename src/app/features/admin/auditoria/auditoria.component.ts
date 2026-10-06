@@ -18,6 +18,7 @@ import {
   describirRegistro
 } from '../../../core/utils/auditoria-texto';
 import { hoyIso } from '../../../core/utils/formato';
+import { FechaInputComponent, esFechaIso } from '../../../shared/fecha-input/fecha-input.component';
 
 interface FilaAuditoria {
   registro: RegistroAuditoria;
@@ -30,7 +31,7 @@ const TAMANIO_PAGINA = 25;
 @Component({
   selector: 'app-admin-auditoria',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FechaInputComponent],
   templateUrl: './auditoria.component.html',
   styleUrl: './auditoria.component.scss'
 })
@@ -102,6 +103,12 @@ export class AuditoriaComponent implements OnInit, OnDestroy {
     this.filtros.update((f) => ({ ...f, [campo]: valor || (campo === 'tipo' ? 'todas' : null) }));
     this.pagina.set(0);
     await this.cargar();
+  }
+
+  async cambiarFecha(campo: 'desde' | 'hasta', valor: string): Promise<void> {
+    if (valor && !esFechaIso(valor)) return;
+    if ((valor || null) === this.filtros()[campo]) return;
+    await this.cambiarFiltro(campo, valor || null);
   }
 
   async limpiarFiltros(): Promise<void> {

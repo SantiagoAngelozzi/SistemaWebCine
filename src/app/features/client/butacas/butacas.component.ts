@@ -628,12 +628,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
           return;
         }
 
-        const edadMinima = funcion.peliculaClasificacion === '+18' ? 18 : funcion.peliculaClasificacion === '+13' ? 13 : 0;
-        if (
-          edadMinima &&
-          perfil.fecha_nacimiento &&
-          !this.authService.tieneEdadMinima(perfil.fecha_nacimiento, edadMinima)
-        ) {
+        if (!this.authService.cumpleClasificacion(funcion.peliculaClasificacion, perfil.fecha_nacimiento)) {
           this.errorMessage.set(`No podés comprar entradas para una película ${funcion.peliculaClasificacion} si no cumplís la edad mínima.`);
           return;
         }

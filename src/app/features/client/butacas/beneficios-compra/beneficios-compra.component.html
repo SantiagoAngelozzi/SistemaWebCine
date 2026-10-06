@@ -98,7 +98,9 @@
             </li>
           }
         </ul>
-        <p class="nota">Una entrada canjeada cubre el precio base de una butaca; la VIP paga sólo el recargo.</p>
+        @if (mostrarNotaEntrada) {
+          <p class="nota">Una entrada canjeada cubre el precio base de una butaca; la VIP paga sólo el recargo.</p>
+        }
       }
     </div>
   }

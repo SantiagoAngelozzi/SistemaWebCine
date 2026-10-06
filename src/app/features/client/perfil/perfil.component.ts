@@ -124,10 +124,13 @@ export class PerfilComponent implements OnInit {
   async cancelar(compra: MiCompra): Promise<void> {
     if (!compra.cancelable) return;
 
+    const queSeCancela = compra.soloCandy
+      ? `tu pedido de Candy Bar del ${formatearFecha(compra.fecha)}`
+      : `tu compra para "${compra.pelicula}" del ${formatearFecha(compra.fecha)} a las ${this.horaCorta(compra.horaInicio)}`;
     const confirmado = await this.confirmService.preguntar(
-      `Vas a cancelar tu compra para "${compra.pelicula}" del ${formatearFecha(compra.fecha)} a las ` +
-        `${this.horaCorta(compra.horaInicio)}. Se acreditarán $${compra.total} en tu cuenta para usar en ` +
-        `próximas compras (no hay devolución de dinero) y las butacas quedan liberadas.` +
+      `Vas a cancelar ${queSeCancela}. Se acreditarán $${compra.total} en tu cuenta para usar en ` +
+        `próximas compras (no hay devolución de dinero)` +
+        (compra.soloCandy ? '.' : ' y las butacas quedan liberadas.') +
         (compra.puntosGanados > 0 ? ` Se descuentan los ${compra.puntosGanados} puntos que sumaste.` : '') +
         (compra.puntosCanjeados > 0 ? ` Te devolvemos los ${compra.puntosCanjeados} puntos que canjeaste.` : ''),
       { titulo: 'Cancelar compra', textoConfirmar: 'Cancelar compra', textoCancelar: 'Volver' }
@@ -159,6 +162,8 @@ export class PerfilComponent implements OnInit {
       await this.comprobantePdf.descargar({
         codigoQr: compra.codigoQr,
         codigoCorto: formatearCodigoCorto(compra.codigoCorto),
+        soloCandy: compra.soloCandy,
+        fechaCompra: formatearFecha(compra.fecha),
         pelicula: compra.pelicula,
         sala: compra.sala,
         fecha: formatearFecha(compra.fecha),
@@ -189,7 +194,7 @@ export class PerfilComponent implements OnInit {
         puntosCanjeados: compra.puntosCanjeados,
         creditoUsado: compra.creditoUsado,
         advertenciaEdad:
-          compra.clasificacion === 'ATP'
+          compra.soloCandy || compra.clasificacion === 'ATP'
             ? undefined
             : `Película ${compra.clasificacion}: concurrencia obligatoria con un adulto responsable.`
       });
