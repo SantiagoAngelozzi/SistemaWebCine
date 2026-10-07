@@ -4,12 +4,6 @@
 
 ---
 
-## Documento de requerimientos
-
-[Ver requerimientos del TP (PDF)](documentoRequerimientos/RequerimientosTP.pdf)
-
----
-
 ## Tecnologias utilizadas
 ### **Frontend & PWA**
 - **[Angular 17+]** — Framework principal con Standalone Components, Signals y Control Flow nativo.
