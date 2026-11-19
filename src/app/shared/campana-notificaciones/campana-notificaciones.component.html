@@ -1,0 +1,50 @@
+<div class="campana">
+  <button
+    type="button"
+    class="boton-campana"
+    [class.con-pendientes]="noLeidas > 0"
+    [attr.aria-label]="'Notificaciones' + (noLeidas ? ' (' + noLeidas + ' sin leer)' : '')"
+    (click)="alternar()"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3a6 6 0 0 0-6 6v3.6L4.3 15.4A1 1 0 0 0 5.2 17h13.6a1 1 0 0 0 .9-1.6L18 12.6V9a6 6 0 0 0-6-6Z" />
+      <path d="M9.5 19a2.5 2.5 0 0 0 5 0" />
+    </svg>
+    @if (noLeidas > 0) {
+      <span class="contador">{{ noLeidas > 9 ? '9+' : noLeidas }}</span>
+    }
+  </button>
+
+  @if (abierta()) {
+    <div class="panel" role="dialog" aria-label="Notificaciones">
+      <div class="panel-cabecera">
+        <strong>Notificaciones</strong>
+        @if (noLeidas > 0) {
+          <button type="button" class="link" (click)="marcarTodas.emit()">Marcar todas como leídas</button>
+        }
+      </div>
+
+      @if (puedeActivarAvisos) {
+        <button type="button" class="activar-avisos" (click)="activarAvisos.emit()">
+          Activar avisos del navegador
+        </button>
+      }
+
+      @if (!notificaciones.length) {
+        <p class="vacio">No tenés notificaciones.</p>
+      } @else {
+        <ul>
+          @for (notificacion of notificaciones; track notificacion.id) {
+            <li>
+              <button type="button" class="item" [class.no-leida]="!notificacion.leida" (click)="elegir(notificacion)">
+                <span class="titulo">{{ notificacion.titulo }}</span>
+                <span class="mensaje">{{ notificacion.mensaje }}</span>
+                <span class="fecha">{{ notificacion.creadaEl | tiempoRelativo }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</div>

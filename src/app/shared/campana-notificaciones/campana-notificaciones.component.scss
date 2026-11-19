@@ -1,0 +1,155 @@
+:host {
+  display: block;
+}
+
+.campana {
+  position: relative;
+}
+
+.boton-campana {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: var(--border-comic);
+  background: var(--color-papel);
+  cursor: pointer;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--color-tinta);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &.con-pendientes {
+    background: var(--color-lima);
+  }
+}
+
+.contador {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 2px solid var(--color-tinta);
+  background: var(--color-coral);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 50;
+  width: min(360px, 90vw);
+  max-height: 420px;
+  overflow-y: auto;
+  border: var(--border-comic);
+  border-radius: 14px;
+  background: var(--color-papel-2);
+  box-shadow: var(--shadow-comic-md);
+}
+
+.panel-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--color-tinta);
+}
+
+.link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.activar-avisos {
+  display: block;
+  width: calc(100% - 28px);
+  margin: 10px 14px 0;
+  padding: 8px;
+  border: 2px dashed var(--color-tinta);
+  border-radius: 10px;
+  background: var(--color-papel);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.vacio {
+  margin: 0;
+  padding: 18px 14px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: var(--font-body);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-papel);
+  }
+
+  &.no-leida {
+    background: #fff6d6;
+
+    .titulo::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 6px;
+      border-radius: 50%;
+      background: var(--color-coral);
+    }
+  }
+}
+
+.titulo {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.mensaje {
+  font-size: 13px;
+}
+
+.fecha {
+  font-size: 11px;
+  opacity: 0.6;
+}
