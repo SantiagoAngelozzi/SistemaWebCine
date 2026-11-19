@@ -2,11 +2,11 @@
   <aside class="sidebar">
     <div class="brand-mini">
       <span>CineQuilmes</span>
-      <small>Admin</small>
+      <small>{{ permisos().esAdmin ? 'Admin' : (permisos().rol ?? 'Panel') }}</small>
     </div>
 
     <nav>
-      @for (item of navItems; track item.path) {
+      @for (item of navItems(); track item.path) {
         <a
           class="nav-item"
           [routerLink]="item.path"
@@ -23,9 +23,14 @@
         <header class="topbar">
       <div class="topbar-row">
         <h1>Panel de Administración</h1>
-        <button type="button" class="logout-btn" (click)="cerrarSesion()">
-          Cerrar sesión
-        </button>
+        <div class="topbar-acciones">
+          @if (!permisos().esAdmin) {
+            <a class="logout-btn" routerLink="/inicio">Ir al sitio</a>
+          }
+          <button type="button" class="logout-btn" (click)="cerrarSesion()">
+            Cerrar sesión
+          </button>
+        </div>
       </div>
       <div class="topbar-strip"></div>
     </header>

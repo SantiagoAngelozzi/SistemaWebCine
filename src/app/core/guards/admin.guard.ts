@@ -1,10 +1,12 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
+import { PermisosService } from '../services/permisos.service';
 import { SupabaseService } from '../services/supabase.service';
 
 export const adminGuard: CanActivateFn = async () => {
   const supabase = inject(SupabaseService);
+  const permisos = inject(PermisosService);
   const router = inject(Router);
 
   const {
@@ -15,15 +17,10 @@ export const adminGuard: CanActivateFn = async () => {
     return router.createUrlTree(['/auth/login']);
   }
 
-  const { data: usuario, error } = await supabase.client
-    .from('usuarios')
-    .select('rol')
-    .eq('id', session.user.id)
-    .single();
-
-  if (error || !usuario || usuario.rol !== 'administrador') {
-    return router.createUrlTree(['/inicio']);
+  const misPermisos = await permisos.cargar();
+  if (misPermisos.esAdmin || misPermisos.secciones.length > 0) {
+    return true;
   }
 
-  return true;
+  return router.createUrlTree(['/inicio']);
 };

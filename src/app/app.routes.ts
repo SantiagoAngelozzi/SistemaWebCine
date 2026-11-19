@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { adminGuard } from './core/guards/admin.guard';
+import { inicioAdminGuard, permisoGuard } from './core/guards/permiso.guard';
 import { empleadoGuard, sesionGuard, sinEmpleadoGuard } from './core/guards/rol.guard';
 import { edadFuncionGuard } from './core/guards/edad.guard';
 
@@ -18,16 +19,20 @@ export const routes: Routes = [
         (m) => m.AdminLayoutComponent
       ),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'peliculas' },
-            {
+      { path: '', pathMatch: 'full', canActivate: [inicioAdminGuard], children: [] },
+      {
         path: 'peliculas',
+        canActivate: [permisoGuard],
+        data: { seccion: 'peliculas' },
         loadComponent: () =>
           import('./features/admin/peliculas/peliculas.component').then(
             (m) => m.PeliculasComponent
           )
       },
-            {
+      {
         path: 'salas-funciones',
+        canActivate: [permisoGuard],
+        data: { seccion: 'salas_funciones' },
         loadComponent: () =>
           import('./features/admin/salas-funciones/salas-funciones.component').then(
             (m) => m.SalasFuncionesComponent
@@ -35,6 +40,8 @@ export const routes: Routes = [
       },
       {
         path: 'candy-bar',
+        canActivate: [permisoGuard],
+        data: { seccion: 'candy' },
         loadComponent: () =>
           import('./features/admin/candy-bar/candy-bar.component').then(
             (m) => m.CandyBarComponent
@@ -42,6 +49,8 @@ export const routes: Routes = [
       },
       {
         path: 'empleados',
+        canActivate: [permisoGuard],
+        data: { seccion: 'empleados' },
         loadComponent: () =>
           import('./features/admin/empleados/empleados.component').then(
             (m) => m.EmpleadosComponent
@@ -49,6 +58,8 @@ export const routes: Routes = [
       },
       {
         path: 'cupones-puntos',
+        canActivate: [permisoGuard],
+        data: { seccion: 'cupones' },
         loadComponent: () =>
           import('./features/admin/cupones-puntos/cupones-puntos.component').then(
             (m) => m.CuponesPuntosComponent
@@ -56,13 +67,31 @@ export const routes: Routes = [
       },
       {
         path: 'reportes',
+        canActivate: [permisoGuard],
+        data: { seccion: 'reportes' },
         loadComponent: () =>
           import('./features/admin/reportes/reportes.component').then((m) => m.ReportesComponent)
       },
       {
         path: 'auditoria',
+        canActivate: [permisoGuard],
+        data: { seccion: 'auditoria' },
         loadComponent: () =>
           import('./features/admin/auditoria/auditoria.component').then((m) => m.AuditoriaComponent)
+      },
+      {
+        path: 'propuestas',
+        canActivate: [permisoGuard],
+        data: { seccion: 'propuestas' },
+        loadComponent: () =>
+          import('./features/admin/propuestas/propuestas.component').then((m) => m.PropuestasComponent)
+      },
+      {
+        path: 'roles',
+        canActivate: [permisoGuard],
+        data: { seccion: 'roles' },
+        loadComponent: () =>
+          import('./features/admin/roles/roles.component').then((m) => m.RolesComponent)
       }
     ]
   },
@@ -126,6 +155,20 @@ export const routes: Routes = [
           import('./features/client/mis-peliculas/mis-peliculas.component').then(
             (m) => m.MisPeliculasComponent
           )
+      },
+      {
+        path: 'proponer-pelicula',
+        canActivate: [sesionGuard],
+        loadComponent: () =>
+          import('./features/client/proponer-pelicula/proponer-pelicula.component').then(
+            (m) => m.ProponerPeliculaComponent
+          )
+      },
+      {
+        path: 'reubicacion/:compraId',
+        canActivate: [sesionGuard],
+        loadComponent: () =>
+          import('./features/client/reubicacion/reubicacion.component').then((m) => m.ReubicacionComponent)
       },
       {
         path: 'perfil',

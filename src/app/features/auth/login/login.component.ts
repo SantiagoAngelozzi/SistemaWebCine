@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { PermisosService } from '../../../core/services/permisos.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { hoyIso } from '../../../core/utils/formato';
@@ -25,6 +26,7 @@ export class LoginComponent {
   private supabase = inject(SupabaseService);
   private toastService = inject(ToastService);
   private router = inject(Router);
+  private permisos = inject(PermisosService);
 
   readonly hoy = hoyIso();
 
@@ -116,6 +118,13 @@ export class LoginComponent {
     }
 
     const rol = await this.auth.obtenerRolActual();
+    if (rol === 'cliente') {
+      const permisos = await this.permisos.cargar();
+      if (permisos.secciones.length) {
+        this.router.navigateByUrl('/admin');
+        return;
+      }
+    }
     this.router.navigateByUrl(this.auth.rutaInicioSegunRol(rol));
   }
 

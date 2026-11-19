@@ -18,6 +18,17 @@
 
     @if (logueado()) {
       <div class="sesion">
+        @if (accesoPanel()) {
+          <a class="panel-link" routerLink="/admin">Panel</a>
+        }
+        <app-campana-notificaciones
+          [notificaciones]="notificacionesService.notificaciones()"
+          [noLeidas]="notificacionesService.noLeidas()"
+          [puedeActivarAvisos]="puedeActivarAvisos()"
+          (abrirNotificacion)="abrirNotificacion($event)"
+          (marcarTodas)="notificacionesService.marcarTodasLeidas()"
+          (activarAvisos)="notificacionesService.pedirPermisoNavegador()"
+        />
         <a class="usuario" routerLink="perfil" title="Mi cuenta">{{ nombreUsuario() }}</a>
         <button type="button" class="logout-btn" (click)="cerrarSesion()">Salir</button>
       </div>

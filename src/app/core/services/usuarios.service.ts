@@ -9,6 +9,7 @@ export interface UsuarioResumen {
   nombre: string | null;
   apellido: string | null;
   rol: RolUsuario;
+  rol_personalizado_id: string | null;
   created_at: string;
 }
 
@@ -19,7 +20,7 @@ export class UsuariosService {
   async listar(): Promise<UsuarioResumen[]> {
     const { data, error } = await this.supabase.client
       .from('usuarios')
-      .select('id, email, nombre, apellido, rol, created_at')
+      .select('id, email, nombre, apellido, rol, rol_personalizado_id, created_at')
       .order('email');
 
     if (error) throw error;

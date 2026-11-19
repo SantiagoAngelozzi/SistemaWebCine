@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { SECCIONES_ADMIN } from '../../../core/models/rol.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { PermisosService } from '../../../core/services/permisos.service';
 
 interface AdminNavItem {
   path: string;
@@ -16,20 +18,29 @@ interface AdminNavItem {
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.scss'
 })
-export class AdminLayoutComponent {
+export class AdminLayoutComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private permisosService = inject(PermisosService);
 
-  navItems: AdminNavItem[] = [
-    { path: 'peliculas', label: 'Películas' },
-    { path: 'salas-funciones', label: 'Salas y Funciones' },
-    { path: 'candy-bar', label: 'Candy Bar' },
-    { path: 'empleados', label: 'Empleados' },
-    { path: '/empleado', label: 'Validar QR' },
-    { path: 'cupones-puntos', label: 'Cupones y Puntos' },
-    { path: 'reportes', label: 'Dashboard y Reportes' },
-    { path: 'auditoria', label: 'Auditoría' },
-  ];
+  permisos = this.permisosService.permisos;
+
+  navItems = computed<AdminNavItem[]>(() => {
+    const permisos = this.permisos();
+    const items: AdminNavItem[] = SECCIONES_ADMIN.filter(
+      (s) => permisos.esAdmin || permisos.secciones.includes(s.seccion)
+    ).map((s) => ({ path: s.ruta, label: s.etiqueta }));
+
+    if (permisos.esAdmin) {
+      const indiceEmpleados = items.findIndex((i) => i.path === 'empleados');
+      items.splice(indiceEmpleados + 1, 0, { path: '/empleado', label: 'Validar QR' });
+    }
+    return items;
+  });
+
+  async ngOnInit(): Promise<void> {
+    await this.permisosService.cargar();
+  }
 
   async cerrarSesion(): Promise<void> {
     await this.auth.signOut();

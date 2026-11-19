@@ -1,0 +1,141 @@
+<div class="page">
+  <div class="header-row">
+    <div>
+      <h2>Roles</h2>
+      <p class="hint">
+        Un rol define a qué secciones del panel puede entrar un usuario (por ejemplo, sólo Reportes). Empleados y
+        Roles quedan siempre reservados al administrador.
+      </p>
+    </div>
+    <button type="button" class="btn-primary" (click)="abrirNuevo()">+ Nuevo rol</button>
+  </div>
+
+  @if (mostrandoForm()) {
+    <form class="form-card" [formGroup]="form" (ngSubmit)="guardar()">
+      <h3>{{ editandoId() ? 'Editar rol' : 'Nuevo rol' }}</h3>
+
+      <div class="row2">
+        <div class="field">
+          <label for="rol-nombre">Nombre</label>
+          <input
+            id="rol-nombre"
+            type="text"
+            formControlName="nombre"
+            placeholder="Ej: Analista de reportes"
+            [class.input-invalido]="form.controls.nombre.invalid && form.controls.nombre.touched"
+          />
+          <app-form-error [control]="form.controls.nombre" />
+        </div>
+        <div class="field">
+          <label for="rol-descripcion">Descripción</label>
+          <input id="rol-descripcion" type="text" formControlName="descripcion" placeholder="Opcional" />
+          <app-form-error [control]="form.controls.descripcion" />
+        </div>
+      </div>
+
+      <fieldset class="permisos" formGroupName="permisos">
+        <legend>Secciones a las que accede</legend>
+        <div class="checks">
+          @for (seccion of secciones; track seccion) {
+            <label class="check">
+              <input type="checkbox" [formControlName]="seccion" />
+              {{ etiquetaSeccion(seccion) }}
+            </label>
+          }
+        </div>
+        <app-form-error [control]="form.controls.permisos" />
+      </fieldset>
+
+      <div class="actions">
+        <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardar rol' }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (cargando()) {
+    <p class="hint">Cargando…</p>
+  } @else {
+    @if (!roles().length) {
+      <div class="empty-state"><p>Todavía no creaste roles.</p></div>
+    } @else {
+      <div class="grid-roles">
+        @for (rol of roles(); track rol.id) {
+          <article class="rol-card">
+            <div class="rol-cabecera">
+              <h3>{{ rol.nombre }}</h3>
+              <span class="usuarios">{{ rol.cantidadUsuarios }} usuario(s)</span>
+            </div>
+            @if (rol.descripcion) {
+              <p class="hint">{{ rol.descripcion }}</p>
+            }
+            <div class="tags">
+              @for (seccion of rol.secciones; track seccion) {
+                <span class="tag">{{ etiquetaSeccion(seccion) }}</span>
+              }
+            </div>
+            <div class="rol-acciones">
+              <button type="button" class="btn-link" (click)="abrirEdicion(rol)">Editar</button>
+              <button type="button" class="btn-link danger" (click)="eliminar(rol)">Eliminar</button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    <section class="asignacion">
+      <h3>Asignar roles a usuarios</h3>
+      <p class="hint">
+        Sólo se asignan a usuarios con rol cliente. Al ingresar, el usuario va directo al panel y ve únicamente las
+        secciones de su rol.
+      </p>
+      <input
+        class="buscador"
+        type="search"
+        placeholder="Buscar por email o nombre…"
+        [value]="busqueda()"
+        (input)="busqueda.set($any($event.target).value)"
+      />
+
+      @if (!clientes().length) {
+        <p class="hint">No hay clientes que coincidan con la búsqueda.</p>
+      } @else {
+        <div class="tabla-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Nombre</th>
+                <th>Rol personalizado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (usuario of clientes(); track usuario.id) {
+                <tr>
+                  <td>{{ usuario.email }}</td>
+                  <td>{{ nombreCompleto(usuario) }}</td>
+                  <td>
+                    <select
+                      [value]="usuario.rol_personalizado_id ?? ''"
+                      [disabled]="asignandoId() === usuario.id || !roles().length"
+                      (change)="asignar(usuario, $any($event.target).value)"
+                    >
+                      <option value="">Sin rol</option>
+                      @for (rol of roles(); track rol.id) {
+                        <option [value]="rol.id" [selected]="rol.id === usuario.rol_personalizado_id">
+                          {{ rol.nombre }}
+                        </option>
+                      }
+                    </select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

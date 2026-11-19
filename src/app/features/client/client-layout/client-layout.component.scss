@@ -129,3 +129,14 @@ nav {
     background: var(--color-coral);
   }
 }
+
+.panel-link {
+  font-weight: 700;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: var(--border-comic);
+  background: var(--color-turquesa);
+  color: var(--color-tinta);
+  text-decoration: none;
+}
