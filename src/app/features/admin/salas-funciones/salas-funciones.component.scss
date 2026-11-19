@@ -434,3 +434,84 @@ button.danger:disabled {
     font-weight: 700;
   }
 }
+
+.tabla-funciones tr.cancelada td {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.tabla-funciones tr.cancelada td.acciones-funcion {
+  opacity: 1;
+  text-decoration: none;
+}
+
+.acciones-funcion {
+  white-space: nowrap;
+
+  button + button {
+    margin-left: 6px;
+  }
+}
+
+.badge-cancelada {
+  background: #ffd2dc;
+}
+
+.panel-cancelacion {
+  margin: 18px 0;
+  padding: 20px;
+  border: var(--border-comic-lg);
+  border-radius: 16px;
+  background: #fff3f6;
+  box-shadow: var(--shadow-comic-md);
+
+  h4 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 22px;
+  }
+
+  .meta {
+    margin: 4px 0 10px;
+    font-weight: 700;
+  }
+
+  .impacto {
+    margin: 0 0 10px;
+    padding-left: 20px;
+    font-size: 14px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 10px 0;
+    font-weight: 700;
+    font-size: 14px;
+
+    input {
+      font-family: var(--font-body);
+      padding: 8px 12px;
+      border: var(--border-comic);
+      border-radius: 10px;
+      background: var(--color-papel-2);
+    }
+  }
+}
+
+.btn-peligro {
+  font-family: var(--font-body);
+  font-weight: 700;
+  padding: 10px 18px;
+  border: var(--border-comic);
+  border-radius: 10px;
+  background: var(--color-coral);
+  cursor: pointer;
+  box-shadow: var(--shadow-comic-sm);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

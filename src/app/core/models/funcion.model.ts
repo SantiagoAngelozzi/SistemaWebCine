@@ -11,6 +11,14 @@ export interface Funcion {
   idioma: IdiomaPelicula;
   created_by: string | null;
   created_at: string;
+  estado: EstadoFuncion;
+  motivo_cancelacion: string | null;
+}
+
+export type EstadoFuncion = 'activa' | 'cancelada';
+
+export interface FuncionDePelicula extends Funcion {
+  salaNombre: string;
 }
 
 export interface FuncionConDetalle extends Funcion {
@@ -19,6 +27,21 @@ export interface FuncionConDetalle extends Funcion {
   precioVigente: number;
   entradasVendidas: number;
   tieneCompras: boolean;
+  enEspera: number;
+}
+
+export interface ResumenCancelacion {
+  compras: number;
+  entradas: number;
+  creditoADevolver: number;
+  comprasSinCuenta: number;
+}
+
+export interface ResultadoCancelacionFuncion {
+  compras: number;
+  entradas: number;
+  creditoDevuelto: number;
+  comprasSinCuenta: number;
 }
 
 export interface FuncionFormValue {

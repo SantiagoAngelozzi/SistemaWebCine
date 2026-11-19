@@ -1,0 +1,41 @@
+<div class="reubicacion-page">
+  @if (cargando()) {
+    <p class="hint">Cargando…</p>
+  } @else if (errorMessage() || !compra()) {
+    <div class="empty-state">
+      <p>{{ errorMessage() }}</p>
+      <a routerLink="/perfil">Volver a mi perfil</a>
+    </div>
+  } @else {
+    <header class="cabecera">
+      <h1>Reubicate en otra función</h1>
+      <p class="meta">
+        El cine canceló la función de <strong>{{ compra()!.pelicula }}</strong> del
+        {{ formatearFecha(compra()!.fecha) }} a las {{ compra()!.horaInicio.slice(0, 5) }}. Te acreditamos
+        <strong>${{ compra()!.total }}</strong> (entradas y Candy Bar).
+      </p>
+      <p class="credito">Crédito disponible: <strong>${{ credito() }}</strong></p>
+    </header>
+
+    @if (!funciones().length) {
+      <div class="empty-state">
+        <p>Por ahora no hay otras funciones de esta película. El crédito queda en tu cuenta para cuando quieras.</p>
+        <a routerLink="/cartelera">Ver cartelera</a>
+      </div>
+    } @else {
+      <p class="hint">Elegí una función: el crédito se aplica solo al pagar.</p>
+      <div class="grid-funciones">
+        @for (funcion of funciones(); track funcion.id) {
+          <button type="button" class="funcion-card" [disabled]="agotada(funcion)" (click)="elegir(funcion)">
+            <span class="fecha">{{ formatearFecha(funcion.fecha) }}</span>
+            <span class="hora">{{ funcion.hora_inicio.slice(0, 5) }}</span>
+            <span class="detalle">{{ funcion.salaNombre }} · {{ funcion.formato }} · {{ funcion.idioma }}</span>
+            @if (agotada(funcion)) {
+              <span class="agotada">Agotada</span>
+            }
+          </button>
+        }
+      </div>
+    }
+  }
+</div>

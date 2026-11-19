@@ -61,12 +61,12 @@ export class CuentaService {
     const { data, error } = await this.supabase.client
       .from('compras')
       .select(
-        `id, codigo_qr, codigo_corto, total, credito_usado, estado, created_at, cancelada_at,
+        `id, codigo_qr, codigo_corto, total, credito_usado, estado, created_at, cancelada_at, cancelada_por_cine,
          entrada_validada_at, candy_entregado_at,
          descuento_porcentaje, descuento_monto, puntos_ganados, puntos_canjeados,
          compra_entradas(precio, incluida_en_combo, canjeada_con_puntos,
            butacas(fila, columna, tipo),
-           funciones(fecha, hora_inicio, hora_fin, formato, idioma,
+           funciones(id, pelicula_id, fecha, hora_inicio, hora_fin, formato, idioma,
              salas(nombre), peliculas(nombre, clasificacion, imagen_url))),
          compra_candy_items(cantidad, precio_unitario, recompensa_id,
            candy_productos(nombre),
@@ -93,6 +93,11 @@ export class CuentaService {
       created_at: fila.created_at,
       compraCodigoCorto: fila.compras?.codigo_corto ?? null
     }));
+  }
+
+  async obtenerCompra(compraId: string): Promise<MiCompra | null> {
+    const compras = await this.listarMisCompras();
+    return compras.find((c) => c.id === compraId) ?? null;
   }
 
   async cancelarCompra(compraId: string): Promise<ResultadoCancelacion> {
@@ -162,7 +167,7 @@ export class CuentaService {
     else estado = 'confirmada';
 
     let motivoNoCancelable: string | null = null;
-    if (fila.estado === 'cancelada') motivoNoCancelable = 'Compra cancelada.';
+    if (fila.estado === 'cancelada') motivoNoCancelable = fila.cancelada_por_cine ? 'El cine canceló la función.' : 'Compra cancelada.';
     else if (entradaValidada || candyEntregado) motivoNoCancelable = 'La compra ya se usó.';
     else if (!soloCandy && inicio.getTime() - ahora < HORAS_LIMITE_CANCELACION * MS_POR_HORA) {
       motivoNoCancelable =
@@ -188,6 +193,9 @@ export class CuentaService {
       entradaValidada,
       candyEntregado,
       soloCandy,
+      canceladaPorCine: !!fila.cancelada_por_cine,
+      funcionId: funcion.id ?? null,
+      peliculaId: funcion.pelicula_id ?? null,
       pelicula: soloCandy ? 'Pedido de Candy Bar' : funcion.peliculas?.nombre ?? '(película)',
       clasificacion: funcion.peliculas?.clasificacion ?? 'ATP',
       imagenUrl: funcion.peliculas?.imagen_url ?? null,

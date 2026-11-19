@@ -16,6 +16,7 @@ export interface FuncionParaCompra {
   peliculaDuracion: number;
   peliculaFechaEstreno: string;
   peliculaDiasPreventa: number;
+  cancelada: boolean;
 }
 
 export type TipoItemCandy = 'producto' | 'combo';

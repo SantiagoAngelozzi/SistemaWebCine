@@ -234,6 +234,61 @@
           </div>
         }
 
+        @if (cancelacion(); as actual) {
+          <div class="panel-cancelacion">
+            <h4>Cancelar la función de {{ actual.funcion.peliculaNombre }}</h4>
+            <p class="meta">
+              {{ actual.funcion.salaNombre }} · {{ formatearFecha(actual.funcion.fecha) }}
+              {{ actual.funcion.hora_inicio.slice(0, 5) }}
+            </p>
+
+            @if (!actual.resumen) {
+              <p class="hint">Calculando a quiénes afecta…</p>
+            } @else {
+              <ul class="impacto">
+                <li><strong>{{ actual.resumen.compras }}</strong> compra(s) se anulan</li>
+                <li><strong>{{ actual.resumen.entradas }}</strong> butaca(s) se liberan</li>
+                <li>
+                  <strong>${{ actual.resumen.creditoADevolver }}</strong> se devuelven como crédito (entradas y Candy Bar)
+                </li>
+                @if (actual.resumen.comprasSinCuenta) {
+                  <li>{{ actual.resumen.comprasSinCuenta }} compra(s) de invitados sin cuenta: se anulan sin crédito</li>
+                }
+                @if (actual.funcion.enEspera) {
+                  <li>{{ actual.funcion.enEspera }} persona(s) en lista de espera reciben un aviso</li>
+                }
+              </ul>
+              <p class="hint">
+                Todo se hace en una sola operación: si algo falla no se cancela nada. Cada comprador recibe una notificación
+                para reubicarse en otra función de la película.
+              </p>
+
+              <label class="field">
+                <span>Motivo (opcional, se le muestra al cliente)</span>
+                <input
+                  type="text"
+                  maxlength="120"
+                  placeholder="Ej: falla técnica en la sala"
+                  [value]="motivoCancelacion()"
+                  (input)="motivoCancelacion.set($any($event.target).value)"
+                />
+              </label>
+            }
+
+            <div class="actions">
+              <button type="button" class="btn-link" [disabled]="cancelando()" (click)="cerrarCancelacion()">Volver</button>
+              <button
+                type="button"
+                class="btn-peligro"
+                [disabled]="!actual.resumen || cancelando()"
+                (click)="confirmarCancelacion()"
+              >
+                {{ cancelando() ? 'Cancelando…' : 'Cancelar función' }}
+              </button>
+            </div>
+          </div>
+        }
+
         @if (pasadas().length) {
           <div class="filtro-pasadas">
             <label class="check">
@@ -260,12 +315,13 @@
                 <th>Idioma</th>
                 <th>Precio vigente</th>
                 <th>Vendidas</th>
+                <th>En espera</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               @for (funcion of funcionesVisibles(); track funcion.id) {
-                <tr [class.pasada]="esPasada(funcion)">
+                <tr [class.pasada]="esPasada(funcion)" [class.cancelada]="funcion.estado === 'cancelada'">
                   <td>{{ funcion.peliculaNombre }}</td>
                   <td>{{ funcion.salaNombre }}</td>
                   <td>{{ funcion.fecha }}</td>
@@ -274,9 +330,15 @@
                   <td>{{ funcion.idioma }}</td>
                   <td>${{ funcion.precioVigente }}</td>
                   <td>{{ funcion.entradasVendidas }}</td>
-                  <td>
-                    @if (esPasada(funcion)) {
+                  <td>{{ funcion.enEspera || '—' }}</td>
+                  <td class="acciones-funcion">
+                    @if (funcion.estado === 'cancelada') {
+                      <span class="badge-pasada badge-cancelada" [title]="funcion.motivo_cancelacion ?? ''">Cancelada</span>
+                    } @else if (esPasada(funcion)) {
                       <span class="badge-pasada">Pasada</span>
+                    }
+                    @if (puedeCancelar(funcion)) {
+                      <button type="button" class="danger" (click)="abrirCancelacion(funcion)">Cancelar</button>
                     }
                     <button
                       type="button"

@@ -11,7 +11,9 @@ export const NOMBRE_ENTIDAD: Record<string, string> = {
   cupones: 'Cupón',
   recompensas_puntos: 'Recompensa',
   compras: 'Compra',
-  usuarios: 'Usuario'
+  usuarios: 'Usuario',
+  propuestas_peliculas: 'Propuesta',
+  roles: 'Rol'
 };
 
 const VERBO: Record<string, string> = {
@@ -22,7 +24,9 @@ const VERBO: Record<string, string> = {
   QR_ENTREGA_CANDY: 'Entregó el Candy Bar',
   QR_RECHAZADO: 'QR rechazado',
   COMPRA_CANCELADA: 'Canceló una compra',
-  CAMBIO_ROL: 'Cambió el rol de un usuario'
+  CAMBIO_ROL: 'Cambió el rol de un usuario',
+  ROL_ASIGNADO: 'Asignó un rol personalizado',
+  FUNCION_CANCELADA: 'Canceló una función'
 };
 
 const NOMBRE_CAMPO: Record<string, string> = {
@@ -47,7 +51,9 @@ const NOMBRE_CAMPO: Record<string, string> = {
   candy_producto_id: 'Producto',
   categoria_id: 'Categoría',
   pelicula_id: 'Película',
-  sala_id: 'Sala'
+  sala_id: 'Sala',
+  estado: 'Estado',
+  motivo_cancelacion: 'Motivo de cancelación'
 };
 
 const MOTIVO_QR: Record<string, string> = {
@@ -88,7 +94,7 @@ export function describirRegistro(registro: RegistroAuditoria): DescripcionRegis
     ? `${VERBO[registro.accion]} ${articulo(registro.entidad)} ${entidad.toLowerCase()}`
     : VERBO[registro.accion] ?? registro.accion;
 
-  let objeto: string | null = detalle['etiqueta'] ?? fila['nombre'] ?? fila['codigo'] ?? null;
+  let objeto: string | null = detalle['etiqueta'] ?? fila['nombre'] ?? fila['codigo'] ?? fila['titulo'] ?? null;
   if (!objeto && registro.entidad === 'funciones' && fila['fecha']) {
     objeto = `Función del ${fila['fecha']} ${String(fila['hora_inicio'] ?? '').slice(0, 5)}`.trim();
   }
@@ -115,6 +121,13 @@ export function describirRegistro(registro: RegistroAuditoria): DescripcionRegis
       objeto = detalle['codigo_corto'] ? `Compra ${formatearCodigoCorto(detalle['codigo_corto'])}` : 'Compra';
       extra = detalle['credito_otorgado'] != null ? `Crédito otorgado: $${detalle['credito_otorgado']}` : null;
       break;
+    case 'FUNCION_CANCELADA':
+      extra =
+        `${detalle['compras'] ?? 0} compra(s), ${detalle['entradas'] ?? 0} butaca(s), ` +
+        `$${detalle['credito_devuelto'] ?? 0} en crédito` +
+        (detalle['motivo'] ? ` · Motivo: ${detalle['motivo']}` : '');
+      break;
+    case 'ROL_ASIGNADO':
     case 'CAMBIO_ROL':
       objeto = null;
       extra = `${detalle['rol_anterior'] ?? '?'} → ${detalle['rol_nuevo'] ?? '?'}`;
@@ -149,7 +162,7 @@ export function camposRegistro(registro: RegistroAuditoria): CambioCampo[] {
 }
 
 function articulo(entidad: string | null): string {
-  return ['peliculas', 'funciones', 'salas', 'candy_categorias', 'compras', 'recompensas_puntos'].includes(entidad ?? '')
+  return ['peliculas', 'funciones', 'salas', 'candy_categorias', 'compras', 'recompensas_puntos', 'propuestas_peliculas'].includes(entidad ?? '')
     ? 'una'
     : 'un';
 }

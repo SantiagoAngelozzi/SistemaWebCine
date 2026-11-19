@@ -43,7 +43,8 @@ export class ComprasService {
       peliculaClasificacion: data.peliculas?.clasificacion ?? 'ATP',
       peliculaDuracion: data.peliculas?.duracion_minutos ?? 0,
       peliculaFechaEstreno: data.peliculas?.fecha_estreno ?? '',
-      peliculaDiasPreventa: data.peliculas?.dias_preventa ?? 0
+      peliculaDiasPreventa: data.peliculas?.dias_preventa ?? 0,
+      cancelada: data.estado === 'cancelada'
     };
   }
 

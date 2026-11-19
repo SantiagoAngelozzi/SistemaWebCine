@@ -20,8 +20,8 @@ export const ACCIONES_POR_TIPO: Record<Exclude<TipoAccion, 'todas'>, string[]> =
   modificaciones: ['UPDATE'],
   bajas: ['DELETE'],
   qr: ['QR_VALIDADO_SALA', 'QR_ENTREGA_CANDY', 'QR_RECHAZADO'],
-  cancelaciones: ['COMPRA_CANCELADA'],
-  roles: ['CAMBIO_ROL']
+  cancelaciones: ['COMPRA_CANCELADA', 'FUNCION_CANCELADA'],
+  roles: ['CAMBIO_ROL', 'ROL_ASIGNADO']
 };
 
 export interface FiltrosAuditoria {

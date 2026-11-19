@@ -48,6 +48,9 @@ export interface MiCompra {
   entradaValidada: boolean;
   candyEntregado: boolean;
   soloCandy: boolean;
+  canceladaPorCine: boolean;
+  funcionId: string | null;
+  peliculaId: string | null;
   pelicula: string;
   clasificacion: ClasificacionEdad;
   imagenUrl: string | null;
@@ -66,7 +69,7 @@ export interface MiCompra {
 export interface MovimientoCredito {
   id: string;
   monto: number;
-  motivo: 'cancelacion' | 'uso_en_compra';
+  motivo: 'cancelacion' | 'uso_en_compra' | 'cancelacion_funcion';
   created_at: string;
   compraCodigoCorto: string | null;
 }

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { FuncionConDetalle } from '../../../core/models/funcion.model';
+import { FuncionConDetalle, ResumenCancelacion } from '../../../core/models/funcion.model';
 import { FormatoProyeccion, IdiomaPelicula, PeliculaConRelaciones } from '../../../core/models/pelicula.model';
 import { SalaConCantidadButacas } from '../../../core/models/sala.model';
 import { ConfirmService } from '../../../core/services/confirm.service';
@@ -325,6 +325,55 @@ export class SalasFuncionesComponent implements OnInit {
     } finally {
       this.guardandoFuncion.set(false);
       this.progreso.set(null);
+    }
+  }
+
+  cancelacion = signal<{ funcion: FuncionConDetalle; resumen: ResumenCancelacion | null } | null>(null);
+  motivoCancelacion = signal('');
+  cancelando = signal(false);
+
+  puedeCancelar(funcion: FuncionConDetalle): boolean {
+    return funcion.estado === 'activa' && !this.esPasada(funcion);
+  }
+
+  async abrirCancelacion(funcion: FuncionConDetalle): Promise<void> {
+    this.motivoCancelacion.set('');
+    this.cancelacion.set({ funcion, resumen: null });
+    setTimeout(() =>
+      document.querySelector('.panel-cancelacion')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    );
+    try {
+      const resumen = await this.funcionesService.resumenCancelacion(funcion.id);
+      if (this.cancelacion()?.funcion.id === funcion.id) this.cancelacion.set({ funcion, resumen });
+    } catch (err: any) {
+      console.error(err);
+      this.toastService.error(err?.message ?? 'No se pudo calcular el impacto de la cancelación.');
+      this.cancelacion.set(null);
+    }
+  }
+
+  cerrarCancelacion(): void {
+    if (!this.cancelando()) this.cancelacion.set(null);
+  }
+
+  async confirmarCancelacion(): Promise<void> {
+    const actual = this.cancelacion();
+    if (!actual?.resumen) return;
+
+    this.cancelando.set(true);
+    try {
+      const resultado = await this.funcionesService.cancelar(actual.funcion.id, this.motivoCancelacion());
+      this.toastService.exito(
+        `Función cancelada. ${resultado.compras} compra(s) anuladas, ${resultado.entradas} butaca(s) liberadas y ` +
+          `$${resultado.creditoDevuelto} devueltos como crédito.`
+      );
+      this.cancelacion.set(null);
+      await this.cargarTodo();
+    } catch (err: any) {
+      console.error(err);
+      this.toastService.error(err?.message ?? 'No se pudo cancelar la función. No se modificó nada.');
+    } finally {
+      this.cancelando.set(false);
     }
   }
 
