@@ -5,6 +5,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 
 import { CatalogoCandy } from '../../../core/models/candy.model';
 import { DescuentoAplicable, Recompensa } from '../../../core/models/fidelizacion.model';
+import { ReservasListaEspera } from '../../../core/models/lista-espera.model';
 import {
   CanjeSeleccionado,
   CompraConfirmada,
@@ -17,12 +18,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CandyService } from '../../../core/services/candy.service';
 import { CuentaService } from '../../../core/services/cuenta.service';
 import { FidelizacionService } from '../../../core/services/fidelizacion.service';
+import { ListaEsperaService } from '../../../core/services/lista-espera.service';
 import { ComprasService } from '../../../core/services/compras.service';
 import { ComprobantePdfService } from '../../../core/services/comprobante-pdf.service';
 import { formatearCodigoCorto } from '../../../core/services/validacion.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { estadoVenta, funcionYaComenzo } from '../../../core/utils/pelicula-fechas';
+import { CuentaRegresivaPipe } from '../../../shared/pipes/cuenta-regresiva.pipe';
 import { BeneficiosCompraComponent, CambioCanje } from './beneficios-compra/beneficios-compra.component';
 import {
   CambioCantidadCandy,
@@ -30,7 +33,11 @@ import {
   claveCarrito
 } from './candy-selector/candy-selector.component';
 
-type EstadoButaca = 'libre' | 'ocupada' | 'seleccionada' | 'reservada_otro';
+type EstadoButaca = 'libre' | 'ocupada' | 'seleccionada' | 'reservada_otro' | 'reservada_espera';
+
+function estaBloqueada(estado: EstadoButaca): boolean {
+  return estado === 'ocupada' || estado === 'reservada_espera';
+}
 
 interface ButacaUI extends Butaca {
   estado: EstadoButaca;
@@ -65,7 +72,7 @@ const CLIENTE_ID = crypto.randomUUID();
 @Component({
   selector: 'app-butacas',
   standalone: true,
-  imports: [CommonModule, CandySelectorComponent, BeneficiosCompraComponent],
+  imports: [CommonModule, CandySelectorComponent, BeneficiosCompraComponent, CuentaRegresivaPipe],
   templateUrl: './butacas.component.html',
   styleUrl: './butacas.component.scss'
 })
@@ -80,6 +87,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
   private comprobantePdf = inject(ComprobantePdfService);
   private supabase = inject(SupabaseService);
   private toastService = inject(ToastService);
+  private listaEsperaService = inject(ListaEsperaService);
 
   recargoVipTexto = '50%';
   readonly formatearCodigoCorto = formatearCodigoCorto;
@@ -98,6 +106,16 @@ export class ButacasComponent implements OnInit, OnDestroy {
   catalogo = signal<CatalogoCandy | null>(null);
   errorCandy = signal<string | null>(null);
   carrito = signal<Map<string, number>>(new Map());
+
+  miReserva = signal<ReservasListaEspera['mia']>(null);
+  private reservadasPorOtros = new Set<string>();
+  private ahora = signal(Date.now());
+  private temporizador: ReturnType<typeof setInterval> | null = null;
+
+  restanteReserva = computed(() => {
+    const reserva = this.miReserva();
+    return reserva ? Math.max(0, new Date(reserva.expiraAt).getTime() - this.ahora()) : 0;
+  });
 
   private butacasPorId = new Map<string, ButacaUI>();
   private canalOcupacion: RealtimeChannel | null = null;
@@ -266,6 +284,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.detenerTemporizador();
     if (this.canalOcupacion) this.supabase.client.removeChannel(this.canalOcupacion);
     if (this.canalSeleccion) this.supabase.client.removeChannel(this.canalSeleccion);
   }
@@ -284,20 +303,28 @@ export class ButacasComponent implements OnInit, OnDestroy {
         this.errorMessage.set('La venta de esta película todavía no está habilitada.');
         return;
       }
+      if (funcion.cancelada) {
+        this.errorMessage.set('Esta función fue cancelada por el cine. Elegí otra función de la película.');
+        return;
+      }
       if (funcionYaComenzo(funcion.fecha, funcion.hora_inicio)) {
         this.errorMessage.set('Esta función ya comenzó, así que no se pueden comprar entradas. Elegí otra función.');
         return;
       }
       this.funcion.set(funcion);
 
-      const [butacas, ocupadas] = await Promise.all([
+      const [butacas, ocupadas, reservas] = await Promise.all([
         this.comprasService.listarButacasDeSala(funcion.sala_id),
         this.comprasService.listarButacasOcupadas(this.funcionId),
+        this.listaEsperaService.reservas(this.funcionId),
         this.cargarCatalogoCandy(),
         this.cargarSaldosYBeneficios()
       ]);
 
+      this.reservadasPorOtros = new Set(reservas.reservadas);
       this.armarFilas(butacas, ocupadas);
+      this.aplicarMiReserva(reservas.mia);
+      this.aplicarCreditoPedido();
     } catch (err) {
       console.error(err);
       this.errorMessage.set('No se pudo cargar el mapa de butacas.');
@@ -430,7 +457,9 @@ export class ButacasComponent implements OnInit, OnDestroy {
       const ui: ButacaUI[] = lista.map((b) => {
         const estado: EstadoButaca = ocupadas.has(b.id)
           ? 'ocupada'
-          : this.seleccionadas().has(b.id)
+          : this.reservadasPorOtros.has(b.id)
+            ? 'reservada_espera'
+            : this.seleccionadas().has(b.id)
             ? 'seleccionada'
             : 'libre';
         const item: ButacaUI = { ...b, estado };
@@ -449,7 +478,9 @@ export class ButacasComponent implements OnInit, OnDestroy {
     filas.sort((a, b) => a.fila.localeCompare(b.fila));
     this.filas.set(filas);
 
-    this.seleccionadas.update((set) => new Set(Array.from(set).filter((id) => !ocupadas.has(id))));
+    this.seleccionadas.update(
+      (set) => new Set(Array.from(set).filter((id) => !ocupadas.has(id) && !this.reservadasPorOtros.has(id)))
+    );
     this.ajustarCombosAButacas();
     if (!this.seleccionadas().size) this.paso.set('butacas');
   }
@@ -467,7 +498,7 @@ export class ButacasComponent implements OnInit, OnDestroy {
       .on('broadcast', { event: 'seleccion' }, ({ payload }) => {
         if (payload.clienteId === CLIENTE_ID) return;
         const butaca = this.butacasPorId.get(payload.butacaId);
-        if (!butaca || butaca.estado === 'ocupada') return;
+        if (!butaca || estaBloqueada(butaca.estado)) return;
         this.marcarEstado(payload.butacaId, payload.accion === 'seleccionada' ? 'reservada_otro' : 'libre');
       })
       .subscribe();
@@ -492,22 +523,100 @@ export class ButacasComponent implements OnInit, OnDestroy {
     if (!this.seleccionadas().size) this.paso.set('butacas');
   }
 
-  private alLiberarseButaca(butacaId: string): void {
+  private async alLiberarseButaca(butacaId: string): Promise<void> {
     const butaca = this.butacasPorId.get(butacaId);
     if (!butaca || butaca.estado !== 'ocupada') return;
     butaca.estado = 'libre';
     this.filas.update((filas) => filas.map((f) => ({ ...f })));
+    await this.recargarReservas();
+  }
+
+  private async recargarReservas(): Promise<void> {
+    try {
+      const reservas = await this.listaEsperaService.reservas(this.funcionId);
+      const anteriores = this.reservadasPorOtros;
+      this.reservadasPorOtros = new Set(reservas.reservadas);
+
+      for (const id of anteriores) {
+        const butaca = this.butacasPorId.get(id);
+        if (butaca?.estado === 'reservada_espera' && !this.reservadasPorOtros.has(id)) butaca.estado = 'libre';
+      }
+      for (const id of this.reservadasPorOtros) {
+        const butaca = this.butacasPorId.get(id);
+        if (!butaca || butaca.estado === 'ocupada') continue;
+        if (this.seleccionadas().has(id)) {
+          this.seleccionadas.update((set) => {
+            const copia = new Set(set);
+            copia.delete(id);
+            return copia;
+          });
+          this.toastService.error(`La butaca ${butaca.fila}-${butaca.columna} quedó reservada para la lista de espera.`);
+        }
+        butaca.estado = 'reservada_espera';
+      }
+      this.filas.update((filas) => filas.map((f) => ({ ...f })));
+      this.aplicarMiReserva(reservas.mia);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  private aplicarMiReserva(reserva: ReservasListaEspera['mia']): void {
+    this.miReserva.set(reserva);
+    if (!reserva) {
+      this.detenerTemporizador();
+      return;
+    }
+
+    const butaca = this.butacasPorId.get(reserva.butacaId);
+    if (butaca && butaca.estado !== 'ocupada' && !this.seleccionadas().has(butaca.id)) {
+      this.seleccionadas.update((set) => new Set(set).add(butaca.id));
+      butaca.estado = 'seleccionada';
+      this.filas.update((filas) => filas.map((f) => ({ ...f })));
+    }
+    this.iniciarTemporizador();
+  }
+
+  private iniciarTemporizador(): void {
+    if (this.temporizador) return;
+    this.ahora.set(Date.now());
+    this.temporizador = setInterval(() => {
+      this.ahora.set(Date.now());
+      if (this.miReserva() && this.restanteReserva() <= 0) this.alVencerReserva();
+    }, 1000);
+  }
+
+  private detenerTemporizador(): void {
+    if (this.temporizador) {
+      clearInterval(this.temporizador);
+      this.temporizador = null;
+    }
+  }
+
+  private async alVencerReserva(): Promise<void> {
+    this.detenerTemporizador();
+    this.miReserva.set(null);
+    if (this.comprando() || this.compraExitosa()) return;
+    this.toastService.error('Se venció tu reserva de la lista de espera: la butaca pasó a la siguiente persona.');
+    await this.listaEsperaService.procesarVencidos(this.funcionId);
+    this.seleccionadas.set(new Set());
+    await this.cargar();
+  }
+
+  private aplicarCreditoPedido(): void {
+    const pedido = this.route.snapshot.queryParamMap.get('usarCredito') === '1';
+    if (pedido && this.creditoDisponible() > 0) this.usarCredito.set(true);
   }
 
   private marcarEstado(butacaId: string, estado: EstadoButaca): void {
     const butaca = this.butacasPorId.get(butacaId);
-    if (!butaca || butaca.estado === 'ocupada') return;
+    if (!butaca || estaBloqueada(butaca.estado)) return;
     butaca.estado = estado;
     this.filas.update((filas) => filas.map((f) => ({ ...f })));
   }
 
   toggleButaca(butaca: ButacaUI): void {
-    if (butaca.estado === 'ocupada' || butaca.estado === 'reservada_otro') return;
+    if (estaBloqueada(butaca.estado) || butaca.estado === 'reservada_otro') return;
 
     const yaSeleccionada = this.seleccionadas().has(butaca.id);
     this.seleccionadas.update((set) => {
@@ -648,6 +757,8 @@ export class ButacasComponent implements OnInit, OnDestroy {
         this.canjesParaCompra()
       );
       this.compraExitosa.set(compra);
+      this.miReserva.set(null);
+      this.detenerTemporizador();
       this.carrito.set(new Map());
       this.canjes.set(new Map());
       this.cuponAplicado.set(null);

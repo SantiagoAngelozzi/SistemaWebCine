@@ -68,6 +68,14 @@
       <p class="error"> {{ errorMessage() }}</p>
     }
 
+    @if (miReserva(); as reserva) {
+      <div class="aviso-reserva">
+        <strong>Lista de espera:</strong> te reservamos la butaca {{ reserva.ubicacion }}. Comprala antes de que termine
+        el tiempo, si no pasa a la siguiente persona.
+        <span class="reloj" [class.urgente]="restanteReserva() < 120000">{{ restanteReserva() | cuentaRegresiva }}</span>
+      </div>
+    }
+
     @if (paso() === 'butacas') {
       <div class="leyenda">
         <span class="item"><span class="swatch libre"></span> Libre</span>
@@ -76,6 +84,7 @@
         <span class="item"><span class="swatch seleccionada"></span> Tu selección</span>
         <span class="item"><span class="swatch reservada"></span> Eligiendo otra persona</span>
         <span class="item"><span class="swatch ocupada"></span> Ocupada</span>
+        <span class="item"><span class="swatch reservada-espera"></span> Reservada (lista de espera)</span>
       </div>
 
       <div class="pantalla">PANTALLA</div>
@@ -91,7 +100,7 @@
                   class="butaca"
                   [style.grid-column]="'' + (b.columna)"
                   [ngClass]="[b.tipo, b.estado]"
-                  [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
+                  [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro' || b.estado === 'reservada_espera'"
                   (click)="toggleButaca(b)"
                 >
                   {{ b.columna }}
@@ -105,7 +114,7 @@
                   class="butaca"
                   [style.grid-column]="'' + (b.columna - 5)"
                   [ngClass]="[b.tipo, b.estado]"
-                  [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
+                  [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro' || b.estado === 'reservada_espera'"
                   (click)="toggleButaca(b)"
                 >
                   {{ b.columna }}
@@ -119,7 +128,7 @@
                   class="butaca"
                   [style.grid-column]="'' + (b.columna - 26)"
                   [ngClass]="[b.tipo, b.estado]"
-                  [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro'"
+                  [disabled]="b.estado === 'ocupada' || b.estado === 'reservada_otro' || b.estado === 'reservada_espera'"
                   (click)="toggleButaca(b)"
                 >
                   {{ b.columna }}

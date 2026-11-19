@@ -51,6 +51,15 @@
         type="button"
         role="tab"
         class="tab"
+        [class.active]="pestania() === 'espera'"
+        (click)="pestania.set('espera')"
+      >
+        LISTAS DE ESPERA{{ listasActivas().length ? ' (' + listasActivas().length + ')' : '' }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab"
         [class.active]="pestania() === 'puntos'"
         (click)="pestania.set('puntos')"
       >
@@ -97,6 +106,55 @@
           </section>
         }
       }
+    } @else if (pestania() === 'espera') {
+      <section>
+        <h2>Mis listas de espera</h2>
+        @if (!listasEspera().length) {
+          <p class="hint">
+            No estás en ninguna lista. Cuando una función está agotada podés anotarte desde la página de la película y te
+            avisamos si se libera una butaca.
+          </p>
+        } @else {
+          <div class="lista">
+            @for (lista of listasEspera(); track lista.id) {
+              <article class="espera" [class.inactiva]="lista.estado !== 'esperando' && lista.estado !== 'notificado'">
+                <div class="cuerpo">
+                  <div class="titulo-fila">
+                    <h3>{{ lista.pelicula }}</h3>
+                    <span class="badge estado-espera" [ngClass]="lista.estado">{{ etiquetaEspera(lista.estado) }}</span>
+                  </div>
+                  <p class="meta">
+                    {{ lista.sala }} · {{ formatearFecha(lista.fecha) }} {{ horaCorta(lista.horaInicio) }} · {{ lista.formato }}
+                  </p>
+                  @if (lista.estado === 'esperando') {
+                    <p class="posicion">Estás en la posición <strong>{{ lista.posicion }}</strong> de la fila.</p>
+                  } @else if (lista.estado === 'notificado') {
+                    <p class="posicion">
+                      Te reservamos la butaca <strong>{{ lista.butaca }}</strong> hasta las
+                      <strong>{{ lista.expiraAt | date: 'HH:mm' }}</strong>.
+                    </p>
+                  }
+                </div>
+                <div class="acciones">
+                  @if (lista.estado === 'notificado') {
+                    <a class="btn-primary" [routerLink]="['/funcion', lista.funcionId, 'butacas']">Comprar ahora</a>
+                  }
+                  @if (lista.estado === 'esperando' || lista.estado === 'notificado') {
+                    <button
+                      type="button"
+                      class="btn-secundario"
+                      [disabled]="saliendoId() === lista.id"
+                      (click)="salirDeEspera(lista)"
+                    >
+                      Salir de la lista
+                    </button>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
     } @else if (pestania() === 'puntos') {
       <section>
         <h2>Qué podés canjear</h2>
@@ -173,7 +231,13 @@
                 <tr>
                   <td>{{ mov.created_at | date: 'dd/MM/yyyy HH:mm' }}</td>
                   <td>
-                    {{ mov.motivo === 'cancelacion' ? 'Cancelación de compra' : 'Usado en una compra' }}
+                    {{
+                      mov.motivo === 'cancelacion'
+                        ? 'Cancelación de compra'
+                        : mov.motivo === 'cancelacion_funcion'
+                          ? 'Función cancelada por el cine'
+                          : 'Usado en una compra'
+                    }}
                     @if (mov.compraCodigoCorto) {
                       <span class="mono">{{ formatearCodigoCorto(mov.compraCodigoCorto) }}</span>
                     }
@@ -263,8 +327,16 @@
 
       @if (compra.estado === 'cancelada') {
         <p class="nota">
-          Cancelada el {{ compra.canceladaEl | date: 'dd/MM/yyyy HH:mm' }}. El importe se acreditó en tu cuenta.
+          @if (compra.canceladaPorCine) {
+            El cine canceló esta función el {{ compra.canceladaEl | date: 'dd/MM/yyyy HH:mm' }}. Te acreditamos el total
+            (incluido el Candy Bar) para que te reubiques en otra función.
+          } @else {
+            Cancelada el {{ compra.canceladaEl | date: 'dd/MM/yyyy HH:mm' }}. El importe se acreditó en tu cuenta.
+          }
         </p>
+        @if (compra.canceladaPorCine) {
+          <a class="btn-primary reubicar" [routerLink]="['/reubicacion', compra.id]">Reubicarme en otra función</a>
+        }
       }
     </div>
 

@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { MiCompra, MovimientoCredito, PerfilUsuario } from '../../../core/models/cuenta.model';
+import { EstadoListaEspera, MiListaEspera } from '../../../core/models/lista-espera.model';
 import {
   DescuentoAplicable,
   MotivoPuntos,
@@ -13,11 +14,21 @@ import { ComprobantePdfService } from '../../../core/services/comprobante-pdf.se
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { CuentaService, HORAS_LIMITE_CANCELACION } from '../../../core/services/cuenta.service';
 import { FidelizacionService } from '../../../core/services/fidelizacion.service';
+import { ListaEsperaService } from '../../../core/services/lista-espera.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatearCodigoCorto } from '../../../core/services/validacion.service';
 import { formatearFecha } from '../../../core/utils/pelicula-fechas';
 
-type Pestania = 'compras' | 'puntos' | 'credito';
+type Pestania = 'compras' | 'espera' | 'puntos' | 'credito';
+
+const ETIQUETA_ESPERA: Record<EstadoListaEspera, string> = {
+  esperando: 'Esperando',
+  notificado: '¡Te toca!',
+  compro: 'Compraste',
+  expirado: 'Se venció el turno',
+  salio: 'Saliste',
+  cancelada: 'Función cancelada'
+};
 
 const ETIQUETA_MOTIVO_PUNTOS: Record<MotivoPuntos, string> = {
   compra: 'Sumados por una compra',
@@ -46,6 +57,8 @@ export class PerfilComponent implements OnInit {
   private comprobantePdf = inject(ComprobantePdfService);
   private confirmService = inject(ConfirmService);
   private toastService = inject(ToastService);
+  private listaEsperaService = inject(ListaEsperaService);
+  private route = inject(ActivatedRoute);
 
   readonly horasLimite = HORAS_LIMITE_CANCELACION;
   readonly formatearCodigoCorto = formatearCodigoCorto;
@@ -61,6 +74,12 @@ export class PerfilComponent implements OnInit {
   movimientosPuntos = signal<MovimientoPuntos[]>([]);
   recompensas = signal<Recompensa[]>([]);
   beneficio = signal<DescuentoAplicable | null>(null);
+  listasEspera = signal<MiListaEspera[]>([]);
+  saliendoId = signal<string | null>(null);
+
+  listasActivas = computed(() =>
+    this.listasEspera().filter((l) => l.estado === 'esperando' || l.estado === 'notificado')
+  );
 
   cancelandoId = signal<string | null>(null);
   descargandoId = signal<string | null>(null);
@@ -80,6 +99,8 @@ export class PerfilComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab === 'espera' || tab === 'puntos' || tab === 'credito') this.pestania.set(tab);
     await this.cargar();
   }
 
@@ -87,14 +108,16 @@ export class PerfilComponent implements OnInit {
     this.cargando.set(true);
     this.errorMessage.set(null);
     try {
-      const [perfil, compras, movimientos, movimientosPuntos, recompensas, beneficio] = await Promise.all([
+      const [perfil, compras, movimientos, movimientosPuntos, recompensas, beneficio, listas] = await Promise.all([
         this.cuentaService.obtenerPerfil(),
         this.cuentaService.listarMisCompras(),
         this.cuentaService.listarMovimientosCredito(),
         this.fidelizacion.listarMovimientosPuntos(),
         this.fidelizacion.listarRecompensas(true),
-        this.fidelizacion.consultarDescuento(null).catch(() => null)
+        this.fidelizacion.consultarDescuento(null).catch(() => null),
+        this.listaEsperaService.misListas().catch(() => [] as MiListaEspera[])
       ]);
+      this.listasEspera.set(listas);
       this.perfil.set(perfil);
       this.compras.set(compras);
       this.movimientos.set(movimientos);
@@ -114,7 +137,25 @@ export class PerfilComponent implements OnInit {
   }
 
   etiquetaEstado(compra: MiCompra): string {
-    return ETIQUETA_ESTADO[compra.estado];
+    return compra.canceladaPorCine ? 'Cancelada por el cine' : ETIQUETA_ESTADO[compra.estado];
+  }
+
+  etiquetaEspera(estado: EstadoListaEspera): string {
+    return ETIQUETA_ESPERA[estado];
+  }
+
+  async salirDeEspera(lista: MiListaEspera): Promise<void> {
+    this.saliendoId.set(lista.id);
+    try {
+      await this.listaEsperaService.salir(lista.funcionId);
+      this.toastService.exito('Saliste de la lista de espera.');
+      this.listasEspera.set(await this.listaEsperaService.misListas());
+    } catch (err: any) {
+      console.error(err);
+      this.toastService.error(err?.message ?? 'No se pudo salir de la lista de espera.');
+    } finally {
+      this.saliendoId.set(null);
+    }
   }
 
   horaCorta(hora: string): string {
