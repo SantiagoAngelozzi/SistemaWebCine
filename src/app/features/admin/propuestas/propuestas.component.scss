@@ -1,0 +1,69 @@
+:host {
+  display: block;
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: 1px;
+    margin: 0;
+  }
+}
+
+.hint {
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+.contador {
+  padding: 6px 14px;
+  border: var(--border-comic);
+  border-radius: 999px;
+  background: var(--color-lima);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.chip {
+  padding: 6px 14px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 999px;
+  background: var(--color-papel-2);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+
+  &.activa {
+    background: var(--color-lima);
+    box-shadow: var(--shadow-comic-sm);
+  }
+}
+
+.empty-state {
+  padding: 30px;
+  border: 3px dashed var(--color-tinta);
+  border-radius: 14px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}

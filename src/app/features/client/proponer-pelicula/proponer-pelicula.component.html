@@ -1,0 +1,92 @@
+<div class="propuesta-page">
+  <header class="cabecera">
+    <h1>Proponé una película</h1>
+    <p class="meta">
+      ¿Hay una película que te gustaría ver en CineQuilmes y no está en la
+      <a routerLink="/cartelera">cartelera</a>? Contanos cuál es y por qué. Podés tener una propuesta en revisión a la vez.
+    </p>
+  </header>
+
+  @if (cargando()) {
+    <p class="hint">Cargando…</p>
+  } @else {
+    @if (pendiente(); as propuesta) {
+      <section class="tarjeta pendiente">
+        <span class="badge pendiente">{{ etiquetaEstado(propuesta.estado) }}</span>
+        <h2>{{ propuesta.titulo }}</h2>
+        <p>{{ propuesta.descripcion }}</p>
+        <p class="motivo"><strong>Por qué:</strong> {{ propuesta.motivo }}</p>
+        <p class="hint">
+          La enviaste {{ propuesta.creadaEl | tiempoRelativo }}. Cuando el cine la revise te avisamos con una notificación
+          y vas a poder mandar otra.
+        </p>
+      </section>
+    } @else {
+      <form class="tarjeta" [formGroup]="form" (ngSubmit)="enviar()">
+        @if (errorMessage()) {
+          <p class="error">{{ errorMessage() }}</p>
+        }
+
+        <div class="field">
+          <label for="titulo">Título</label>
+          <input
+            id="titulo"
+            type="text"
+            formControlName="titulo"
+            placeholder="Ej: Volver al Futuro"
+            [class.input-invalido]="form.controls.titulo.invalid && form.controls.titulo.touched"
+          />
+          <app-form-error [control]="form.controls.titulo" />
+        </div>
+
+        <div class="field">
+          <label for="descripcion">Descripción</label>
+          <textarea
+            id="descripcion"
+            rows="4"
+            formControlName="descripcion"
+            placeholder="¿De qué trata?"
+            [class.input-invalido]="form.controls.descripcion.invalid && form.controls.descripcion.touched"
+          ></textarea>
+          <span class="contador">{{ form.controls.descripcion.value.length }}/1000</span>
+          <app-form-error [control]="form.controls.descripcion" />
+        </div>
+
+        <div class="field">
+          <label for="motivo">¿Por qué la tendríamos que pasar?</label>
+          <textarea
+            id="motivo"
+            rows="3"
+            formControlName="motivo"
+            placeholder="Contanos por qué te gustaría verla en el cine"
+            [class.input-invalido]="form.controls.motivo.invalid && form.controls.motivo.touched"
+          ></textarea>
+          <span class="contador">{{ form.controls.motivo.value.length }}/500</span>
+          <app-form-error [control]="form.controls.motivo" />
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="enviando()">
+          {{ enviando() ? 'Enviando…' : 'ENVIAR PROPUESTA' }}
+        </button>
+      </form>
+    }
+
+    @if (historial().length) {
+      <section class="historial">
+        <h2>Tus propuestas anteriores</h2>
+        <ul>
+          @for (propuesta of historial(); track propuesta.id) {
+            <li>
+              <span class="badge" [ngClass]="propuesta.estado">{{ etiquetaEstado(propuesta.estado) }}</span>
+              <strong>{{ propuesta.titulo }}</strong>
+              <span class="hint">{{ propuesta.creadaEl | date: 'dd/MM/yyyy' }}</span>
+              @if (propuesta.estado === 'aceptada' && propuesta.peliculaId) {
+                <a [routerLink]="['/pelicula', propuesta.peliculaId]">Ver película</a>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</div>

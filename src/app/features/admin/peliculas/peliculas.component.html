@@ -12,6 +12,14 @@
     <form [formGroup]="form" (ngSubmit)="guardar()" class="form-card">
       <h3>{{ editandoId() ? 'Editar película' : 'Nueva película' }}</h3>
 
+      @if (propuestaOrigen(); as origen) {
+        <div class="aviso-propuesta">
+          <strong>Creando desde una propuesta de {{ origen.autor ?? 'un cliente' }}.</strong>
+          Completá el resto de los datos y guardá: la propuesta queda aceptada y se le avisa al cliente.
+          <span class="motivo">Por qué la propuso: "{{ origen.motivo }}"</span>
+        </div>
+      }
+
       <div class="field">
         <label>Nombre</label>
         <input

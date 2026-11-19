@@ -1,0 +1,31 @@
+<article class="card" [ngClass]="propuesta.estado">
+  <div class="cabecera">
+    <h3>{{ propuesta.titulo }}</h3>
+    <span class="badge" [ngClass]="propuesta.estado">{{ propuesta.estado }}</span>
+  </div>
+
+  <p class="meta">
+    Propuesta por {{ propuesta.autor ?? 'un cliente' }} · {{ propuesta.creadaEl | tiempoRelativo }}
+  </p>
+
+  <p class="descripcion">{{ propuesta.descripcion }}</p>
+  <p class="motivo"><strong>Por qué:</strong> {{ propuesta.motivo }}</p>
+
+  @if (propuesta.estado === 'pendiente') {
+    <div class="acciones">
+      <button type="button" class="btn-rechazar" [disabled]="procesando" (click)="rechazar.emit(propuesta)">
+        Rechazar
+      </button>
+      <button type="button" class="btn-aceptar" [disabled]="procesando" (click)="aceptar.emit(propuesta)">
+        Aceptar y crear película
+      </button>
+    </div>
+  } @else if (propuesta.estado === 'aceptada' && propuesta.peliculaId) {
+    <p class="resuelta">
+      Aceptada {{ propuesta.resueltaEl | tiempoRelativo }} ·
+      <a [routerLink]="['/pelicula', propuesta.peliculaId]" target="_blank">ver película</a>
+    </p>
+  } @else {
+    <p class="resuelta">Resuelta {{ propuesta.resueltaEl | tiempoRelativo }}</p>
+  }
+</article>

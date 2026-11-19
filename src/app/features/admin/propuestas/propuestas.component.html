@@ -1,0 +1,36 @@
+<div class="page">
+  <div class="header-row">
+    <div>
+      <h2>Propuestas de películas</h2>
+      <p class="hint">
+        Películas que los clientes quieren ver. Al aceptar una se abre el alta de película con los datos de la propuesta.
+      </p>
+    </div>
+    <span class="contador">{{ pendientes() }} pendiente(s)</span>
+  </div>
+
+  <div class="chips">
+    @for (opcion of filtros; track opcion.valor) {
+      <button type="button" class="chip" [class.activa]="filtro() === opcion.valor" (click)="filtro.set(opcion.valor)">
+        {{ opcion.etiqueta }}
+      </button>
+    }
+  </div>
+
+  @if (cargando()) {
+    <p class="hint">Cargando propuestas…</p>
+  } @else if (!filtradas().length) {
+    <div class="empty-state"><p>No hay propuestas en esta categoría.</p></div>
+  } @else {
+    <div class="grid">
+      @for (propuesta of filtradas(); track propuesta.id) {
+        <app-propuesta-card
+          [propuesta]="propuesta"
+          [procesando]="procesandoId() === propuesta.id"
+          (aceptar)="aceptar($event)"
+          (rechazar)="rechazar($event)"
+        />
+      }
+    </div>
+  }
+</div>

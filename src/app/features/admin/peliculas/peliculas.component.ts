@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import {
   ClasificacionEdad,
@@ -9,8 +10,10 @@ import {
   IdiomaPelicula,
   PeliculaConRelaciones
 } from '../../../core/models/pelicula.model';
+import { PropuestaPelicula } from '../../../core/models/propuesta.model';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { PeliculasService } from '../../../core/services/peliculas.service';
+import { PropuestasService } from '../../../core/services/propuestas.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { FechaInputComponent } from '../../../shared/fecha-input/fecha-input.component';
 import { FormErrorComponent } from '../../../shared/form-error/form-error.component';
@@ -29,6 +32,13 @@ export class PeliculasComponent implements OnInit {
   private peliculasService = inject(PeliculasService);
   private confirmService = inject(ConfirmService);
   private toastService = inject(ToastService);
+  private propuestasService = inject(PropuestasService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  @Input() propuesta?: string;
+
+  propuestaOrigen = signal<PropuestaPelicula | null>(null);
 
   formatosDisponibles = FORMATOS_DISPONIBLES;
 
@@ -68,6 +78,28 @@ export class PeliculasComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.cargarDatos();
+    if (this.propuesta) await this.prellenarDesdePropuesta(this.propuesta);
+  }
+
+  private async prellenarDesdePropuesta(id: string): Promise<void> {
+    try {
+      const propuesta = await this.propuestasService.obtener(id);
+      if (!propuesta || propuesta.estado !== 'pendiente') {
+        this.toastService.error('Esa propuesta ya no está pendiente.');
+        this.limpiarQueryParam();
+        return;
+      }
+      this.abrirNueva();
+      this.propuestaOrigen.set(propuesta);
+      this.form.patchValue({ nombre: propuesta.titulo, sinopsis: propuesta.descripcion });
+    } catch (err) {
+      console.error(err);
+      this.toastService.error('No se pudo cargar la propuesta.');
+    }
+  }
+
+  private limpiarQueryParam(): void {
+    this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
   }
 
   async cargarDatos(): Promise<void> {
@@ -90,6 +122,7 @@ export class PeliculasComponent implements OnInit {
 
   abrirNueva(): void {
     this.editandoId.set(null);
+    this.propuestaOrigen.set(null);
     this.form.reset({
       nombre: '',
       sinopsis: '',
@@ -110,6 +143,7 @@ export class PeliculasComponent implements OnInit {
 
   abrirEdicion(pelicula: PeliculaConRelaciones): void {
     this.editandoId.set(pelicula.id);
+    this.propuestaOrigen.set(null);
     this.form.reset({
       nombre: pelicula.nombre,
       sinopsis: pelicula.sinopsis ?? '',
@@ -130,6 +164,10 @@ export class PeliculasComponent implements OnInit {
 
   cancelar(): void {
     this.mostrandoForm.set(false);
+    if (this.propuestaOrigen()) {
+      this.propuestaOrigen.set(null);
+      this.limpiarQueryParam();
+    }
   }
 
   toggleGenero(id: string, marcado: boolean): void {
@@ -163,8 +201,16 @@ export class PeliculasComponent implements OnInit {
         await this.peliculasService.actualizar(id, valores, generoIds, formatos);
         this.toastService.exito('Película actualizada');
       } else {
-        await this.peliculasService.crear(valores, generoIds, formatos);
-        this.toastService.exito('Película creada');
+        const nuevaId = await this.peliculasService.crear(valores, generoIds, formatos);
+        const origen = this.propuestaOrigen();
+        if (origen) {
+          await this.propuestasService.resolver(origen.id, 'aceptada', nuevaId);
+          this.propuestaOrigen.set(null);
+          this.limpiarQueryParam();
+          this.toastService.exito('Película creada y propuesta aceptada. Le avisamos al cliente.');
+        } else {
+          this.toastService.exito('Película creada');
+        }
       }
 
       this.mostrandoForm.set(false);

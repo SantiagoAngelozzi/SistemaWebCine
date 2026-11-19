@@ -2,17 +2,18 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { FuncionConDetalle } from '../../../core/models/funcion.model';
+import { FuncionDePelicula } from '../../../core/models/funcion.model';
+import { EstadoEsperaFuncion } from '../../../core/models/lista-espera.model';
 import { PeliculaConRelaciones } from '../../../core/models/pelicula.model';
 import { ResenaPublica, ResumenResenas } from '../../../core/models/resena.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
+import { FuncionesService } from '../../../core/services/funciones.service';
+import { ListaEsperaService } from '../../../core/services/lista-espera.service';
 import { PeliculasService } from '../../../core/services/peliculas.service';
 import { ResenasService, mensajeErrorResena } from '../../../core/services/resenas.service';
-import { SupabaseService } from '../../../core/services/supabase.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { estadoVenta, funcionYaComenzo } from '../../../core/utils/pelicula-fechas';
-import { hoyIso } from '../../../core/utils/formato';
+import { estadoVenta } from '../../../core/utils/pelicula-fechas';
 import { EstrellasComponent } from '../../../shared/estrellas/estrellas.component';
 import { TiempoRelativoPipe } from '../../../shared/pipes/tiempo-relativo.pipe';
 import { ResenaFormComponent } from '../../../shared/resena-form/resena-form.component';
@@ -28,7 +29,8 @@ export class PeliculaComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private peliculasService = inject(PeliculasService);
-  private supabase = inject(SupabaseService);
+  private funcionesService = inject(FuncionesService);
+  private listaEsperaService = inject(ListaEsperaService);
   private auth = inject(AuthService);
   private resenasService = inject(ResenasService);
   private confirmService = inject(ConfirmService);
@@ -37,7 +39,9 @@ export class PeliculaComponent implements OnInit {
   cargando = signal(true);
   errorMessage = signal<string | null>(null);
   pelicula = signal<PeliculaConRelaciones | null>(null);
-  funciones = signal<FuncionConDetalle[]>([]);
+  funciones = signal<FuncionDePelicula[]>([]);
+  esperas = signal<Map<string, EstadoEsperaFuncion>>(new Map());
+  procesandoEsperaId = signal<string | null>(null);
   ventaHabilitada = computed(() => {
     const pelicula = this.pelicula();
     return !!pelicula && estadoVenta(pelicula) !== 'proximamente';
@@ -71,29 +75,14 @@ export class PeliculaComponent implements OnInit {
     this.cargando.set(true);
     this.errorMessage.set(null);
     try {
-      const [pelicula, { data: funciones, error: errorFunciones }] = await Promise.all([
+      const [pelicula, funciones] = await Promise.all([
         this.peliculasService.obtenerActivaPorId(id),
-        this.supabase.client
-          .from('funciones')
-          .select('*, peliculas(nombre), salas(nombre)')
-          .eq('pelicula_id', id)
-          .gte('fecha', hoyIso())
-          .order('fecha')
-          .order('hora_inicio')
+        this.funcionesService.listarProximasDePelicula(id)
       ]);
 
-      if (errorFunciones) throw errorFunciones;
-
       this.pelicula.set(pelicula);
-      this.funciones.set(
-        (funciones ?? [])
-          .filter((fila: any) => !funcionYaComenzo(fila.fecha, fila.hora_inicio))
-          .map((fila: any) => ({
-            ...fila,
-            peliculaNombre: fila.peliculas?.nombre ?? '',
-            salaNombre: fila.salas?.nombre ?? ''
-          }))
-      );
+      this.funciones.set(funciones);
+      await this.cargarEsperas();
     } catch (err) {
       console.error(err);
       this.errorMessage.set('No se pudo cargar la película.');
@@ -141,6 +130,54 @@ export class PeliculaComponent implements OnInit {
 
   irAResenas(): void {
     document.getElementById('resenas')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async cargarEsperas(): Promise<void> {
+    try {
+      this.esperas.set(await this.listaEsperaService.estadoDeFunciones(this.funciones().map((f) => f.id)));
+    } catch (err) {
+      console.error(err);
+      this.esperas.set(new Map());
+    }
+  }
+
+  espera(funcionId: string): EstadoEsperaFuncion | undefined {
+    return this.esperas().get(funcionId);
+  }
+
+  async anotarse(funcion: FuncionDePelicula): Promise<void> {
+    if (!this.logueado()) {
+      this.router.navigateByUrl('/auth/login');
+      return;
+    }
+    this.procesandoEsperaId.set(funcion.id);
+    try {
+      const posicion = await this.listaEsperaService.anotarse(funcion.id);
+      this.toastService.exito(
+        `Te anotaste en la lista de espera (posición ${posicion}). Si se libera una butaca te avisamos y tenés 15 minutos para comprarla.`
+      );
+      await this.cargarEsperas();
+    } catch (err: any) {
+      console.error(err);
+      this.toastService.error(err?.message ?? 'No se pudo anotarte en la lista de espera.');
+      await this.cargarEsperas();
+    } finally {
+      this.procesandoEsperaId.set(null);
+    }
+  }
+
+  async salirDeEspera(funcion: FuncionDePelicula): Promise<void> {
+    this.procesandoEsperaId.set(funcion.id);
+    try {
+      await this.listaEsperaService.salir(funcion.id);
+      this.toastService.exito('Saliste de la lista de espera.');
+      await this.cargarEsperas();
+    } catch (err: any) {
+      console.error(err);
+      this.toastService.error(err?.message ?? 'No se pudo salir de la lista de espera.');
+    } finally {
+      this.procesandoEsperaId.set(null);
+    }
   }
 
   irAButacas(funcionId: string): void {

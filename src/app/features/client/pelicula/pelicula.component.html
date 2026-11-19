@@ -68,13 +68,60 @@
       } @else {
         <div class="grid-funciones">
           @for (funcion of funciones(); track funcion.id) {
-            <button type="button" class="funcion-card" (click)="irAButacas(funcion.id)">
-              <span class="fecha">{{ funcion.fecha }}</span>
-              <span class="hora">{{ funcion.hora_inicio }}</span>
-              <span class="detalle">
-                {{ funcion.salaNombre }} · {{ funcion.formato }} · {{ funcion.idioma }}
-              </span>
-            </button>
+            @if (espera(funcion.id); as estado) {
+              @if (estado.miEstado === 'notificado') {
+                <button type="button" class="funcion-card turno" (click)="irAButacas(funcion.id)">
+                  <span class="fecha">{{ funcion.fecha }}</span>
+                  <span class="hora">{{ funcion.hora_inicio }}</span>
+                  <span class="detalle">{{ funcion.salaNombre }} · {{ funcion.formato }} · {{ funcion.idioma }}</span>
+                  <span class="estado-espera">¡Te toca! Tenés una butaca reservada: comprala ahora</span>
+                </button>
+              } @else if (estado.miEstado === 'esperando') {
+                <div class="funcion-card agotada">
+                  <span class="fecha">{{ funcion.fecha }}</span>
+                  <span class="hora">{{ funcion.hora_inicio }}</span>
+                  <span class="detalle">{{ funcion.salaNombre }} · {{ funcion.formato }} · {{ funcion.idioma }}</span>
+                  <span class="estado-espera">Estás en la lista de espera: posición {{ estado.miPosicion }}</span>
+                  <button
+                    type="button"
+                    class="btn-espera secundario"
+                    [disabled]="procesandoEsperaId() === funcion.id"
+                    (click)="salirDeEspera(funcion)"
+                  >
+                    Salir de la lista
+                  </button>
+                </div>
+              } @else if (estado.agotada) {
+                <div class="funcion-card agotada">
+                  <span class="fecha">{{ funcion.fecha }}</span>
+                  <span class="hora">{{ funcion.hora_inicio }}</span>
+                  <span class="detalle">{{ funcion.salaNombre }} · {{ funcion.formato }} · {{ funcion.idioma }}</span>
+                  <span class="estado-espera">
+                    Agotada{{ estado.enEspera ? ' · ' + estado.enEspera + ' en espera' : '' }}
+                  </span>
+                  <button
+                    type="button"
+                    class="btn-espera"
+                    [disabled]="procesandoEsperaId() === funcion.id"
+                    (click)="anotarse(funcion)"
+                  >
+                    {{ logueado() ? 'Anotarme en la lista de espera' : 'Ingresá para anotarte' }}
+                  </button>
+                </div>
+              } @else {
+                <button type="button" class="funcion-card" (click)="irAButacas(funcion.id)">
+                  <span class="fecha">{{ funcion.fecha }}</span>
+                  <span class="hora">{{ funcion.hora_inicio }}</span>
+                  <span class="detalle">{{ funcion.salaNombre }} · {{ funcion.formato }} · {{ funcion.idioma }}</span>
+                </button>
+              }
+            } @else {
+              <button type="button" class="funcion-card" (click)="irAButacas(funcion.id)">
+                <span class="fecha">{{ funcion.fecha }}</span>
+                <span class="hora">{{ funcion.hora_inicio }}</span>
+                <span class="detalle">{{ funcion.salaNombre }} · {{ funcion.formato }} · {{ funcion.idioma }}</span>
+              </button>
+            }
           }
         </div>
       }

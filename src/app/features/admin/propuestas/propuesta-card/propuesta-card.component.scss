@@ -1,0 +1,103 @@
+:host {
+  display: block;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 18px;
+  border: var(--border-comic);
+  border-radius: 14px;
+  background: var(--color-papel-2);
+  box-shadow: var(--shadow-comic-sm);
+
+  &.rechazada {
+    opacity: 0.75;
+  }
+}
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+
+  h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 0.5px;
+  }
+}
+
+.badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 2px solid var(--color-tinta);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+
+  &.pendiente {
+    background: var(--color-lima);
+  }
+
+  &.aceptada {
+    background: var(--color-turquesa);
+  }
+
+  &.rechazada {
+    background: #ffd2dc;
+  }
+}
+
+.meta,
+.resuelta {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.7;
+
+  a {
+    color: var(--color-tinta);
+    font-weight: 700;
+  }
+}
+
+.descripcion,
+.motivo {
+  margin: 0;
+  font-size: 14px;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+
+  button {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 14px;
+    border: var(--border-comic);
+    border-radius: 10px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.btn-aceptar {
+  background: var(--color-lima);
+}
+
+.btn-rechazar {
+  background: var(--color-papel);
+}

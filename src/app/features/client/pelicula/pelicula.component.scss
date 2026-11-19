@@ -360,3 +360,44 @@ app-resena-form {
   font-size: 16px;
   text-transform: uppercase;
 }
+
+.funcion-card.agotada {
+  cursor: default;
+  background: #f3eee6;
+
+  &:hover {
+    transform: none;
+    box-shadow: var(--shadow-comic-sm);
+    background: #f3eee6;
+  }
+}
+
+.funcion-card.turno {
+  background: var(--color-lima);
+}
+
+.estado-espera {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.btn-espera {
+  margin-top: 6px;
+  padding: 7px 10px;
+  border: 2px solid var(--color-tinta);
+  border-radius: 10px;
+  background: var(--color-turquesa);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+
+  &.secundario {
+    background: var(--color-papel-2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

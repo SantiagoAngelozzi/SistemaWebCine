@@ -293,3 +293,19 @@
   text-align: center;
   opacity: 0.7;
 }
+
+.aviso-propuesta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 2px dashed var(--color-tinta);
+  border-radius: 12px;
+  background: #e6fbf8;
+  font-size: 13px;
+
+  .motivo {
+    font-style: italic;
+    opacity: 0.8;
+  }
+}
